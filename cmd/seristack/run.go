@@ -44,6 +44,10 @@ func runServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
+	if config.Server == nil {
+		return fmt.Errorf("server configuration is missing")
+	}
+
 	if port != "" {
 		config.Server.Port = port
 	}

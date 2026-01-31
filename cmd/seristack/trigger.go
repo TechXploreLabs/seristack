@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	stackName string
-	dryRun    bool
+	stack string
 )
 
 var triggerCmd = &cobra.Command{
@@ -30,13 +29,13 @@ Examples:
   seristack trigger --config myconfig.yaml
   
   # Dry run (show execution order without running)
-  seristack trigger --dry-run`,
+  seristack trigger --stack`,
 	RunE: runTrigger,
 }
 
 func init() {
 	rootCmd.AddCommand(triggerCmd)
-	triggerCmd.Flags().BoolVar(&dryRun, "dry-run", false, "show execution plan without running")
+	triggerCmd.Flags().StringVarP(&stack, "stack", "s", "", "run a particular stack")
 }
 
 func runTrigger(cmd *cobra.Command, args []string) error {
@@ -48,19 +47,21 @@ func runTrigger(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Loaded config from: %s\n", configFile)
 		fmt.Printf("Found %d stacks\n", len(config.Stacks))
 	}
+	if stack != "" {
+		stackmap := exe.Stackmap(config.Stacks)
+		if newstack, ok := stackmap[stack]; ok {
+			newstack.DependsOn = nil
+			config = &conf.Config{
+				Stacks: []conf.Stack{*newstack},
+				Server: config.Server,
+			}
+		} else {
+			return fmt.Errorf("stack '%s' not found", stack)
+		}
+	}
 	order, err := function.ExecutionOrder(config.Stacks)
 	if err != nil {
 		return fmt.Errorf("dependency resolution failed: %w", err)
-	}
-	if dryRun {
-		fmt.Println("Execution Plan:")
-		for i, batch := range order {
-			fmt.Printf("\nBatch %d (parallel):\n", i+1)
-			for _, stackName := range batch {
-				fmt.Printf("  - %s\n", stackName)
-			}
-		}
-		return nil
 	}
 	sourceDir, err := os.Getwd()
 	if err != nil {

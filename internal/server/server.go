@@ -22,11 +22,15 @@ func Server(config *conf.Config) {
 		RegisterHandler(mux, endpoint, stackMap)
 	}
 	port := config.Server.Port
+	host := config.Server.Host
 	if port == "" {
 		port = "8080"
 	}
-	fmt.Printf("Server starting on http://localhost:%s\n", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	fmt.Printf("Server starting on http://%s:%s\n", host, port)
+	if err := http.ListenAndServe(host+":"+port, mux); err != nil {
 		log.Fatal(err)
 	}
 }

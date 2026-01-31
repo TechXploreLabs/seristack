@@ -9,6 +9,8 @@ import (
 	"github.com/TechXploreLabs/seristack/internal/registry"
 )
 
+// Outputs stackname and stack details in dict format
+
 func Stackmap(e []config.Stack) map[string]*config.Stack {
 	stackMap := make(map[string]*config.Stack, len(e))
 	for i := range e {
@@ -16,6 +18,8 @@ func Stackmap(e []config.Stack) map[string]*config.Stack {
 	}
 	return stackMap
 }
+
+// Function that call execute stack
 
 func Execute(e *config.Executor, order *[][]string) error {
 	stackMap := Stackmap(e.Config.Stacks)
