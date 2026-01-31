@@ -6,13 +6,13 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
 
 # Features
 
-🚀 Run multiple command stacks from a single config
-🔁 Repeat stacks with serial or concurrent execution
-🔗 Define dependencies between stacks
-🧩 Variable substitution using templates
-📦 Share output between stacks
-🌐 Expose stacks as HTTP endpoints
-🛠 Works with Bash, sh, and PowerShell
+    🚀 Run multiple command stacks from a single config
+    🔁 Repeat stacks with serial or concurrent execution
+    🔗 Define dependencies between stacks
+    🧩 Variable substitution using templates
+    📦 Share output between stacks
+    🌐 Expose stacks as HTTP endpoints
+    🛠 Works with Bash, sh, and PowerShell
 
 ```yaml
 # description about seristack
