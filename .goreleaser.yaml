@@ -1,0 +1,10 @@
+project_name: tfimport
+builds:
+  - env:
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
