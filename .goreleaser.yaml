@@ -1,4 +1,4 @@
-project_name: tfimport
+project_name: seristack
 builds:
   - env:
     goos:
