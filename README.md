@@ -22,6 +22,7 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
 brew install TechXploreLabs/tap/seristack
 ```
 
+# Sample stack yaml file
 
 ```yaml
 # description about seristack
