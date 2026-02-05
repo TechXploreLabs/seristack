@@ -67,7 +67,7 @@ stacks:
     invite: hello engineers
   cmds:
   - |
-    echo "Hey, i'm gonna below cmd and output it for an http request"
+    echo "Hey, i'm gonna show the date we met!!"
     echo "`date`"
 
 
