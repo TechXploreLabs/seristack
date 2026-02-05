@@ -14,6 +14,15 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
     🌐 Expose stacks as HTTP endpoints
     🛠 Works with Bash, sh, and PowerShell
 
+## Installation
+
+### Using Homebrew (Mac and linux)
+
+```bash
+brew install TechXploreLabs/tap/seristack
+```
+
+
 ```yaml
 # description about seristack
 
