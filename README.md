@@ -54,8 +54,6 @@ stacks:
   count: 3
   isSerial: TRUE
   dependsOn: [stack1]
-  vars:
-    samplekey: samplevalue
   cmds:
   - |
     echo "Hey i can also take output from any of the previous stack, which completed before i start"
