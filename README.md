@@ -4,6 +4,8 @@
 
 Seristack is a lightweight automation engine designed to bridge the gap between local task execution and remote triggers. Define your stacks in YAML, manage dependencies, and expose your automation via a built-in HTTP server.
 
+[seristack](https://github.com/TechXploreLabs/seristack)
+
 # Features
 
     🚀 Run multiple command stacks from a single config
