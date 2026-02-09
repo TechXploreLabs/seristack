@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seristack - Shell Workflows Made Simple</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --accent: #60a5fa;
+            --dark: #0f172a;
+            --dark-card: #1e293b;
+            --dark-border: #334155;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --code-bg: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(96, 165, 250, 0.08) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--dark-border);
+            background: rgba(10, 14, 26, 0.9);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+            text-decoration: none;
+        }
+
+        .github-link {
+            padding: 0.75rem 1.5rem;
+            background: var(--dark-card);
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 1px solid var(--dark-border);
+            transition: all 0.3s;
+        }
+
+        .github-link:hover {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .hero {
+            padding: 5rem 0 4rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .description {
+            font-size: 1.125rem;
+            color: var(--text-dim);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+        }
+
+        .features {
+            padding: 4rem 0;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-item {
+            background: var(--dark-card);
+            padding: 1.75rem;
+            border-radius: 10px;
+            border: 1px solid var(--dark-border);
+            transition: all 0.3s;
+        }
+
+        .feature-item:hover {
+            border-color: #10b981;
+            transform: translateY(-3px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .feature-item h3 {
+            font-size: 1.125rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        section {
+            padding: 4rem 0;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #10b981;
+        }
+
+        .install-grid {
+            display: grid;
+            gap: 3rem;
+        }
+
+        .install-section {
+            background: var(--dark-card);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--dark-border);
+        }
+
+        .install-section h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: #10b981;
+        }
+
+        .install-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .step-number {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 0.875rem;
+        }
+
+        .step-desc {
+            color: var(--text-dim);
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            border: 1px solid var(--dark-border);
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            color: var(--text-dim);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #10b981;
+            color: var(--dark);
+            border-color: #10b981;
+        }
+
+        .code-block code {
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .comment {
+            color: #6a9955;
+        }
+
+        .keyword {
+            color: #569cd6;
+        }
+
+        .string {
+            color: #ce9178;
+        }
+
+        .number {
+            color: #b5cea8;
+        }
+
+        .yaml-example {
+            margin-top: 2rem;
+            background: var(--dark-card);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--dark-border);
+        }
+
+        .yaml-example h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #10b981;
+        }
+
+        .usage-section {
+            background: var(--dark-card);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--dark-border);
+            margin-top: 3rem;
+        }
+
+        .usage-section h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: #10b981;
+        }
+
+        .usage-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .usage-item h4 {
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+        }
+
+        .usage-item p {
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            padding: 3rem 0 2rem;
+            border-top: 1px solid var(--dark-border);
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1.25rem;
+            }
+
+            .description {
+                font-size: 1rem;
+            }
+
+            .features-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">⚡ seristack</a>
+                <a href="https://github.com/TechXploreLabs/seristack" class="github-link" target="_blank">GitHub →</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>seristack</h1>
+                <p class="tagline">Run shell workflows via CLI or HTTP — no CI, no cron, no Makefiles.</p>
+                <p class="description">
+                    Seristack is a lightweight automation engine designed to bridge the gap between local task execution 
+                    and remote triggers. Define your stacks in YAML, manage dependencies, and expose your automation via 
+                    a built-in HTTP server.
+                </p>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <h2>Features</h2>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">🚀</span>
+                        <h3>Run multiple command stacks from a single config</h3>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🔁</span>
+                        <h3>Repeat stacks with serial or concurrent execution</h3>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🔗</span>
+                        <h3>Define dependencies between stacks</h3>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🧩</span>
+                        <h3>Variable substitution using templates</h3>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📦</span>
+                        <h3>Share output between stacks</h3>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🌐</span>
+                        <h3>Expose stacks as HTTP endpoints</h3>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🛠</span>
+                        <h3>Works with Bash, sh, and PowerShell</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <h2>Installation</h2>
+                <div class="install-grid">
+                    <!-- Mac/Linux Homebrew -->
+                    <div class="install-section">
+                        <h3>Mac and Linux (Homebrew)</h3>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <code>brew install TechXploreLabs/tap/seristack</code>
+                        </div>
+                    </div>
+
+                    <!-- Linux Manual -->
+                    <div class="install-section">
+                        <h3>Linux (Release Archive)</h3>
+                        <div class="install-steps">
+                            <div class="step">
+                                <span class="step-number">STEP 1</span>
+                                <p class="step-desc">Download the latest release from GitHub:</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <code># Download from https://github.com/TechXploreLabs/seristack/releases
+# Look for: seristack_VERSION_linux_ARCH.tar.gz</code>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">STEP 2</span>
+                                <p class="step-desc">Extract the archive:</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <code>tar -xzf seristack_VERSION_linux_ARCH.tar.gz</code>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">STEP 3</span>
+                                <p class="step-desc">Move to your PATH and set permissions:</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <code>sudo mv seristack /usr/local/bin/
+sudo chmod +x /usr/local/bin/seristack</code>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">STEP 4</span>
+                                <p class="step-desc">Verify installation:</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <code>seristack --help</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Windows -->
+                    <div class="install-section">
+                        <h3>Windows (Release Archive)</h3>
+                        <div class="install-steps">
+                            <div class="step">
+                                <span class="step-number">STEP 1</span>
+                                <p class="step-desc">Download the latest release from GitHub:</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <code># Download from https://github.com/TechXploreLabs/seristack/releases
+# Look for: seristack_VERSION_windows_ARCH.zip</code>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">STEP 2</span>
+                                <p class="step-desc">Extract the zip file (Right click → Extract all, or use 7-Zip)</p>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">STEP 3</span>
+                                <p class="step-desc">Move seristack.exe to a folder in your %PATH% (e.g., C:\Windows or a custom tools folder)</p>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">STEP 4</span>
+                                <p class="step-desc">Verify installation in PowerShell:</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <code>seristack --help</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <h2>Configuration</h2>
+                <div class="yaml-example">
+                    <h3>Sample YAML Configuration</h3>
+                    <div class="code-block" style="margin-top: 0;">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <code><span class="comment"># config.yaml</span>
+
+<span class="keyword">stacks:</span>
+- <span class="keyword">name:</span> stack1                <span class="comment"># name of the stack (REQUIRED)</span>
+  <span class="keyword">workDir:</span> ./                 <span class="comment"># working directory. default is "./"</span>
+  <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># stop on error. default is false</span>
+  <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># run 3 times. default is 0</span>
+  <span class="keyword">isSerial:</span> <span class="number">TRUE</span>              <span class="comment"># run serially. default is false (concurrent)</span>
+  <span class="keyword">vars:</span>                       <span class="comment"># variables for substitution</span>
+    <span class="keyword">samplekey:</span> samplevalue
+  <span class="keyword">shell:</span> bash                 <span class="comment"># default: sh (linux/mac), powershell (windows)</span>
+  <span class="keyword">shellArg:</span> -c                <span class="comment"># default: -c (linux/mac), -Command (windows)</span>
+  <span class="keyword">dependsOn:</span> []               <span class="comment"># dependencies. default is []</span>
+  <span class="keyword">cmds:</span>
+  - |
+    export samplekey={{.Vars.samplekey}}    <span class="comment"># use variables</span>
+    echo $samplekey
+    echo <span class="string">"count={{.Count.index}}"</span>         <span class="comment"># iteration index</span>
+    echo <span class="string">"Hey i'm seristack!"</span>
+
+- <span class="keyword">name:</span> stack2
+  <span class="keyword">workDir:</span> ./
+  <span class="keyword">continueOnError:</span> <span class="number">false</span>
+  <span class="keyword">count:</span> <span class="number">3</span>
+  <span class="keyword">isSerial:</span> <span class="number">TRUE</span>
+  <span class="keyword">dependsOn:</span> [stack1]          <span class="comment"># runs after stack1</span>
+  <span class="keyword">cmds:</span>
+  - |
+    echo <span class="string">"Using output from previous stack"</span>
+    echo <span class="string">"count={{.Result.stack1}}"</span>     <span class="comment"># use previous stack output</span>
+
+- <span class="keyword">name:</span> stack3
+  <span class="keyword">workDir:</span> ./
+  <span class="keyword">count:</span> <span class="number">1</span>
+  <span class="keyword">vars:</span>
+    <span class="keyword">invite:</span> hello engineers
+  <span class="keyword">cmds:</span>
+  - |
+    echo <span class="string">"Current date and time:"</span>
+    echo `date`
+
+<span class="keyword">server:</span>
+  <span class="keyword">host:</span> 127.0.0.1      <span class="comment"># default: 127.0.0.1, use 0.0.0.0 for public access</span>
+  <span class="keyword">port:</span> <span class="number">8080</span>           <span class="comment"># default: 8080</span>
+  <span class="keyword">endpoint:</span>
+  - <span class="keyword">path:</span> /show
+    <span class="keyword">method:</span> GET
+    <span class="keyword">stackName:</span> stack3</code>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>Running Stacks</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <h4>1. Trigger entire stacks</h4>
+                            <p>Run all stacks defined in the config file (default: config.yaml)</p>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <code>seristack trigger -c config.yaml
+<span class="comment"># or simply:</span>
+seristack trigger</code>
+                            </div>
+                        </div>
+
+                        <div class="usage-item">
+                            <h4>2. Run a specific stack</h4>
+                            <p>Execute only a particular stack by name</p>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <code>seristack trigger -c config.yaml -s stack3</code>
+                            </div>
+                        </div>
+
+                        <div class="usage-item">
+                            <h4>3. Start HTTP server</h4>
+                            <p>Initialize the HTTP server with defined endpoints (Ctrl+C to stop)</p>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <code>seristack run -c config.yaml</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Apache License | <a href="https://github.com/TechXploreLabs/seristack" style="color: #10b981; text-decoration: none;">GitHub</a></p>
+        </div>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.querySelector('code').innerText;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
