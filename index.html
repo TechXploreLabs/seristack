@@ -245,6 +245,8 @@
         .code-block code {
             color: var(--text);
             line-height: 1.6;
+            white-space: pre;
+            display: block;
         }
 
         .comment {
@@ -474,20 +476,20 @@ sudo chmod +x /usr/local/bin/seristack</code>
 
 <span class="keyword">stacks:</span>
   - <span class="keyword">name:</span> stack1                <span class="comment"># name of the stack (REQUIRED)</span>
-    <span class="keyword">workDir:</span> ./                 <span class="comment"># working directory. default is "./"</span>
-    <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># stop on error. default is false</span>
-    <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># run 3 times. default is 0</span>
-    <span class="keyword">isSerial:</span> <span class="number">true</span>              <span class="comment"># run serially. default is false (concurrent)</span>
-    <span class="keyword">vars:</span>                       <span class="comment"># variables for substitution</span>
+    <span class="keyword">workDir:</span> ./                 <span class="comment"># working directory to execute the cmds. default is "./"</span>
+    <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># if cmds has error, true will not stop execution, false will stop. default is false</span>
+    <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0</span>
+    <span class="keyword">isSerial:</span> <span class="number">true</span>              <span class="comment"># if count = 3 and isSerial = false, runs concurrently (thrice). default is false</span>
+    <span class="keyword">vars:</span>                       <span class="comment"># vars take key=value pair of variables. default is empty</span>
       <span class="keyword">samplekey:</span> samplevalue
-    <span class="keyword">shell:</span> bash                 <span class="comment"># default: sh (linux/mac), powershell (windows)</span>
-    <span class="keyword">shellArg:</span> -c                <span class="comment"># default: -c (linux/mac), -Command (windows)</span>
-    <span class="keyword">dependsOn:</span> []               <span class="comment"># dependencies. default is []</span>
-    <span class="keyword">cmds:</span>
+    <span class="keyword">shell:</span> bash                 <span class="comment"># shell takes sh as default for linux, darwin and powershell for windows</span>
+    <span class="keyword">shellArg:</span> -c                <span class="comment"># shellArg takes -c as default for linux, darwin and -Command for windows</span>
+    <span class="keyword">dependsOn:</span> []               <span class="comment"># dependsOn takes list of stacks to start after them. default is []</span>
+    <span class="keyword">cmds:</span>                       <span class="comment"># cmds takes list of shell commands (linux, powershell)</span>
       - |
-        export samplekey={{.Vars.samplekey}}    <span class="comment"># use variables</span>
+        export samplekey={{.Vars.samplekey}}    <span class="comment"># to use vars for substitution</span>
         echo $samplekey
-        echo <span class="string">"count={{.Count.index}}"</span>         <span class="comment"># iteration index</span>
+        echo <span class="string">"count={{.Count.index}}"</span>         <span class="comment"># index of count iterations</span>
         echo <span class="string">"Hey i'm seristack!"</span>
 
   - <span class="keyword">name:</span> stack2
@@ -495,11 +497,11 @@ sudo chmod +x /usr/local/bin/seristack</code>
     <span class="keyword">continueOnError:</span> <span class="number">false</span>
     <span class="keyword">count:</span> <span class="number">3</span>
     <span class="keyword">isSerial:</span> <span class="number">true</span>
-    <span class="keyword">dependsOn:</span> [stack1]          <span class="comment"># runs after stack1</span>
+    <span class="keyword">dependsOn:</span> [stack1]          <span class="comment"># runs after stack1 completes</span>
     <span class="keyword">cmds:</span>
       - |
         echo <span class="string">"Using output from previous stack"</span>
-        echo <span class="string">"count={{.Result.stack1}}"</span>     <span class="comment"># use previous stack output</span>
+        echo <span class="string">"count={{.Result.stack1}}"</span>     <span class="comment"># to use result of previous batch stack output for substitution</span>
 
   - <span class="keyword">name:</span> stack3
     <span class="keyword">workDir:</span> ./
@@ -512,9 +514,9 @@ sudo chmod +x /usr/local/bin/seristack</code>
         echo `date`
 
 <span class="keyword">server:</span>
-  <span class="keyword">host:</span> 127.0.0.1      <span class="comment"># default: 127.0.0.1, use 0.0.0.0 for public access</span>
-  <span class="keyword">port:</span> <span class="number">8080</span>           <span class="comment"># default: 8080</span>
-  <span class="keyword">endpoint:</span>
+  <span class="keyword">host:</span> 127.0.0.1      <span class="comment"># default is 127.0.0.1, use 0.0.0.0 for exposing it to internet</span>
+  <span class="keyword">port:</span> <span class="number">8080</span>           <span class="comment"># default is 8080</span>
+  <span class="keyword">endpoint:</span>            <span class="comment"># endpoint will connect the path to particular stack and run the cmds, publish output</span>
     - <span class="keyword">path:</span> /show
       <span class="keyword">method:</span> GET
       <span class="keyword">stackName:</span> stack3</code>

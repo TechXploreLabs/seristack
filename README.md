@@ -59,52 +59,54 @@ brew install TechXploreLabs/tap/seristack
 
 ```yaml
 # description about seristack
+# config.yaml
 
 stacks:
-- name: stack1                # name of the stack(REQUIRED)
-  workDir: ./                 # working directory to execute the cmds. default is "./"
-  continueOnError: false      # if the cmds has any error, setting this flag true will not stop entir stacks execution, seeting false will stop all other rest of the executions. default is false.
-  count: 3                    # if setting count = 0 , will not run cmds, count = 3 will run entire cmds three times. default is 0.
-  isSerial: TRUE              # if the count = 3 and isSerial = false will let run set of cmds concurrently(thrice). default is false.
-  vars:                       # vars take key=value pair of variables. default is empty
-    samplekey: samplevalue
-  shell: bash                 # shell takes sh as default for linux, darwin and powershell for windows.
-  shellArg: -c                # shellArg take -c as default for linux, darwin and -Command for windows.
-  dependsOn: []               # dependsOn takes list of stack to start after them. default is [].
-  cmds:                       # cmds takes list of shell cmds(linux, powershell)
-  - |
-    export samplekey={{.Vars.samplekey}}    # to use vars for substitution
-    echo $samplekey
-    echo "count={{.Count.index}}"         # index of count iterations
-    echo "Hey i'm seristack an modern task automation tool."
-- name: stack2
-  workDir: ./
-  continueOnError: false
-  count: 3
-  isSerial: TRUE
-  dependsOn: [stack1]
-  cmds:
-  - |
-    echo "Hey i can also take output from any of the previous stack, which completed before i start"
-    echo "count={{.Result.stack1}}"     # to use result of previous batch stack output for substitution
-- name: stack3
-  workDir: ./
-  count: 1
-  vars:
-    invite: hello engineers
-  cmds:
-  - |
-    echo "Hey, i'm gonna show the date we met!!"
-    echo "`date`"
+  - name: stack1                # name of the stack (REQUIRED)
+    workDir: ./                 # working directory to execute the cmds. default is "./"
+    continueOnError: false      # if cmds has error, true will not stop execution, false will stop. default is false
+    count: 3                    # count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0
+    isSerial: true              # if count = 3 and isSerial = false, runs concurrently (thrice). default is false
+    vars:                       # vars take key=value pair of variables. default is empty
+      samplekey: samplevalue
+    shell: bash                 # shell takes sh as default for linux, darwin and powershell for windows
+    shellArg: -c                # shellArg takes -c as default for linux, darwin and -Command for windows
+    dependsOn: []               # dependsOn takes list of stacks to start after them. default is []
+    cmds:                       # cmds takes list of shell commands (linux, powershell)
+      - |
+        export samplekey={{.Vars.samplekey}}    # to use vars for substitution
+        echo $samplekey
+        echo "count={{.Count.index}}"         # index of count iterations
+        echo "Hey i'm seristack!"
 
+  - name: stack2
+    workDir: ./
+    continueOnError: false
+    count: 3
+    isSerial: true
+    dependsOn: [stack1]          # runs after stack1 completes
+    cmds:
+      - |
+        echo "Using output from previous stack"
+        echo "count={{.Result.stack1}}"     # to use result of previous batch stack output for substitution
+
+  - name: stack3
+    workDir: ./
+    count: 1
+    vars:
+      invite: hello engineers
+    cmds:
+      - |
+        echo "Current date and time:"
+        echo `date`
 
 server:
-  host: 127.0.0.1      # default is 27.0.0.1, use 0.0.0.0 for exposing it to internet. 
+  host: 127.0.0.1      # default is 127.0.0.1, use 0.0.0.0 for exposing it to internet
   port: 8080           # default is 8080
-  endpoint:            # endpoint will connect the path to particular stack and run the cmds publish output.
-  - path: /show
-    method: GET
-    stackName: stack3
+  endpoint:            # endpoint will connect the path to particular stack and run the cmds, publish output
+    - path: /show
+      method: GET
+      stackName: stack3
 ```
 
 # Running the stacks
