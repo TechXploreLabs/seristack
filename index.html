@@ -130,35 +130,33 @@
         }
 
         .features-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 4rem;
-        }
-
-        .feature-item {
             background: var(--dark-card);
-            padding: 1.75rem;
-            border-radius: 10px;
+            padding: 2.5rem;
+            border-radius: 12px;
             border: 1px solid var(--dark-border);
-            transition: all 0.3s;
         }
 
-        .feature-item:hover {
-            border-color: #10b981;
-            transform: translateY(-3px);
+        .features-list ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
         }
 
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 0.75rem;
-            display: block;
-        }
-
-        .feature-item h3 {
-            font-size: 1.125rem;
+        .features-list li {
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
             color: var(--text);
-            margin-bottom: 0.5rem;
+        }
+
+        .features-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: 700;
+            font-size: 1.25rem;
         }
 
         section {
@@ -340,7 +338,7 @@
     <header>
         <div class="container">
             <nav>
-                <a href="#" class="logo">⚡ seristack</a>
+                <a href="#" class="logo">seristack</a>
                 <a href="https://github.com/TechXploreLabs/seristack" class="github-link" target="_blank">GitHub →</a>
             </nav>
         </div>
@@ -363,34 +361,15 @@
             <div class="container">
                 <h2>Features</h2>
                 <div class="features-list">
-                    <div class="feature-item">
-                        <span class="feature-icon">🚀</span>
-                        <h3>Run multiple command stacks from a single config</h3>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">🔁</span>
-                        <h3>Repeat stacks with serial or concurrent execution</h3>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">🔗</span>
-                        <h3>Define dependencies between stacks</h3>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">🧩</span>
-                        <h3>Variable substitution using templates</h3>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">📦</span>
-                        <h3>Share output between stacks</h3>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">🌐</span>
-                        <h3>Expose stacks as HTTP endpoints</h3>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">🛠</span>
-                        <h3>Works with Bash, sh, and PowerShell</h3>
-                    </div>
+                    <ul>
+                        <li>Run multiple command stacks from a single config</li>
+                        <li>Repeat stacks with serial or concurrent execution</li>
+                        <li>Define dependencies between stacks</li>
+                        <li>Variable substitution using templates</li>
+                        <li>Share output between stacks</li>
+                        <li>Expose stacks as HTTP endpoints</li>
+                        <li>Works with Bash, sh, and PowerShell</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -494,51 +473,51 @@ sudo chmod +x /usr/local/bin/seristack</code>
                         <code><span class="comment"># config.yaml</span>
 
 <span class="keyword">stacks:</span>
-- <span class="keyword">name:</span> stack1                <span class="comment"># name of the stack (REQUIRED)</span>
-  <span class="keyword">workDir:</span> ./                 <span class="comment"># working directory. default is "./"</span>
-  <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># stop on error. default is false</span>
-  <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># run 3 times. default is 0</span>
-  <span class="keyword">isSerial:</span> <span class="number">TRUE</span>              <span class="comment"># run serially. default is false (concurrent)</span>
-  <span class="keyword">vars:</span>                       <span class="comment"># variables for substitution</span>
-    <span class="keyword">samplekey:</span> samplevalue
-  <span class="keyword">shell:</span> bash                 <span class="comment"># default: sh (linux/mac), powershell (windows)</span>
-  <span class="keyword">shellArg:</span> -c                <span class="comment"># default: -c (linux/mac), -Command (windows)</span>
-  <span class="keyword">dependsOn:</span> []               <span class="comment"># dependencies. default is []</span>
-  <span class="keyword">cmds:</span>
-  - |
-    export samplekey={{.Vars.samplekey}}    <span class="comment"># use variables</span>
-    echo $samplekey
-    echo <span class="string">"count={{.Count.index}}"</span>         <span class="comment"># iteration index</span>
-    echo <span class="string">"Hey i'm seristack!"</span>
+  - <span class="keyword">name:</span> stack1                <span class="comment"># name of the stack (REQUIRED)</span>
+    <span class="keyword">workDir:</span> ./                 <span class="comment"># working directory. default is "./"</span>
+    <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># stop on error. default is false</span>
+    <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># run 3 times. default is 0</span>
+    <span class="keyword">isSerial:</span> <span class="number">true</span>              <span class="comment"># run serially. default is false (concurrent)</span>
+    <span class="keyword">vars:</span>                       <span class="comment"># variables for substitution</span>
+      <span class="keyword">samplekey:</span> samplevalue
+    <span class="keyword">shell:</span> bash                 <span class="comment"># default: sh (linux/mac), powershell (windows)</span>
+    <span class="keyword">shellArg:</span> -c                <span class="comment"># default: -c (linux/mac), -Command (windows)</span>
+    <span class="keyword">dependsOn:</span> []               <span class="comment"># dependencies. default is []</span>
+    <span class="keyword">cmds:</span>
+      - |
+        export samplekey={{.Vars.samplekey}}    <span class="comment"># use variables</span>
+        echo $samplekey
+        echo <span class="string">"count={{.Count.index}}"</span>         <span class="comment"># iteration index</span>
+        echo <span class="string">"Hey i'm seristack!"</span>
 
-- <span class="keyword">name:</span> stack2
-  <span class="keyword">workDir:</span> ./
-  <span class="keyword">continueOnError:</span> <span class="number">false</span>
-  <span class="keyword">count:</span> <span class="number">3</span>
-  <span class="keyword">isSerial:</span> <span class="number">TRUE</span>
-  <span class="keyword">dependsOn:</span> [stack1]          <span class="comment"># runs after stack1</span>
-  <span class="keyword">cmds:</span>
-  - |
-    echo <span class="string">"Using output from previous stack"</span>
-    echo <span class="string">"count={{.Result.stack1}}"</span>     <span class="comment"># use previous stack output</span>
+  - <span class="keyword">name:</span> stack2
+    <span class="keyword">workDir:</span> ./
+    <span class="keyword">continueOnError:</span> <span class="number">false</span>
+    <span class="keyword">count:</span> <span class="number">3</span>
+    <span class="keyword">isSerial:</span> <span class="number">true</span>
+    <span class="keyword">dependsOn:</span> [stack1]          <span class="comment"># runs after stack1</span>
+    <span class="keyword">cmds:</span>
+      - |
+        echo <span class="string">"Using output from previous stack"</span>
+        echo <span class="string">"count={{.Result.stack1}}"</span>     <span class="comment"># use previous stack output</span>
 
-- <span class="keyword">name:</span> stack3
-  <span class="keyword">workDir:</span> ./
-  <span class="keyword">count:</span> <span class="number">1</span>
-  <span class="keyword">vars:</span>
-    <span class="keyword">invite:</span> hello engineers
-  <span class="keyword">cmds:</span>
-  - |
-    echo <span class="string">"Current date and time:"</span>
-    echo `date`
+  - <span class="keyword">name:</span> stack3
+    <span class="keyword">workDir:</span> ./
+    <span class="keyword">count:</span> <span class="number">1</span>
+    <span class="keyword">vars:</span>
+      <span class="keyword">invite:</span> hello engineers
+    <span class="keyword">cmds:</span>
+      - |
+        echo <span class="string">"Current date and time:"</span>
+        echo `date`
 
 <span class="keyword">server:</span>
   <span class="keyword">host:</span> 127.0.0.1      <span class="comment"># default: 127.0.0.1, use 0.0.0.0 for public access</span>
   <span class="keyword">port:</span> <span class="number">8080</span>           <span class="comment"># default: 8080</span>
   <span class="keyword">endpoint:</span>
-  - <span class="keyword">path:</span> /show
-    <span class="keyword">method:</span> GET
-    <span class="keyword">stackName:</span> stack3</code>
+    - <span class="keyword">path:</span> /show
+      <span class="keyword">method:</span> GET
+      <span class="keyword">stackName:</span> stack3</code>
                     </div>
                 </div>
 
