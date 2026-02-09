@@ -18,20 +18,47 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
 
 ## Installation
 
-### Using Homebrew (Mac and linux)
+### Using Homebrew (Mac and Linux)
 
 ```bash
 brew install TechXploreLabs/tap/seristack
 ```
 
+### Linux (using release archive)
+
+1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_linux_ARCH.tar.gz` (`ARCH` matches your system, e.g., `amd64`, `arm64`).
+2. Extract the archive:
+   ```bash
+   tar -xzf seristack_VERSION_linux_ARCH.tar.gz
+   ```
+3. Move the `seristack` binary to a directory in your `PATH`:
+   ```bash
+   sudo mv seristack /usr/local/bin/
+   ```
+4. Set execute permissions (just in case):
+   ```bash
+   sudo chmod +x /usr/local/bin/seristack
+   ```
+5. Verify installation:
+   ```bash
+   seristack --help
+   ```
+
+### Windows (using release archive)
+
+1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_windows_ARCH.zip` or `.gz` file (where `ARCH` matches your system, e.g., `amd64`).
+2. Extract the zip/gz file (Right click → Extract all, or use a tool like 7-Zip).
+3. Move `seristack.exe` to a folder in your `%PATH%` (such as `C:\Windows`, or better, a custom tools folder included in PATH).
+4. Open PowerShell or Command Prompt and verify installation:
+   ```powershell
+   seristack --help
+   ```
+
+
 # Sample stack yaml file
 
 ```yaml
 # description about seristack
-
-# `seristack trigger -c config.yaml`  will run the entire stack.
-# `seristack trigger -c config.yaml -s stack3` will run the particular stack
-# `seristack run -c config.yaml` will init the http server with endpoint. ctrl+c will stop the server process.
 
 stacks:
 - name: stack1                # name of the stack(REQUIRED)
@@ -72,13 +99,36 @@ stacks:
 
 
 server:
-  host: 127.0.0.1      # default is 27.0.0.1 
+  host: 127.0.0.1      # default is 27.0.0.1, use 0.0.0.0 for exposing it to internet. 
   port: 8080           # default is 8080
   endpoint:            # endpoint will connect the path to particular stack and run the cmds publish output.
   - path: /show
     method: GET
     stackName: stack3
+```
 
+# Running the stacks
+
+1. Trigger entire stacks, default is config.yaml.
+
+```bash
+seristack trigger -c config.yaml
+
+or
+
+seristack trigger
+```
+
+2. Run the particular stack.
+
+```bash
+seristack trigger -c config.yaml -s stack3
+```
+
+3. Init the http server with endpoint. ctrl+c will stop the server process.
+
+```bash
+seristack run -c config.yaml
 ```
 
 # License
