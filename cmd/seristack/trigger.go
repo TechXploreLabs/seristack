@@ -57,7 +57,11 @@ func setupTrigger(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 	if stack != "" {
-		config = trigger.SingleStackCheck(config, &stack)
+		config, err = trigger.SingleStackCheck(config, &stack)
+		if err != nil {
+			color.Red("%v", err)
+			os.Exit(1)
+		}
 	}
 	consolidatedresult := trigger.RunTrigger(config, &output)
 	if consolidatedresult != nil {
