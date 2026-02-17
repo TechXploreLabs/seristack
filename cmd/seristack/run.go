@@ -1,8 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
@@ -41,21 +42,19 @@ func init() {
 func runServer(cmd *cobra.Command, args []string) error {
 	config, err := conf.LoadConfig(configFile)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
+		color.Red("Error: failed to load config: %v", err)
+		os.Exit(1)
 	}
 
 	if config.Server == nil {
-		return fmt.Errorf("server configuration is missing")
+		color.Red("Error: server configuration is missing")
+		os.Exit(1)
 	}
 
 	if port != "" {
 		config.Server.Port = port
 	}
 
-	if verbose {
-		fmt.Printf("Loaded config from: %s\n", configFile)
-		fmt.Printf("Registered %d endpoints\n", len(config.Server.Endpoints))
-	}
 	server.Server(config)
 	return nil
 }

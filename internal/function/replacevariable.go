@@ -2,7 +2,6 @@ package function
 
 import (
 	"bytes"
-	"log"
 	"text/template"
 
 	"github.com/TechXploreLabs/seristack/internal/config"
@@ -14,7 +13,7 @@ func ReplaceVariables(vars map[string]string, result *config.Executor, input str
 		data := map[string]any{"Vars": vars}
 		tmpl, err := template.New("shellScript1").Parse(input)
 		if err != nil {
-			log.Fatal(err)
+			return "Error: Variable Template", err
 		}
 		var buf bytes.Buffer
 		if err := tmpl.Execute(&buf, data); err != nil {
@@ -30,7 +29,7 @@ func ReplaceVariables(vars map[string]string, result *config.Executor, input str
 	}
 	tmpl, err := template.New("shellScript1").Parse(input)
 	if err != nil {
-		log.Fatal(err)
+		return "Error: Variable Template", err
 	}
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {

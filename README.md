@@ -66,7 +66,12 @@ stacks:
     workDir: ./                 # working directory to execute the cmds. default is "./"
     continueOnError: false      # if cmds has error, true will not stop execution, false will stop. default is false
     count: 3                    # count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0
-    isSerial: true              # if count = 3 and isSerial = false, runs concurrently (thrice). default is false
+    executionMode: PARALLEL     # if count = 3 and executionMode is PARALLEL, then all three iterations of list 
+                                # cmds execute parallellely . Valid options are, [PARALLEL/STAGE/PIPELINE/SEQUENTIAL]. 
+                                # STAGE = execute all iterations conncurrently, list of cmds execeuted serially
+                                # PIPELINE = execute all iterations serially, list of cmds executed concurrently
+                                # SEQUENTIAL = execute all iterations and theirs cmds serially. default is PARALLEL
+    
     vars:                       # vars take key=value pair of variables. default is empty
       samplekey: samplevalue
     shell: bash                 # shell takes sh as default for linux, darwin and powershell for windows
@@ -83,7 +88,7 @@ stacks:
     workDir: ./
     continueOnError: false
     count: 3
-    isSerial: true
+    executionMode: SEQUENTIAL
     dependsOn: [stack1]          # runs after stack1 completes
     cmds:
       - |

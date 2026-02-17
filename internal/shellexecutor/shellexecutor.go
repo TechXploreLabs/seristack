@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,59 +23,130 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 	shell, shellArg, err := Shellargs(stack.Shell, stack.ShellArg)
 	if err != nil {
 		result.Success = false
-		result.Error = err
+		result.Error = err.Error()
+		return result
+	}
+	if stack.ExecutionMode == "" {
+		stack.ExecutionMode = "PARALLEL"
+	}
+	ExecutionMode := []string{"PARALLEL", "PIPELINE", "STAGE", "SEQUENTIAL"}
+	if !slices.Contains(ExecutionMode, stack.ExecutionMode) {
+		result.Error = fmt.Sprintf("invalid executionMode: %s", stack.ExecutionMode)
+		result.Success = false
 		return result
 	}
 	workDir := filepath.Join(e.SourceDir, stack.WorkDir)
 	var wg sync.WaitGroup
-	errChan := make(chan error, stack.Count)
 	var outputMu sync.Mutex
 	var allOutput bytes.Buffer
+	var errorMsg bytes.Buffer
+	countConcurrent := stack.ExecutionMode == "PARALLEL" || stack.ExecutionMode == "STAGE"
+	commandsConcurrent := stack.ExecutionMode == "PARALLEL" || stack.ExecutionMode == "PIPELINE"
 	for index := range stack.Count {
-		wg.Add(1)
-		executeIteration := func() {
-			defer wg.Done()
-			for _, cmd := range stack.Cmds {
-				indexStr := strconv.Itoa(index)
-				modifiedCmd := strings.ReplaceAll(cmd, "{{.Count.index}}", indexStr)
-				modifiedCmd, err := function.ReplaceVariables(stack.Vars, e, modifiedCmd)
-				if err != nil {
-					errChan <- fmt.Errorf("variable template error. %s", err)
-					return
+		executeIteration := func(idx int) error {
+			if commandsConcurrent {
+				var cmdWg sync.WaitGroup
+				var iterationErrors []error
+				var errorMu sync.Mutex
+				for cmdIndex, cmd := range stack.Cmds {
+					cmdWg.Add(1)
+					go func(cIdx int, command string) {
+						defer cmdWg.Done()
+						indexStr := strconv.Itoa(idx)
+						modifiedCmd := strings.ReplaceAll(command, "{{.Count.index}}", indexStr)
+						var replaceErr error
+						if e.Registry != nil {
+							modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
+						} else {
+							modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, nil, modifiedCmd)
+						}
+						if replaceErr != nil {
+							cmdErr := fmt.Errorf("variable template error : %w", replaceErr)
+							errorMu.Lock()
+							errorMsg.Write([]byte(cmdErr.Error()))
+							iterationErrors = append(iterationErrors, cmdErr)
+							errorMu.Unlock()
+							return
+						}
+						output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
+						outputMu.Lock()
+						if len(output) > 0 {
+							allOutput.Write(output)
+						}
+						outputMu.Unlock()
+						if execErr != nil {
+							cmdErr := fmt.Errorf("command failed : %w\n%s", execErr, output)
+							errorMu.Lock()
+							errorMsg.Write([]byte(cmdErr.Error()))
+							errorMu.Unlock()
+							if !stack.ContinueOnError {
+								errorMu.Lock()
+								iterationErrors = append(iterationErrors, cmdErr)
+								errorMu.Unlock()
+							}
+						}
+					}(cmdIndex, cmd)
 				}
-				output, err := ShellExec(workDir, shell, shellArg, modifiedCmd)
-				outputMu.Lock()
-				if len(output) > 0 {
-					allOutput.Write(output)
+				cmdWg.Wait()
+				if len(iterationErrors) > 0 && !stack.ContinueOnError {
+					return iterationErrors[0]
 				}
-				outputMu.Unlock()
-				if err != nil {
-					if stack.ContinueOnError {
-						fmt.Printf("[%s] Warning: command failed (index %d), continuing: %v\n", stack.Name, index, err)
-						continue
+			} else {
+				for _, cmd := range stack.Cmds {
+					indexStr := strconv.Itoa(idx)
+					modifiedCmd := strings.ReplaceAll(cmd, "{{.Count.index}}", indexStr)
+					var replaceErr error
+					if e.Registry != nil {
+						modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
+					} else {
+						modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, nil, modifiedCmd)
 					}
-					errChan <- fmt.Errorf("command failed (index %d): %w\n%s", index, err, output)
-					return
+					if replaceErr != nil {
+						cmdErr := fmt.Errorf("variable template error : %w", replaceErr)
+						errorMsg.Write([]byte(cmdErr.Error()))
+						return cmdErr
+					}
+					output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
+					outputMu.Lock()
+					if len(output) > 0 {
+						allOutput.Write(output)
+					}
+					outputMu.Unlock()
+					if execErr != nil {
+						cmdErr := fmt.Errorf("command failed : %w\n%s", execErr, output)
+						errorMsg.Write([]byte(cmdErr.Error()))
+						if !stack.ContinueOnError {
+							return cmdErr
+						}
+					}
 				}
 			}
+			return nil
 		}
-		if stack.IsSerial {
-			executeIteration()
+		if countConcurrent {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				executeIteration(idx)
+			}(index)
 		} else {
-			go executeIteration()
+			if err := executeIteration(index); err != nil {
+				break
+			}
 		}
 	}
-	wg.Wait()
-	close(errChan)
-	for err := range errChan {
-		result.Success = false
-		result.Error = err
-		break
+	if countConcurrent {
+		wg.Wait()
 	}
 	if stack.Count == 0 {
 		result.Output = fmt.Sprintf("%s skipped", stack.Name)
 	} else {
 		result.Output = allOutput.String()
+		result.Error = errorMsg.String()
+		result.ContinueOnError = stack.ContinueOnError
+		if result.Error != "" {
+			result.Success = false
+		}
 	}
 	return result
 }
