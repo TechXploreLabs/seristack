@@ -479,11 +479,11 @@ sudo chmod +x /usr/local/bin/seristack</code>
     <span class="keyword">workDir:</span> ./                 <span class="comment"># working directory to execute the cmds. default is "./"</span>
     <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># if cmds has error, true will not stop execution, false will stop. default is false</span>
     <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0</span>
-    <span class="keyword">executionMode:</span> PARALLEL              <span class="comment"># if count = 3 and executionMode is PARALLEL, then all three iterations of list</span>
-                                                                      <span class="comment"># cmds execute parallellely . Valid options are, [PARALLEL/STAGE/PIPELINE/SEQUENTIAL].</span>
-                                                                      <span class="comment"># STAGE = execute all iterations conncurrently, list of cmds execeuted serially</span>
-                                                                      <span class="comment"># PIPELINE = execute all iterations serially, list of cmds executed concurrently</span>
-                                                                      <span class="comment"># SEQUENTIAL = execute all iterations and theirs cmds serially. default is PARALLEL.</span>
+    <span class="keyword">executionMode:</span> PARALLEL     <span class="comment"># if count = 3 and executionMode is PARALLEL, then all three iterations of list</span>
+                                <span class="comment"># cmds execute parallellely . Valid options are, [PARALLEL/STAGE/PIPELINE/SEQUENTIAL].</span>
+                                <span class="comment"># STAGE = execute all iterations conncurrently, list of cmds execeuted serially</span>
+                                <span class="comment"># PIPELINE = execute all iterations serially, list of cmds executed concurrently</span>
+                                <span class="comment"># SEQUENTIAL = execute all iterations and theirs cmds serially. default is PARALLEL.</span>
     <span class="keyword">vars:</span>                       <span class="comment"># vars take key=value pair of variables. default is empty</span>
       <span class="keyword">samplekey:</span> samplevalue
     <span class="keyword">shell:</span> bash                 <span class="comment"># shell takes sh as default for linux, darwin and powershell for windows</span>
