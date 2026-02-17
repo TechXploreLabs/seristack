@@ -56,7 +56,7 @@ stacks:
 			yamlData: `
 stacks:
   - name: "stack2"
-    isSerial: true
+    executionMode: PARALLEL
 server:
   host: "localhost"
   port: "8080"
@@ -68,8 +68,8 @@ server:
 			wantConfig: &Config{
 				Stacks: []Stack{
 					{
-						Name:     "stack2",
-						IsSerial: true,
+						Name:          "stack2",
+						ExecutionMode: "PARALLEL",
 					},
 				},
 				Server: &Serverconfig{

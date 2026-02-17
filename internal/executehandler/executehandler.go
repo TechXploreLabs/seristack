@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/registry"
+	"github.com/TechXploreLabs/seristack/internal/shellexecutor"
+	"github.com/fatih/color"
 )
 
 // Outputs stackname and stack details in dict format
@@ -21,41 +24,77 @@ func Stackmap(e []config.Stack) map[string]*config.Stack {
 
 // Function that call execute stack
 
-func Execute(e *config.Executor, order *[][]string) error {
+func Execute(e *config.Executor, order *[][]string, output *string) []*config.Result {
 	stackMap := Stackmap(e.Config.Stacks)
-
-	for batchNum, batch := range *order {
-		fmt.Printf("\n%s\n", strings.Repeat("=", 80))
-		fmt.Printf("BATCH %d: %v\n", batchNum+1, batch)
-		fmt.Printf("%s\n", strings.Repeat("=", 80))
-
+	var consolidatedresult []*config.Result
+	for _, batch := range *order {
 		var wg sync.WaitGroup
-		errChan := make(chan error, len(batch))
+		resultChan := make(chan *config.Result, len(batch))
 		for _, stackName := range batch {
 			wg.Add(1)
 			stack := stackMap[stackName]
-			go func(s *config.Stack) {
+			go func(stack *config.Stack, output *string) {
 				defer wg.Done()
-				result := ExecuteStack(e, s)
-				registry.Set(e.Registry, s.Name, result)
-				fmt.Printf(`
-########################
-stack: %s
-output:
-%s
-########################
-`, s.Name, result.Output)
-				if !result.Success && !s.ContinueOnError {
-					errChan <- fmt.Errorf("stack '%s' failed: %v", s.Name, result.Error)
+				result := ExecuteStack(e, stack, output)
+				if e.Registry != nil {
+					registry.Set(e.Registry, stack.Name, result)
 				}
-			}(stack)
+				resultChan <- result
+			}(stack, output)
 		}
-
 		wg.Wait()
-		close(errChan)
-		for err := range errChan {
-			return err
+		close(resultChan)
+		if *output != "" {
+			for value := range resultChan {
+				consolidatedresult = append(consolidatedresult, value)
+			}
 		}
 	}
-	return nil
+	return consolidatedresult
+}
+
+// Function for executing stack
+
+func ExecuteStack(e *config.Executor, stack *config.Stack, output *string) *config.Result {
+	start := time.Now()
+	var result *config.Result
+	result = shellexecutor.ExecuteShell(e, stack)
+	result.Duration = time.Since(start)
+	if *output == "" {
+		fmt.Printf(`
+stack: %s
+continueOnError: %t
+duration: %.2fs
+success: %t
+`, stack.Name, result.ContinueOnError, result.Duration.Seconds(), result.Success)
+		if result.Error == "" {
+			color.Green(`
+output:
+┌─
+`)
+			for _, line := range strings.Split(strings.TrimSpace(result.Output), "\n") {
+				color.Green("│ %s\n", line)
+			}
+			color.Green("└─\n")
+		}
+		if result.Error != "" {
+			color.Yellow(`
+output:
+┌─
+`)
+			for _, line := range strings.Split(strings.TrimSpace(result.Output), "\n") {
+				color.Yellow("│ %s\n", line)
+			}
+			color.Yellow("└─\n")
+			color.Red(`
+error:
+┌─
+`)
+			for _, line := range strings.Split(strings.TrimSpace(result.Error), "\n") {
+				color.Red("│ %s\n", line)
+			}
+			color.Red("└─\n")
+		}
+	}
+	return result
 }

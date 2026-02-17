@@ -13,7 +13,7 @@ type Stack struct {
 	ContinueOnError bool              `yaml:"continueOnError,omitempty"`
 	DependsOn       []string          `yaml:"dependsOn,omitempty"`
 	Vars            map[string]string `yaml:"vars,omitempty"`
-	IsSerial        bool              `yaml:"isSerial,omitempty"`
+	ExecutionMode   string            `yaml:"executionMode,omitempty"`
 	Count           int               `yaml:"count,omitempty"`
 	Shell           string            `yaml:"shell,omitempty"`
 	ShellArg        string            `yaml:"shellArg,omitempty"`
@@ -54,11 +54,12 @@ type Executor struct {
 // Result of each stack
 
 type Result struct {
-	Name     string
-	Success  bool
-	Output   string
-	Error    error
-	Duration time.Duration
+	Name            string
+	Success         bool
+	Output          string
+	Error           string
+	Duration        time.Duration
+	ContinueOnError bool
 }
 
 // Shard represents a single shard in the registry

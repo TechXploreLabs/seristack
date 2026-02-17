@@ -15,6 +15,10 @@ func NewRegistry(order *[][]string) *config.Registry {
 	slices.SortFunc(batch_length, func(a, b int) int {
 		return b - a
 	})
+
+	if len(batch_length) == 1 && batch_length[0] == 1 {
+		return nil
+	}
 	shardCount := calculateOptimalShards(batch_length[0])
 	r := &config.Registry{
 		Shards:     make([]*config.Shard, shardCount),
