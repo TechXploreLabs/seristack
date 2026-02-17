@@ -2,7 +2,6 @@ package opsyseristackaction
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/TechXploreLabs/seristack/internal/config"
@@ -24,13 +23,15 @@ type Config struct {
 	Vars       map[string]string
 }
 
-func OpsySeristack(conf Config) Result {
+func OpsySeristack(conf Config) (Result, error) {
 	config, err := config.LoadConfig(conf.ConfigFile)
 	if err != nil {
-		fmt.Printf("failed to load config: %v", err)
-		os.Exit(1)
+		return Result{}, fmt.Errorf("failed to load config: %w", err)
 	}
-	config = trigger.SingleStackCheck(config, &conf.StackName)
+	config, err = trigger.SingleStackCheck(config, &conf.StackName)
+	if err != nil {
+		return Result{}, fmt.Errorf("%w", err)
+	}
 	config.Stacks[0].Vars = conf.Vars
 	output := "yaml"
 	result := trigger.RunTrigger(config, &output)
@@ -42,5 +43,5 @@ func OpsySeristack(conf Config) Result {
 		Duration:        result[0].Duration,
 		ContinueOnError: result[0].ContinueOnError,
 	}
-	return actionResult
+	return actionResult, nil
 }

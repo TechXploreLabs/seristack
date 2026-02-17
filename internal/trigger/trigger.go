@@ -1,6 +1,7 @@
 package trigger
 
 import (
+	"fmt"
 	"os"
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
@@ -10,7 +11,7 @@ import (
 	"github.com/fatih/color"
 )
 
-func SingleStackCheck(config *conf.Config, stack *string) *conf.Config {
+func SingleStackCheck(config *conf.Config, stack *string) (*conf.Config, error) {
 	stackmap := exe.Stackmap(config.Stacks)
 	if newstack, ok := stackmap[*stack]; ok {
 		newstack.DependsOn = nil
@@ -19,10 +20,9 @@ func SingleStackCheck(config *conf.Config, stack *string) *conf.Config {
 			Server: config.Server,
 		}
 	} else {
-		color.Red("stack '%s' not found", stack)
-		os.Exit(1)
+		return nil, fmt.Errorf("Stack not exist.")
 	}
-	return config
+	return config, nil
 }
 
 func RunTrigger(config *conf.Config, output *string) []*conf.Result {
