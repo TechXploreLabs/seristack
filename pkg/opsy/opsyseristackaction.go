@@ -19,19 +19,19 @@ type Result struct {
 }
 
 type Config struct {
-	configfile string
-	stackname  string
-	vars       map[string]string
+	ConfigFile string
+	StackName  string
+	Vars       map[string]string
 }
 
 func OpsySeristack(conf Config) Result {
-	config, err := config.LoadConfig(conf.configfile)
+	config, err := config.LoadConfig(conf.ConfigFile)
 	if err != nil {
 		fmt.Printf("failed to load config: %v", err)
 		os.Exit(1)
 	}
-	config = trigger.SingleStackCheck(config, &conf.stackname)
-	config.Stacks[0].Vars = conf.vars
+	config = trigger.SingleStackCheck(config, &conf.StackName)
+	config.Stacks[0].Vars = conf.Vars
 	output := "yaml"
 	result := trigger.RunTrigger(config, &output)
 	actionResult := Result{
