@@ -45,7 +45,7 @@ func RunTrigger(config *conf.Config, output *string) []*conf.Result {
 	case "":
 		exe.Execute(executor, &order, output)
 		return nil
-	case "yaml":
+	case "yaml", "json":
 		consolidatedresult := exe.Execute(executor, &order, output)
 		return consolidatedresult
 	}

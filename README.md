@@ -1,4 +1,4 @@
-# seristack
+# seristack(v0.0.4)
 
 **Run shell workflows via CLI or HTTP — no CI, no cron, no Makefiles.**
 
@@ -94,6 +94,8 @@ stacks:
       - |
         echo "Using output from previous stack"
         echo "count={{.Result.stack1}}"     # to use result of previous batch stack output for substitution
+      - echo "Using output from previous stack"
+        echo "count={{.Result.stack1}}"
 
   - name: stack3
     workDir: ./
@@ -108,7 +110,7 @@ stacks:
 server:
   host: 127.0.0.1      # default is 127.0.0.1, use 0.0.0.0 for exposing it to internet
   port: 8080           # default is 8080
-  endpoint:            # endpoint will connect the path to particular stack and run the cmds, publish output
+  endpoints:            # endpoint will connect the path to particular stack and run the cmds, publish output
     - path: /show
       method: GET
       stackName: stack3

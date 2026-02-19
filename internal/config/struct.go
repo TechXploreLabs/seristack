@@ -33,7 +33,7 @@ type Endpoint struct {
 type Serverconfig struct {
 	Host      string     `yaml:"host,omitempty"`
 	Port      string     `yaml:"port,omitempty"`
-	Endpoints []Endpoint `yaml:"endpoint"`
+	Endpoints []Endpoint `yaml:"endpoints"`
 }
 
 // Root configuration
@@ -54,12 +54,12 @@ type Executor struct {
 // Result of each stack
 
 type Result struct {
-	Name            string
-	Success         bool
-	Output          string
-	Error           string
-	Duration        time.Duration
-	ContinueOnError bool
+	Name            string        `json:"name" yaml:"name"`
+	Success         bool          `json:"success" yaml:"success"`
+	Output          string        `json:"output" yaml:"output"`
+	Error           string        `json:"error" yaml:"error"`
+	Duration        time.Duration `json:"duration" yaml:"duration"`
+	ContinueOnError bool          `json:"continueOnError" yaml:"continueOnError"`
 }
 
 // Shard represents a single shard in the registry

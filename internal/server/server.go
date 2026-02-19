@@ -7,12 +7,12 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/executehandler"
-	"github.com/TechXploreLabs/seristack/internal/function"
-	"github.com/TechXploreLabs/seristack/internal/shellexecutor"
+	"gopkg.in/yaml.v3"
 )
 
 func Server(config *conf.Config) {
@@ -45,33 +45,20 @@ func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[st
 			http.Error(w, fmt.Sprintf("Failed to parse form: %v", err), http.StatusBadRequest)
 			return
 		}
+		sourceDir, _ := os.Getwd()
+		executor := &conf.Executor{
+			Registry:  nil,
+			Config:    nil,
+			SourceDir: sourceDir,
+		}
 		vars := substituteVars(r)
-
-		shell, shellArg, err := shellexecutor.Shellargs(stackMap[endpoint.Stackname].Shell, stackMap[endpoint.Stackname].ShellArg)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Shell configuration error: %v", err), http.StatusInternalServerError)
-			log.Printf("Shell config error for %s: %v", endpoint.Path, err)
-			return
-		}
-		var allOutput bytes.Buffer
-		for _, cmd := range stackMap[endpoint.Stackname].Cmds {
-			cmd, err := function.ReplaceVariables(vars, nil, cmd)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Variable Subtitution failed: %s", err), http.StatusInternalServerError)
-				log.Printf("Variable Subtitution failed %s", err)
-				return
-			}
-			output, err := shellexecutor.ShellExec(stackMap[endpoint.Stackname].WorkDir, shell, shellArg, cmd)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Command execution failed: %v", err), http.StatusInternalServerError)
-				log.Printf("Error executing command for %s: %v", endpoint.Path, err)
-				return
-			}
-			allOutput.Write(output)
-		}
-		w.Header().Set("Content-Type", "text/plain")
+		stackMap[endpoint.Stackname].Vars = vars
+		output := "yaml"
+		result := executehandler.ExecuteStack(executor, stackMap[endpoint.Stackname], &output)
+		yamldata, _ := yaml.Marshal(result)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(allOutput.Bytes())
+		w.Write(yamldata)
 		log.Printf("%s %s - Params: %v - Success",
 			r.Method, endpoint.Path, r.URL.Query())
 	}
@@ -90,8 +77,7 @@ func substituteVars(r *http.Request) map[string]string {
 	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		body, err := io.ReadAll(r.Body)
 		if err == nil {
-			r.Body = io.NopCloser(bytes.NewBuffer(body)) // Restore body
-
+			r.Body = io.NopCloser(bytes.NewBuffer(body))
 			var jsonVars map[string]interface{}
 			if err := json.Unmarshal(body, &jsonVars); err == nil {
 				for k, v := range jsonVars {
