@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 - Run tasks as HTTP API endpoints (run)
 
 Visit https://github.com/TechXploreLabs/seristack for more information.`,
-	Version: "0.0.2",
+	Version: "0.0.4",
 }
 
 func Execute() {
@@ -36,5 +36,5 @@ func Execute() {
 }
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "config.yaml", "config file path")
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "config.yaml", "config file")
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -27,28 +28,23 @@ var triggerCmd = &cobra.Command{
 Examples:
   # Execute all stacks in config.yaml
   seristack trigger
-  
-  # Execute with custom config file
-  seristack trigger --config myconfig.yaml
-  
-  # Execute particular stack
-  seristack trigger --stack stackname
-  
-  # Output in yaml format
-  seristack trigger -o yaml `,
+
+  # Ececute specific stack
+  seristack trigger -s stackname 
+ `,
 	RunE: setupTrigger,
 }
 
 func init() {
 	rootCmd.AddCommand(triggerCmd)
 	triggerCmd.Flags().StringVarP(&stack, "stack", "s", "", "run a particular stack")
-	triggerCmd.Flags().StringVarP(&output, "output", "o", "", "output format for result")
+	triggerCmd.Flags().StringVarP(&output, "output", "o", "", "output format for result yaml or json")
 }
 
 func setupTrigger(cmd *cobra.Command, args []string) error {
-	outputformat := []string{"yaml"}
+	outputformat := []string{"yaml", "json"}
 	if output != "" && !slices.Contains(outputformat, output) {
-		color.Red("supported output format is yaml")
+		color.Red("supported output format is yaml/json")
 		os.Exit(1)
 	}
 	config, err := conf.LoadConfig(configFile)
@@ -65,9 +61,13 @@ func setupTrigger(cmd *cobra.Command, args []string) error {
 	}
 	consolidatedresult := trigger.RunTrigger(config, &output)
 	if consolidatedresult != nil {
-		yamldata, _ := yaml.Marshal(&consolidatedresult)
-		fmt.Printf("result:\n")
-		fmt.Println(string(yamldata))
+		if output == "yaml" {
+			yamldata, _ := yaml.Marshal(map[string]any{"result": &consolidatedresult})
+			fmt.Println(string(yamldata))
+		} else {
+			jsondata, _ := json.MarshalIndent(map[string]any{"result": &consolidatedresult}, "", " ")
+			fmt.Println(string(jsondata))
+		}
 	}
 	return nil
 }
