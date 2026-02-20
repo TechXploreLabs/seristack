@@ -95,7 +95,7 @@ stacks:
         echo "Using output from previous stack"
         echo "count={{.Result.stack1}}"     # to use result of previous batch stack output for substitution
       - echo "Using output from previous stack"
-        echo "count={{.Result.stack1}}"
+      - echo "count={{.Result.stack1}}"
 
   - name: stack3
     workDir: ./
