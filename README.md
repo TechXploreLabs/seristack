@@ -1,6 +1,6 @@
 # seristack(v0.0.4)
 
-**Run shell workflows via CLI or HTTP — no CI, no cron, no Makefiles.**
+**Run shell workflows via CLI or HTTP
 
 Seristack is a lightweight automation engine designed to bridge the gap between local task execution and remote triggers. Define your stacks in YAML, manage dependencies, and expose your automation via a built-in HTTP server.
 
