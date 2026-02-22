@@ -32,9 +32,8 @@ func OpsySeristack(conf Config) (Result, error) {
 	if err != nil {
 		return Result{}, fmt.Errorf("%w", err)
 	}
-	config.Stacks[0].Vars = conf.Vars
 	output := "yaml"
-	result := trigger.RunTrigger(config, &output)
+	result := trigger.RunTrigger(config, &output, &conf.Vars)
 	actionResult := Result{
 		Name:            result[0].Name,
 		Success:         result[0].Success,

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -34,27 +34,20 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-
-	// Run-specific flags
 	runCmd.Flags().StringVarP(&port, "port", "p", "", "server port (overrides config)")
 }
 
 func runServer(cmd *cobra.Command, args []string) error {
 	config, err := conf.LoadConfig(configFile)
 	if err != nil {
-		color.Red("Error: failed to load config: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("%s", color.RedString("Error: [failed to load config], %v", err))
 	}
-
 	if config.Server == nil {
-		color.Red("Error: server configuration is missing")
-		os.Exit(1)
+		return fmt.Errorf("%s", color.RedString("Error: server configuration is missing"))
 	}
-
 	if port != "" {
 		config.Server.Port = port
 	}
-
 	server.Server(config)
 	return nil
 }

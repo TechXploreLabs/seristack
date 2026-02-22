@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 - Run tasks as HTTP API endpoints (run)
 
 Visit https://github.com/TechXploreLabs/seristack for more information.`,
-	Version: "0.0.4",
+	Version: "0.0.5",
 }
 
 func Execute() {
