@@ -52,7 +52,7 @@ func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[st
 			SourceDir: sourceDir,
 		}
 		vars := substituteVars(r)
-		stackMap[endpoint.Stackname].Vars = vars
+		stackMap[endpoint.Stackname].Vars = executehandler.MergeMaps(stackMap[endpoint.Stackname].Vars, vars)
 		output := "yaml"
 		result := executehandler.ExecuteStack(executor, stackMap[endpoint.Stackname], &output)
 		yamldata, _ := yaml.Marshal(result)

@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"maps"
+
 	"github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/registry"
 	"github.com/TechXploreLabs/seristack/internal/shellexecutor"
@@ -22,9 +24,18 @@ func Stackmap(e []config.Stack) map[string]*config.Stack {
 	return stackMap
 }
 
+// Vars override
+
+func MergeMaps(base, override map[string]string) map[string]string {
+	result := make(map[string]string)
+	maps.Copy(result, base)
+	maps.Copy(result, override)
+	return result
+}
+
 // Function that call execute stack
 
-func Execute(e *config.Executor, order *[][]string, output *string) []*config.Result {
+func Execute(e *config.Executor, order *[][]string, output *string, varsMap *map[string]string) []*config.Result {
 	stackMap := Stackmap(e.Config.Stacks)
 	var consolidatedresult []*config.Result
 	for _, batch := range *order {
@@ -35,6 +46,9 @@ func Execute(e *config.Executor, order *[][]string, output *string) []*config.Re
 			stack := stackMap[stackName]
 			go func(stack *config.Stack, output *string) {
 				defer wg.Done()
+				if varsMap != nil {
+					stack.Vars = MergeMaps(stack.Vars, *varsMap)
+				}
 				result := ExecuteStack(e, stack, output)
 				if e.Registry != nil {
 					registry.Set(e.Registry, stack.Name, result)

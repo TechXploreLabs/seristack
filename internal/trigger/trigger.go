@@ -25,7 +25,7 @@ func SingleStackCheck(config *conf.Config, stack *string) (*conf.Config, error) 
 	return config, nil
 }
 
-func RunTrigger(config *conf.Config, output *string) []*conf.Result {
+func RunTrigger(config *conf.Config, output *string, varsMap *map[string]string) []*conf.Result {
 	order, err := function.ExecutionOrder(config.Stacks)
 	if err != nil {
 		color.Red("dependency resolution failed: %v", err)
@@ -43,10 +43,10 @@ func RunTrigger(config *conf.Config, output *string) []*conf.Result {
 	}
 	switch o := *output; o {
 	case "":
-		exe.Execute(executor, &order, output)
+		exe.Execute(executor, &order, output, varsMap)
 		return nil
 	case "yaml", "json":
-		consolidatedresult := exe.Execute(executor, &order, output)
+		consolidatedresult := exe.Execute(executor, &order, output, varsMap)
 		return consolidatedresult
 	}
 	return nil
