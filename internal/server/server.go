@@ -12,14 +12,16 @@ import (
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/executehandler"
+	"github.com/TechXploreLabs/seristack/internal/trigger"
 	"gopkg.in/yaml.v3"
 )
 
 func Server(config *conf.Config) {
 	mux := http.NewServeMux()
 	stackMap := executehandler.Stackmap(config.Stacks)
+	RegisterTriggerHandler(mux, config)
 	for _, endpoint := range config.Server.Endpoints {
-		RegisterHandler(mux, endpoint, stackMap)
+		RegisterHandler(mux, endpoint, stackMap, config)
 	}
 	port := config.Server.Port
 	host := config.Server.Host
@@ -35,8 +37,29 @@ func Server(config *conf.Config) {
 	}
 }
 
-func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[string]*conf.Stack) {
+func RegisterTriggerHandler(mux *http.ServeMux, config *conf.Config) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed. Expected GET", http.StatusMethodNotAllowed)
+			return
+		}
+		output := "yaml"
+		result := trigger.RunTrigger(config, &output, nil)
+		yamldata, _ := yaml.Marshal(result)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(yamldata)
+		log.Printf("%s /trigger - Params: %v", r.Method, r.URL.Query())
+	}
+
+	mux.HandleFunc("/trigger", handler)
+	fmt.Println("Registered: GET /trigger (default)")
+}
+
+func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[string]*conf.Stack, config *conf.Config) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		sourceDir, _ := os.Getwd()
+		output := "yaml"
 		if endpoint.Method != "" && r.Method != strings.ToUpper(endpoint.Method) {
 			http.Error(w, fmt.Sprintf("Method not allowed. Expected %s", endpoint.Method), http.StatusMethodNotAllowed)
 			return
@@ -45,7 +68,6 @@ func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[st
 			http.Error(w, fmt.Sprintf("Failed to parse form: %v", err), http.StatusBadRequest)
 			return
 		}
-		sourceDir, _ := os.Getwd()
 		executor := &conf.Executor{
 			Registry:  nil,
 			Config:    nil,
@@ -53,7 +75,6 @@ func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[st
 		}
 		vars := substituteVars(r)
 		stackMap[endpoint.Stackname].Vars = vars
-		output := "yaml"
 		result := executehandler.ExecuteStack(executor, stackMap[endpoint.Stackname], &output)
 		yamldata, _ := yaml.Marshal(result)
 		w.Header().Set("Content-Type", "application/json")
