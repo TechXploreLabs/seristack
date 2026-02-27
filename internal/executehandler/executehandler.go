@@ -46,7 +46,9 @@ func Execute(e *config.Executor, order *[][]string, output *string, varsMap *map
 			stack := stackMap[stackName]
 			go func(stack *config.Stack, output *string) {
 				defer wg.Done()
-				stack.Vars = MergeMaps(stack.Vars, *varsMap)
+				if varsMap != nil {
+					stack.Vars = MergeMaps(stack.Vars, *varsMap)
+				}
 				result := ExecuteStack(e, stack, output)
 				if e.Registry != nil {
 					registry.Set(e.Registry, stack.Name, result)

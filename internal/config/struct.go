@@ -9,6 +9,7 @@ import (
 
 type Stack struct {
 	Name            string            `yaml:"name"`
+	Description     string            `yaml:"description,omitempty"`
 	WorkDir         string            `yaml:"workDir,omitempty"`
 	ContinueOnError bool              `yaml:"continueOnError,omitempty"`
 	DependsOn       []string          `yaml:"dependsOn,omitempty"`
