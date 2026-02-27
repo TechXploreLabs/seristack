@@ -1,4 +1,4 @@
-# seristack(v0.0.5)
+# seristack(v0.1.0)
 
 **Run shell workflows via CLI or HTTP
 
@@ -14,6 +14,7 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
     🧩 Variable substitution using templates
     📦 Share output between stacks
     🌐 Expose stacks as HTTP endpoints
+    🧠 Run as an MCP server for IDE integrations
     🛠 Works with Bash, sh, and PowerShell
 
 ## Installation
@@ -64,6 +65,9 @@ brew install TechXploreLabs/tap/seristack
 stacks:
   - name: stack1                # name of the stack (REQUIRED)
     workDir: ./                 # working directory to execute the cmds. default is "./"
+    description: Used for printing  
+                  welcome message               # used for adding the stack as tool in mcp server, if descrption is empty then 
+                                                # it won't be added
     continueOnError: false      # if cmds has error, true will not stop execution, false will stop. default is false
     count: 3                    # count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0
     executionMode: PARALLEL     # if count = 3 and executionMode is PARALLEL, then all three iterations of list 
@@ -138,6 +142,12 @@ seristack trigger -c config.yaml -s stack3
 
 ```bash
 seristack run -c config.yaml
+```
+
+4. Init the mcpserver. ctrl+c will stop the server process.
+
+```bash
+seristack mcp 
 ```
 
 # License

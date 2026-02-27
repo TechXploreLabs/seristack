@@ -23,14 +23,14 @@ var mcpCmd = &cobra.Command{
 	Long: `Run starts an HTTP server that exposes your tasks as REST API endpoints.
 	
 Examples:
-  # Start server with default config
-  seristack run
+  # Start stdio server with default config
+  seristack mcp
   
-  # Start with custom port
-  seristack run --port 3000
+  # Start streamableHTTP
+  seristack mcp --type streamableHTTP --port 3000
   
-  # Start with custom config and host
-  seristack run --config myconfig.yaml --port 9090`,
+  # Start sse
+  seristack run --config myconfig.yaml --type sse  --port 9090`,
 	RunE: mcpServer,
 }
 

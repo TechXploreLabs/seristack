@@ -3,6 +3,7 @@ package mcpserver
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -34,14 +35,14 @@ func McpServer(config *conf.Config, transport string, port string, addr string) 
 			addr = "127.0.0.1"
 		}
 		sseServer := server.NewSSEServer(s, server.WithBaseURL("http://"+addr+":"+port))
-		fmt.Printf("MCP SSE server starting on %s\n", port)
+		fmt.Printf("MCP SSE server starting on http://%s:%s/sse\n", addr, port)
 		return sseServer.Start(":" + port)
 	case "streamableHTTP":
 		if port == "" {
 			port = "8080"
 		}
 		httpServer := server.NewStreamableHTTPServer(s)
-		fmt.Printf("MCP Streamable HTTP server starting on %s\n", port)
+		fmt.Printf("MCP Streamable HTTP server starting on http://127.0.0.1:%s/mcp\n", port)
 		return httpServer.Start(":" + port)
 	default: // stdio
 		return server.ServeStdio(s)
@@ -57,9 +58,9 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 			mcp.Description(fmt.Sprintf("Variable '%s'for stack '%s'", varName, stack.Name)),
 		))
 	}
-
 	tool := mcp.NewTool(stack.Name, options...)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		log.Printf("Tool called: tool: %s, args: %s", stack.Name, req.Params.Arguments)
 		output := "yaml"
 		sourceDir, _ := os.Getwd()
 		vars := make(map[string]string)
@@ -76,6 +77,7 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 		stackMap[stack.Name].Vars = vars
 		result := executehandler.ExecuteStack(executor, stackMap[stack.Name], &output)
 		yamldata, _ := yaml.Marshal(result)
+		log.Printf("Tool execution completed: tool: %s", stack.Name)
 		return mcp.NewToolResultText(string(yamldata)), nil
 	})
 }
