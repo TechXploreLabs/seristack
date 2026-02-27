@@ -44,8 +44,8 @@ func McpServer(config *conf.Config, transport string, port string, addr string) 
 		httpServer := server.NewStreamableHTTPServer(s)
 		fmt.Printf("MCP Streamable HTTP server starting on http://127.0.0.1:%s/mcp\n", port)
 		return httpServer.Start(":" + port)
-	default: // stdio
-		return server.ServeStdio(s)
+	default:
+		return fmt.Errorf("streamableHTTP or sse")
 	}
 }
 

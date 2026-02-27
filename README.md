@@ -147,7 +147,7 @@ seristack run -c config.yaml
 4. Init the mcpserver. ctrl+c will stop the server process.
 
 ```bash
-seristack mcp 
+seristack mcp -t streamableHTTP
 ```
 
 # License
