@@ -2,7 +2,7 @@
 
 Daily grind: Provision resources, check costs, rotate credentials, clean up stale infrastructure, run compliance checks.
 
-The kind of work that's "easy but you have to remember to do it.
+The kind of work that's "easy but you have to remember to do it."
 
 ```yaml
 stacks:
