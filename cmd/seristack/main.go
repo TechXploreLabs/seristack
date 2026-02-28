@@ -20,12 +20,13 @@ var rootCmd = &cobra.Command{
 	Short:         "Seristack - A modern task automation tool",
 	SilenceErrors: true,
 	SilenceUsage:  true,
-	Long: `Seristack is a task automation tool that allows you to:
-- Execute tasks with dependency management (trigger)
-- Run tasks as HTTP API endpoints (run)
+	Long: `
+Visit https://seristack.getsaas.in/ for more information.
 
-Visit https://github.com/TechXploreLabs/seristack for more information.`,
-	Version: "0.0.5",
+See our work on https://github.com/TechXploreLabs/seristack.
+
+Apache 2.0 License.`,
+	Version: "0.1.1",
 }
 
 func Execute() {

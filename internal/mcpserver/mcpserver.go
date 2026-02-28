@@ -64,18 +64,19 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 		output := "yaml"
 		sourceDir, _ := os.Getwd()
 		vars := make(map[string]string)
-		if args, ok := req.Params.Arguments.(map[string]interface{}); ok {
+		if args, ok := req.Params.Arguments.(map[string]any); ok {
 			for k, v := range args {
 				vars[k] = fmt.Sprintf("%v", v)
 			}
 		}
+		stackCopy := *stackMap[stack.Name]
+		stackCopy.Vars = executehandler.MergeMaps(stackCopy.Vars, vars)
 		executor := &conf.Executor{
 			Registry:  nil,
 			Config:    nil,
 			SourceDir: sourceDir,
 		}
-		stackMap[stack.Name].Vars = vars
-		result := executehandler.ExecuteStack(executor, stackMap[stack.Name], &output)
+		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
 		yamldata, _ := yaml.Marshal(result)
 		log.Printf("Tool execution completed: tool: %s", stack.Name)
 		return mcp.NewToolResultText(string(yamldata)), nil

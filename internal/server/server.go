@@ -74,8 +74,9 @@ func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[st
 			SourceDir: sourceDir,
 		}
 		vars := substituteVars(r)
-		stackMap[endpoint.Stackname].Vars = vars
-		result := executehandler.ExecuteStack(executor, stackMap[endpoint.Stackname], &output)
+		stackCopy := *stackMap[endpoint.Stackname]
+		stackCopy.Vars = executehandler.MergeMaps(stackCopy.Vars, vars)
+		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
 		yamldata, _ := yaml.Marshal(result)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
