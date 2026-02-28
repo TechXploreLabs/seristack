@@ -19,11 +19,8 @@ var (
 // runCmd represents the run command
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
-	Short: "Start HTTP server to expose tasks as API endpoints",
-	Long: `Run starts an HTTP server that exposes your tasks as REST API endpoints.
-	
-Examples:
-  
+	Short: "Start MCP server, expose stack as tools",
+	Long: `
   # Start streamableHTTP
   seristack mcp --type streamableHTTP --port 3000
   
