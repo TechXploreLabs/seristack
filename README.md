@@ -18,7 +18,7 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
     🛠 Works with Bash, sh, and PowerShell
 
 
-![HIGH LEVEL USAGE DIAGRAML](seristack_image.jpg)
+![HIGH LEVEL USAGE DIAGRAML](seristack_image.png)
 
 ## Installation
 
