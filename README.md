@@ -17,6 +17,9 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
     🧠 Run as an MCP server for IDE integrations
     🛠 Works with Bash, sh, and PowerShell
 
+
+![HIGH LEVEL USAGE DIAGRAML](seristack_image.jpg)
+
 ## Installation
 
 ### Using Homebrew (Mac and Linux)
