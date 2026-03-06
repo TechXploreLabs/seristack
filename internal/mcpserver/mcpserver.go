@@ -17,7 +17,7 @@ import (
 func McpServer(config *conf.Config, transport string, port string, addr string) error {
 	s := server.NewMCPServer(
 		"seristack",
-		"0.0.6",
+		"0.1.2",
 		server.WithToolCapabilities(true),
 	)
 	stackMap := executehandler.Stackmap(config.Stacks)
@@ -36,14 +36,17 @@ func McpServer(config *conf.Config, transport string, port string, addr string) 
 		}
 		sseServer := server.NewSSEServer(s, server.WithBaseURL("http://"+addr+":"+port))
 		fmt.Printf("MCP SSE server starting on http://%s:%s/sse\n", addr, port)
-		return sseServer.Start(":" + port)
+		return sseServer.Start(addr + ":" + port)
 	case "streamableHTTP":
 		if port == "" {
 			port = "8080"
 		}
+		if addr == "" {
+			addr = "127.0.0.1"
+		}
 		httpServer := server.NewStreamableHTTPServer(s)
-		fmt.Printf("MCP Streamable HTTP server starting on http://127.0.0.1:%s/mcp\n", port)
-		return httpServer.Start(":" + port)
+		fmt.Printf("MCP Streamable HTTP server starting on http://%s:%s/mcp\n", addr, port)
+		return httpServer.Start(addr + ":" + port)
 	default:
 		return fmt.Errorf("streamableHTTP or sse")
 	}
