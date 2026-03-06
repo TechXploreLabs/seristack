@@ -25,7 +25,7 @@ var mcpCmd = &cobra.Command{
   seristack mcp --type streamableHTTP --port 3000
   
   # Start sse
-  seristack run --config myconfig.yaml --type sse  --port 9090`,
+  seristack run --config myconfig.yaml --type sse  --port 9090 --addr 0.0.0.0`,
 	RunE: mcpServer,
 }
 
@@ -33,13 +33,13 @@ func init() {
 	rootCmd.AddCommand(mcpCmd)
 	mcpCmd.Flags().StringVarP(&port, "port", "p", "", "mcp server port (overrides config)")
 	mcpCmd.Flags().StringVarP(&mcptype, "type", "t", "", "mcp server type sse/streamableHTTP")
-	mcpCmd.Flags().StringVarP(&addr, "addr", "a", "", "addr is 127.0.0.1,0.0.0.0")
+	mcpCmd.Flags().StringVarP(&addr, "addr", "a", "", "addr is 127.0.0.1 or 0.0.0.0")
 }
 
 func mcpServer(cmd *cobra.Command, args []string) error {
 	mcp_type := []string{"sse", "streamableHTTP"}
 	if mcptype != "" && !slices.Contains(mcp_type, mcptype) {
-		return fmt.Errorf("%s", color.RedString("Error: supported mcp type stdio/sse/streamableHTTP"))
+		return fmt.Errorf("%s", color.RedString("Error: supported mcp type sse/streamableHTTP"))
 	}
 	config, err := conf.LoadConfig(configFile)
 	if err != nil {

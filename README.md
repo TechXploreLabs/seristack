@@ -1,4 +1,4 @@
-# seristack(v0.1.1)
+# seristack(v0.1.2)
 
 **Run shell workflows via CLI or HTTP
 
