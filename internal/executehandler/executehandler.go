@@ -58,13 +58,21 @@ func Execute(e *config.Executor, order *[][]string, output *string, varsMap *map
 		}
 		wg.Wait()
 		close(resultChan)
-		if *output != "" {
-			for value := range resultChan {
-				consolidatedresult = append(consolidatedresult, value)
+		batchFailed := false
+		for result := range resultChan {
+			consolidatedresult = append(consolidatedresult, result)
+			if !result.Success && !result.ContinueOnError {
+				batchFailed = true
 			}
 		}
+		if batchFailed {
+			break
+		}
 	}
-	return consolidatedresult
+	if *output != "" {
+		return consolidatedresult
+	}
+	return nil
 }
 
 // Function for executing stack
