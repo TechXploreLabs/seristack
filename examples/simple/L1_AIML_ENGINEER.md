@@ -42,3 +42,13 @@ stacks:
 ```
 
 Your ML pipeline shouldn't live in a Jupyter notebook someone has to manually run top-to-bottom. Make it triggerable, version it, and let evaluation be the gatekeeper — not a human.
+
+To run it has pipeline
+```bash
+seristack trigger
+```
+
+To run it http server
+```bash
+seristack run
+```

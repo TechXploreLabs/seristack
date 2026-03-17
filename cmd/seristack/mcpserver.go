@@ -31,9 +31,9 @@ var mcpCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(mcpCmd)
-	mcpCmd.Flags().StringVarP(&port, "port", "p", "", "mcp server port (overrides config)")
+	mcpCmd.Flags().StringVarP(&port, "port", "p", "8080", "mcp server port (overrides config)")
 	mcpCmd.Flags().StringVarP(&mcptype, "type", "t", "", "mcp server type sse/streamableHTTP")
-	mcpCmd.Flags().StringVarP(&addr, "addr", "a", "", "addr is 127.0.0.1 or 0.0.0.0")
+	mcpCmd.Flags().StringVarP(&addr, "addr", "a", "127.0.0.1", "addr is 127.0.0.1 or 0.0.0.0")
 }
 
 func mcpServer(cmd *cobra.Command, args []string) error {

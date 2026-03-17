@@ -16,25 +16,38 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Server(config *conf.Config) {
+func Server(config *conf.Config, port *string, addr *string, skip *bool) error {
 	mux := http.NewServeMux()
+	hasRoutes := false
+	var registeredPatterns = make(map[string]bool)
 	stackMap := executehandler.Stackmap(config.Stacks)
-	RegisterTriggerHandler(mux, config)
-	for _, endpoint := range config.Server.Endpoints {
-		RegisterHandler(mux, endpoint, stackMap, config)
+	if !*skip {
+		RegisterTriggerHandler(mux, config)
+		hasRoutes = true
 	}
-	port := config.Server.Port
-	host := config.Server.Host
-	if port == "" {
-		port = "8080"
+	for _, stack := range config.Stacks {
+		if stack.Method != "" {
+			pattern := stack.Name
+			if stack.UrlPath != "" {
+				pattern = stack.UrlPath
+			}
+			if registeredPatterns[pattern] {
+				return fmt.Errorf("duplicate route registration: pattern %q is already registered or urlPath already resgistered", stack.Name)
+			}
+			RegisterHandler(mux, stack, stackMap)
+			hasRoutes = true
+			registeredPatterns[pattern] = true
+		}
 	}
-	if host == "" {
-		host = "127.0.0.1"
+	if hasRoutes {
+		fmt.Printf("Server starting on http://%s:%s\n", *addr, *port)
+		if err := http.ListenAndServe(*addr+":"+*port, mux); err != nil {
+			return fmt.Errorf("server listen error: %w", err)
+		}
+	} else {
+		return fmt.Errorf("No endpoint to serve")
 	}
-	fmt.Printf("Server starting on http://%s:%s\n", host, port)
-	if err := http.ListenAndServe(host+":"+port, mux); err != nil {
-		log.Fatal(err)
-	}
+	return nil
 }
 
 func RegisterTriggerHandler(mux *http.ServeMux, config *conf.Config) {
@@ -49,19 +62,19 @@ func RegisterTriggerHandler(mux *http.ServeMux, config *conf.Config) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(yamldata)
-		log.Printf("%s /trigger - Params: %v", r.Method, r.URL.Query())
+		log.Printf("%s / - Params: %v", r.Method, r.URL.Query())
 	}
 
-	mux.HandleFunc("/trigger", handler)
-	fmt.Println("Registered: GET /trigger (default)")
+	mux.HandleFunc("/", handler)
+	fmt.Println("Registered: GET / (default)")
 }
 
-func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[string]*conf.Stack, config *conf.Config) {
+func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*conf.Stack) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		sourceDir, _ := os.Getwd()
 		output := "yaml"
-		if endpoint.Method != "" && r.Method != strings.ToUpper(endpoint.Method) {
-			http.Error(w, fmt.Sprintf("Method not allowed. Expected %s", endpoint.Method), http.StatusMethodNotAllowed)
+		if stack.Method != "" && r.Method != strings.ToUpper(stack.Method) {
+			http.Error(w, fmt.Sprintf("Method not allowed. Expected %s", stack.Method), http.StatusMethodNotAllowed)
 			return
 		}
 		if err := r.ParseForm(); err != nil {
@@ -74,7 +87,7 @@ func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[st
 			SourceDir: sourceDir,
 		}
 		vars := substituteVars(r)
-		stackCopy := *stackMap[endpoint.Stackname]
+		stackCopy := *stackMap[stack.Name]
 		stackCopy.Vars = executehandler.MergeMaps(stackCopy.Vars, vars)
 		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
 		yamldata, _ := yaml.Marshal(result)
@@ -82,10 +95,16 @@ func RegisterHandler(mux *http.ServeMux, endpoint conf.Endpoint, stackMap map[st
 		w.WriteHeader(http.StatusOK)
 		w.Write(yamldata)
 		log.Printf("%s %s - Params: %v - Success",
-			r.Method, endpoint.Path, r.URL.Query())
+			r.Method, stack.Name, r.URL.Query())
 	}
-	mux.HandleFunc(endpoint.Path, handler)
-	fmt.Printf("Registered: %s %s\n", endpoint.Method, endpoint.Path)
+	if stack.UrlPath == "" {
+		mux.HandleFunc("/"+stack.Name, handler)
+		fmt.Printf("Registered: %s /%s\n", stack.Method, stack.Name)
+	} else {
+		mux.HandleFunc(stack.UrlPath, handler)
+		fmt.Printf("Registered: %s %s\n", stack.Method, stack.UrlPath)
+	}
+
 }
 
 func substituteVars(r *http.Request) map[string]string {

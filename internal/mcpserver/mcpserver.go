@@ -20,33 +20,37 @@ func McpServer(config *conf.Config, transport string, port string, addr string) 
 		"0.1.2",
 		server.WithToolCapabilities(true),
 	)
+	hasRoutes := false
+	var registeredPatterns = make(map[string]bool)
 	stackMap := executehandler.Stackmap(config.Stacks)
 	for _, stack := range config.Stacks {
 		if stack.Description != "" {
+			if registeredPatterns[stack.Name] {
+				return fmt.Errorf("duplicate tool registration:  %q ", stack.Name)
+			}
 			registerStackTool(s, stack, stackMap)
+			hasRoutes = true
+			registeredPatterns[stack.Name] = true
 		}
 	}
 	switch transport {
 	case "sse":
-		if port == "" {
-			port = "8080"
+		if hasRoutes {
+			sseServer := server.NewSSEServer(s, server.WithBaseURL("http://"+addr+":"+port))
+			fmt.Printf("MCP SSE server starting on http://%s:%s/sse\n", addr, port)
+			return sseServer.Start(addr + ":" + port)
+		} else {
+			return fmt.Errorf("No tools to add")
 		}
-		if addr == "" {
-			addr = "127.0.0.1"
-		}
-		sseServer := server.NewSSEServer(s, server.WithBaseURL("http://"+addr+":"+port))
-		fmt.Printf("MCP SSE server starting on http://%s:%s/sse\n", addr, port)
-		return sseServer.Start(addr + ":" + port)
+
 	case "streamableHTTP":
-		if port == "" {
-			port = "8080"
+		if hasRoutes {
+			httpServer := server.NewStreamableHTTPServer(s)
+			fmt.Printf("MCP Streamable HTTP server starting on http://%s:%s/mcp\n", addr, port)
+			return httpServer.Start(addr + ":" + port)
+		} else {
+			return fmt.Errorf("No tools to add")
 		}
-		if addr == "" {
-			addr = "127.0.0.1"
-		}
-		httpServer := server.NewStreamableHTTPServer(s)
-		fmt.Printf("MCP Streamable HTTP server starting on http://%s:%s/mcp\n", addr, port)
-		return httpServer.Start(addr + ":" + port)
 	default:
 		return fmt.Errorf("streamableHTTP or sse")
 	}

@@ -48,6 +48,8 @@ stacks:
     description: Deploy latest image to production cluster
     count: 1
     dependsOn: [run-smoke-tests]
+    urlPath: /deployment
+    method: GET
     vars:
       image_tag: latest
     cmds:
@@ -90,13 +92,6 @@ stacks:
           --nodegroup-name main \
           --scaling-config minSize=2,maxSize=6,desiredSize=3
 
-server:
-  host: 0.0.0.0
-  port: 8080
-  endpoints:
-    - path: /deploy
-      method: GET
-      stackName: deploy
 ```
 # Three Ways This Pays Off:
 
@@ -119,10 +114,10 @@ This spins up your configured endpoints. Now from anywhere — a CI pipeline, a 
 
 ```bash
 # Run the full deployment pipeline
-curl http://your-deploy-server:8080/deploy
+curl http://your-deploy-server:8080/deployment
 
 # Or trigger everything
-curl http://your-deploy-server:8080/trigger
+curl http://your-deploy-server:8080/
 ```
 
 Inside your GitHub Actions or GitLab CI, instead of duplicating shell logic across pipelines:
@@ -130,7 +125,7 @@ Inside your GitHub Actions or GitLab CI, instead of duplicating shell logic acro
 ```yaml
 # .github/workflows/deploy.yml
 - name: Trigger deployment
-  run: curl http://your-deploy-server:8080/deploy
+  run: curl http://your-deploy-server:8080/deployment
 ```
 
 One source of truth for deployment logic. Your CI just calls it. No more copy-pasted bash across 6 workflow files that slowly drift apart.

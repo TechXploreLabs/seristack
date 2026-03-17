@@ -1,4 +1,4 @@
-# seristack(v0.1.3)
+# seristack(v0.2.0)
 
 **Run shell workflows via CLI or HTTP
 
@@ -71,6 +71,8 @@ stacks:
     description: Used for printing  
                   welcome message               # used for adding the stack as tool in mcp server, if descrption is empty then 
                                                 # it won't be added
+    method: GET                 # Http methods needs to be added for http server
+    urlPath: /show              # Optional, If not provided stack name will be added as path, ex /stack1 
     continueOnError: false      # if cmds has error, true will not stop execution, false will stop. default is false
     count: 3                    # count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0
     executionMode: PARALLEL     # if count = 3 and executionMode is PARALLEL, then all three iterations of list 
@@ -113,14 +115,6 @@ stacks:
       - |
         echo "Current date and time:"
         echo `date`
-
-server:
-  host: 127.0.0.1      # default is 127.0.0.1, use 0.0.0.0 for exposing it to internet
-  port: 8080           # default is 8080
-  endpoints:            # endpoint will connect the path to particular stack and run the cmds, publish output
-    - path: /show
-      method: GET
-      stackName: stack3
 ```
 
 # Running the stacks

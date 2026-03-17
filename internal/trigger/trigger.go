@@ -17,7 +17,6 @@ func SingleStackCheck(config *conf.Config, stack *string) (*conf.Config, error) 
 		newstack.DependsOn = nil
 		config = &conf.Config{
 			Stacks: []conf.Stack{*newstack},
-			Server: config.Server,
 		}
 	} else {
 		return nil, fmt.Errorf("Stack not exist.")
