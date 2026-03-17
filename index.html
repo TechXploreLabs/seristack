@@ -481,6 +481,8 @@ sudo chmod +x /usr/local/bin/seristack</code>
     <span class="keyword">description:</span> Used for printing  
                   welcome message               <span class="comment"># used for adding the stack as tool in mcp server, if descrption is empty then</span>
                                                 <span class="comment"># it won't be added</span>
+    <span class="keyword">method:</span> GET                 <span class="comment"># Http methods needs to be added for http server</span>
+    <span class="keyword">urlPath:</span> /show              <span class="comment"># Optional, If not provided stack name will be added as path, ex /stack1 </span>
     <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># if cmds has error, true will not stop execution, false will stop. default is false</span>
     <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0</span>
     <span class="keyword">executionMode:</span> PARALLEL     <span class="comment"># if count = 3 and executionMode is PARALLEL, then all three iterations of list</span>
@@ -521,14 +523,6 @@ sudo chmod +x /usr/local/bin/seristack</code>
       - |
         echo <span class="string">"Current date and time:"</span>
         echo `date`
-
-<span class="keyword">server:</span>
-  <span class="keyword">host:</span> 127.0.0.1      <span class="comment"># default is 127.0.0.1, use 0.0.0.0 for exposing it to internet</span>
-  <span class="keyword">port:</span> <span class="number">8080</span>           <span class="comment"># default is 8080</span>
-  <span class="keyword">endpoints:</span>            <span class="comment"># endpoints will connect the path to particular stack and run the cmds, publish output</span>
-    - <span class="keyword">path:</span> /show
-      <span class="keyword">method:</span> GET
-      <span class="keyword">stackName:</span> stack3</code>
                     </div>
                 </div>
 

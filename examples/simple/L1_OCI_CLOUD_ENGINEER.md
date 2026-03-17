@@ -8,6 +8,8 @@ The pain is specific: OCI tasks are well-defined and repetitive, but the OCI CLI
 stacks:
   - name: check-compartment-health
     description: Check resource quotas and limits across compartments
+    urlPath: /daily-oci-ops
+    method: GET
     count: 1
     vars:
       compartment_id: ocid1.compartment.oc1..your-compartment-id
@@ -27,6 +29,8 @@ stacks:
 
   - name: backup-autonomous-db
     description: Trigger manual backup of Autonomous Database
+    urlPath: /backup-db
+    method: GET
     count: 1
     dependsOn: [check-compartment-health]
     vars:
@@ -81,6 +85,8 @@ stacks:
 
   - name: cost-report
     description: Pull daily OCI cost and usage report
+    urlPath: /cost-report
+    method: GET
     count: 1
     cmds:
       - |
@@ -99,25 +105,10 @@ stacks:
         curl -X POST $SLACK_WEBHOOK \
           --data '{"text":"☁️ OCI daily ops complete. Backup done, keys rotated, IAM audited."}'
 
-server:
-  host: 0.0.0.0
-  port: 8080
-  endpoints:
-    - path: /daily-oci-ops
-      method: GET
-      stackName: check-compartment-health
-
-    - path: /backup-db
-      method: GET
-      stackName: backup-autonomous-db
-
-    - path: /cost-report
-      method: GET
-      stackName: cost-report
 ```
 
 ```bash
-seristack run      # expose all endpoints
+seristack run -a 0.0.0.0   # expose all endpoints
 seristack trigger  # run full daily ops pipeline
 seristack mcp -t streamableHTTP # start mcp server and add stack as tools which has description.
 ```

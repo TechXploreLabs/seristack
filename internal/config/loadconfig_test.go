@@ -47,7 +47,6 @@ stacks:
 						Cmds:            []string{"echo hello"},
 					},
 				},
-				Server: nil,
 			},
 			wantErr: false,
 		},
@@ -56,31 +55,13 @@ stacks:
 			yamlData: `
 stacks:
   - name: "stack2"
-    executionMode: PARALLEL
-server:
-  host: "localhost"
-  port: "8080"
-  endpoint:
-    - path: "/api"
-      method: "GET"
-      stackName: "stack2"
+    executionMode: PARALLEL"
 `,
 			wantConfig: &Config{
 				Stacks: []Stack{
 					{
 						Name:          "stack2",
 						ExecutionMode: "PARALLEL",
-					},
-				},
-				Server: &Serverconfig{
-					Host: "localhost",
-					Port: "8080",
-					Endpoints: []Endpoint{
-						{
-							Path:      "/api",
-							Method:    "GET",
-							Stackname: "stack2",
-						},
 					},
 				},
 			},

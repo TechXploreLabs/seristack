@@ -10,6 +10,8 @@ import (
 type Stack struct {
 	Name            string            `yaml:"name"`
 	Description     string            `yaml:"description,omitempty"`
+	Method          string            `yaml:"method,omitempty"`
+	UrlPath         string            `yaml:"urlPath,omitempty"`
 	WorkDir         string            `yaml:"workDir,omitempty"`
 	ContinueOnError bool              `yaml:"continueOnError,omitempty"`
 	DependsOn       []string          `yaml:"dependsOn,omitempty"`
@@ -21,27 +23,10 @@ type Stack struct {
 	Cmds            []string          `yaml:"cmds,omitempty"`
 }
 
-// Individual Endpoint for server
-
-type Endpoint struct {
-	Path      string `yaml:"path"`
-	Method    string `yaml:"method"`
-	Stackname string `yaml:"stackName"`
-}
-
-// Server configuration
-
-type Serverconfig struct {
-	Host      string     `yaml:"host,omitempty"`
-	Port      string     `yaml:"port,omitempty"`
-	Endpoints []Endpoint `yaml:"endpoints"`
-}
-
 // Root configuration
 
 type Config struct {
-	Stacks []Stack       `yaml:"stacks"`
-	Server *Serverconfig `yaml:"server,omitempty"`
+	Stacks []Stack `yaml:"stacks"`
 }
 
 // Registry for holding outputs

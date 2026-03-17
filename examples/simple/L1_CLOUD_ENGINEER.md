@@ -8,6 +8,8 @@ The kind of work that's "easy but you have to remember to do it."
 stacks:
   - name: cost-report
     description: Pull daily AWS cost summary
+    urlPath: /daily-ops
+    method: GET
     count: 1
     cmds:
       - |
@@ -36,11 +38,14 @@ stacks:
     cmds:
       - aws configservice describe-compliance-by-config-rule --compliance-types NON_COMPLIANT
 
-server:
-  host: 0.0.0.0
-  port: 8080
-  endpoints:
-    - path: /daily-ops
-      method: GET
-      stackName: cost-report
+```
+
+To run it has pipeline
+```bash
+seristack trigger
+```
+
+To run it http server
+```bash
+seristack run
 ```

@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	port string
+	port     string
+	skiproot bool
 )
 
 // runCmd represents the run command
@@ -28,13 +29,18 @@ Examples:
   seristack run --port 3000
   
   # Start with custom config and host
-  seristack run --config myconfig.yaml --port 9090`,
+  seristack run --config myconfig.yaml --port 9090
+
+  # Start with custom config and host
+  seristack run --config myconfig.yaml --port 9090 --addr 127.0.0.1 --skip-root`,
 	RunE: runServer,
 }
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-	runCmd.Flags().StringVarP(&port, "port", "p", "", "server port (overrides config)")
+	runCmd.Flags().StringVarP(&port, "port", "p", "8080", "server port (overrides config)")
+	runCmd.Flags().StringVarP(&addr, "addr", "a", "127.0.0.1", "addr is 127.0.0.1 or 0.0.0.0")
+	runCmd.Flags().BoolVarP(&skiproot, "skip-root", "", false, "Skip root disable root trigger")
 }
 
 func runServer(cmd *cobra.Command, args []string) error {
@@ -42,12 +48,9 @@ func runServer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("%s", color.RedString("Error: [failed to load config], %v", err))
 	}
-	if config.Server == nil {
-		return fmt.Errorf("%s", color.RedString("Error: server configuration is missing"))
+	err = server.Server(config, &port, &addr, &skiproot)
+	if err != nil {
+		return err
 	}
-	if port != "" {
-		config.Server.Port = port
-	}
-	server.Server(config)
 	return nil
 }
