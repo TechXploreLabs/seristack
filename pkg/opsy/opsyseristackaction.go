@@ -21,7 +21,7 @@ type Config struct {
 	ConfigFile string
 	StackName  string
 	Vars       map[string]string
-	format     string
+	Format     string
 }
 
 func OpsySeristack(conf Config) (Result, error) {
@@ -33,7 +33,7 @@ func OpsySeristack(conf Config) (Result, error) {
 	if err != nil {
 		return Result{}, fmt.Errorf("%w", err)
 	}
-	output := conf.format
+	output := conf.Format
 	result := trigger.RunTrigger(config, &output, &conf.Vars)
 	actionResult := Result{
 		Name:            result[0].Name,
