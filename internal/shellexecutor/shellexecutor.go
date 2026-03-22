@@ -154,8 +154,7 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 func ShellExec(args ...string) ([]byte, error) {
 	execCmd := exec.Command(args[1], args[2], args[3])
 	execCmd.Dir = args[0]
-	output, err := execCmd.CombinedOutput()
-	return output, err
+	return execCmd.CombinedOutput()
 }
 
 func Shellargs(shell string, shellArg string) (string, string, error) {
