@@ -21,6 +21,7 @@ type Stack struct {
 	Shell           string            `yaml:"shell,omitempty"`
 	ShellArg        string            `yaml:"shellArg,omitempty"`
 	Cmds            []string          `yaml:"cmds,omitempty"`
+	Output          string            `yaml:"output.omitempty"`
 }
 
 // Root configuration

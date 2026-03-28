@@ -68,6 +68,7 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 							errorMu.Unlock()
 							return
 						}
+						modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
 						output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
 						outputMu.Lock()
 						if len(output) > 0 {
@@ -106,6 +107,7 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 						errorMsg.Write([]byte(cmdErr.Error()))
 						return cmdErr
 					}
+					modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
 					output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
 					outputMu.Lock()
 					if len(output) > 0 {
@@ -141,6 +143,16 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 	if stack.Count == 0 {
 		result.Output = fmt.Sprintf("%s skipped", stack.Name)
 	} else {
+		if stack.Output != "" {
+			modifiedCmd := strings.ReplaceAll(stack.Output, "{{.Self.result}}", allOutput.String())
+			output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
+			allOutput.Reset()
+			allOutput.Write(output)
+			if execErr != nil {
+				cmdErr := fmt.Errorf("command failed : %w\n%s", execErr, output)
+				errorMsg.Write([]byte(cmdErr.Error()))
+			}
+		}
 		result.Output = allOutput.String()
 		result.Error = errorMsg.String()
 		result.ContinueOnError = stack.ContinueOnError
