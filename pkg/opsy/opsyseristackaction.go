@@ -6,6 +6,7 @@ import (
 
 	"github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/trigger"
+	yaml "gopkg.in/yaml.v3"
 )
 
 type Result struct {
@@ -18,18 +19,23 @@ type Result struct {
 }
 
 type Config struct {
-	ConfigFile string
-	StackName  string
-	Vars       map[string]string
-	Format     string
+	Config    *config.Config
+	StackName string
+	Vars      map[string]string
+	Format    string
 }
 
-func OpsySeristack(conf Config) (Result, error) {
-	config, err := config.LoadConfig(conf.ConfigFile)
-	if err != nil {
-		return Result{}, fmt.Errorf("failed to load config: %w", err)
+func NewConfigFromYAML(data []byte) (*config.Config, error) {
+	var stackDef config.Config
+	if err := yaml.Unmarshal(data, &stackDef); err != nil {
+		return &config.Config{}, fmt.Errorf("failed to decode stack config: %w", err)
 	}
-	config, err = trigger.SingleStackCheck(config, &conf.StackName)
+
+	return &stackDef, nil
+}
+
+func OpsySeristack(conf *Config) (Result, error) {
+	config, err := trigger.SingleStackCheck(conf.Config, &conf.StackName)
 	if err != nil {
 		return Result{}, fmt.Errorf("%w", err)
 	}
