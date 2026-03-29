@@ -473,56 +473,70 @@ sudo chmod +x /usr/local/bin/seristack</code>
                     <h3>Sample YAML Configuration</h3>
                     <div class="code-block" style="margin-top: 0;">
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                        <code><span class="comment"># config.yaml</span>
+                        <code># description about seristack
+# config.yaml
 
-<span class="keyword">stacks:</span>
-  - <span class="keyword">name:</span> stack1                <span class="comment"># name of the stack (REQUIRED)</span>
-    <span class="keyword">workDir:</span> ./                 <span class="comment"># working directory to execute the cmds. default is "./"</span>
-    <span class="keyword">description:</span> Used for printing  
-                  welcome message               <span class="comment"># used for adding the stack as tool in mcp server, if descrption is empty then</span>
-                                                <span class="comment"># it won't be added</span>
-    <span class="keyword">method:</span> GET                 <span class="comment"># Http methods needs to be added for http server</span>
-    <span class="keyword">urlPath:</span> /show              <span class="comment"># Optional, If not provided stack name will be added as path, ex /stack1 </span>
-    <span class="keyword">continueOnError:</span> <span class="number">false</span>      <span class="comment"># if cmds has error, true will not stop execution, false will stop. default is false</span>
-    <span class="keyword">count:</span> <span class="number">3</span>                    <span class="comment"># count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0</span>
-    <span class="keyword">executionMode:</span> PARALLEL     <span class="comment"># if count = 3 and executionMode is PARALLEL, then all three iterations of list</span>
-                                <span class="comment"># cmds execute parallellely . Valid options are, [PARALLEL/STAGE/PIPELINE/SEQUENTIAL].</span>
-                                <span class="comment"># STAGE = execute all iterations conncurrently, list of cmds execeuted serially</span>
-                                <span class="comment"># PIPELINE = execute all iterations serially, list of cmds executed concurrently</span>
-                                <span class="comment"># SEQUENTIAL = execute all iterations and theirs cmds serially. default is PARALLEL</span>
+stacks:
+  - name: stack1                # name of the stack (REQUIRED)
+    workDir: ./                 # working directory to execute the cmds. default is "./"
+    description: Used for printing  
+                  welcome message               # used for adding the stack as tool in mcp server, if descrption is empty then 
+                                                # it won't be added
+    method: GET                 # Http methods needs to be added for http server
+    urlPath: /show              # Optional, If not provided stack name will be added as path, ex /stack1 
+    continueOnError: false      # if cmds has error, true will not stop execution, false will stop. default is false
+    count: 3                    # count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0
+    executionMode: PARALLEL     # if count = 3 and executionMode is PARALLEL, then all three iterations of list 
+                                # cmds execute parallellely . Valid options are, [PARALLEL/STAGE/PIPELINE/SEQUENTIAL]. 
+                                # STAGE = execute all iterations conncurrently, list of cmds execeuted serially
+                                # PIPELINE = execute all iterations serially, list of cmds executed concurrently
+                                # SEQUENTIAL = execute all iterations and theirs cmds serially. default is PARALLEL
     
-    <span class="keyword">vars:</span>                       <span class="comment"># vars take key=value pair of variables. default is empty</span>
-      <span class="keyword">samplekey:</span> samplevalue
-    <span class="keyword">shell:</span> bash                 <span class="comment"># shell takes sh as default for linux, darwin and powershell for windows</span>
-    <span class="keyword">shellArg:</span> -c                <span class="comment"># shellArg takes -c as default for linux, darwin and -Command for windows</span>
-    <span class="keyword">dependsOn:</span> []               <span class="comment"># dependsOn takes list of stacks to start after them. default is []</span>
-    <span class="keyword">cmds:</span>                       <span class="comment"># cmds takes list of shell commands (linux, powershell)</span>
+    vars:                       # vars take key=value pair of variables. default is empty
+      samplekey: samplevalue
+    shell: bash                 # shell takes sh as default for linux, darwin and powershell for windows
+    shellArg: -c                # shellArg takes -c as default for linux, darwin and -Command for windows
+    dependsOn: []               # dependsOn takes list of stacks to start after them. default is []
+    cmds:                       # cmds takes list of shell commands (linux, powershell)
       - |
-        export samplekey={{.Vars.samplekey}}    <span class="comment"># to use vars for substitution</span>
+        export samplekey={{.Vars.samplekey}}    # to use vars for substitution
         echo $samplekey
-        echo <span class="string">"count={{.Count.index}}"</span>         <span class="comment"># index of count iterations</span>
-        echo <span class="string">"Hey i'm seristack!"</span>
+        echo "count={{.Count.index}}"         # index of count iterations
+        echo "Hey i'm seristack!"
 
-  - <span class="keyword">name:</span> stack2
-    <span class="keyword">workDir:</span> ./
-    <span class="keyword">continueOnError:</span> <span class="number">false</span>
-    <span class="keyword">count:</span> <span class="number">3</span>
-    <span class="keyword">executionMode:</span> SEQUENTIAL
-    <span class="keyword">dependsOn:</span> [stack1]          <span class="comment"># runs after stack1 completes</span>
-    <span class="keyword">cmds:</span>
+  - name: stack2
+    workDir: ./
+    continueOnError: false
+    count: 3
+    executionMode: SEQUENTIAL
+    vars:                       # vars take key=value pair of variables. default is empty
+      env: Dev
+    dependsOn: [stack1]          # runs after stack1 completes
+    cmds:
       - |
-        echo <span class="string">"Using output from previous stack"</span>
-        echo <span class="string">"count={{.Result.stack1}}"</span>     <span class="comment"># to use result of previous batch stack output for substitution</span>
-
-  - <span class="keyword">name:</span> stack3
-    <span class="keyword">workDir:</span> ./
-    <span class="keyword">count:</span> <span class="number">1</span>
-    <span class="keyword">vars:</span>
-      <span class="keyword">invite:</span> hello engineers
-    <span class="keyword">cmds:</span>
+        # Command 1: Produces metadata
+        echo "{\"index\": {{.Count.index}}, \"step\": \"metadata\", \"status\": \"ok\"}"
       - |
-        echo <span class="string">"Current date and time:"</span>
+        # Command 2: Produces metric data
+        echo "{\"index\": {{.Count.index}}, \"step\": \"metrics\", \"value\": $((RANDOM % 100))}"  
+    output: |  # for aggregating outputs from the cmds
+      echo "--- Aggregation Summary ---"
+      # We use 'grep' to find JSON lines and 'jq' to format them into an array
+      echo '{{.Self.result}}' | grep "^{\"" | jq -s '{
+        total_records: length,
+        environment: "{{.Vars.env}}",
+        results: .
+      }'
+  - name: stack3
+    workDir: ./
+    count: 1
+    vars:
+      invite: hello engineers
+    cmds:
+      - |
+        echo "Current date and time:"
         echo `date`
+                        </code>
                     </div>
                 </div>
 

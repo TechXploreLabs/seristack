@@ -54,6 +54,7 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 						defer cmdWg.Done()
 						indexStr := strconv.Itoa(idx)
 						modifiedCmd := strings.ReplaceAll(command, "{{.Count.index}}", indexStr)
+						modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
 						var replaceErr error
 						if e.Registry != nil {
 							modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
@@ -68,7 +69,6 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 							errorMu.Unlock()
 							return
 						}
-						modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
 						output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
 						outputMu.Lock()
 						if len(output) > 0 {
@@ -96,6 +96,7 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 				for _, cmd := range stack.Cmds {
 					indexStr := strconv.Itoa(idx)
 					modifiedCmd := strings.ReplaceAll(cmd, "{{.Count.index}}", indexStr)
+					modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
 					var replaceErr error
 					if e.Registry != nil {
 						modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
@@ -107,7 +108,6 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 						errorMsg.Write([]byte(cmdErr.Error()))
 						return cmdErr
 					}
-					modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
 					output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
 					outputMu.Lock()
 					if len(output) > 0 {
@@ -145,6 +145,16 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 	} else {
 		if stack.Output != "" {
 			modifiedCmd := strings.ReplaceAll(stack.Output, "{{.Self.result}}", allOutput.String())
+			var replaceErr error
+			if e.Registry != nil {
+				modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
+			} else {
+				modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, nil, modifiedCmd)
+			}
+			if replaceErr != nil {
+				cmdErr := fmt.Errorf("variable template error : %w", replaceErr)
+				errorMsg.Write([]byte(cmdErr.Error()))
+			}
 			output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd)
 			allOutput.Reset()
 			allOutput.Write(output)

@@ -1,4 +1,4 @@
-# seristack(v0.2.1)
+# seristack(v0.2.2)
 
 **Run shell workflows via CLI or HTTP
 
@@ -98,14 +98,24 @@ stacks:
     continueOnError: false
     count: 3
     executionMode: SEQUENTIAL
+    vars:                       # vars take key=value pair of variables. default is empty
+      env: Dev
     dependsOn: [stack1]          # runs after stack1 completes
     cmds:
       - |
-        echo "Using output from previous stack"
-        echo "count={{.Result.stack1}}"     # to use result of previous batch stack output for substitution
-      - echo "Using output from previous stack"
-      - echo "count={{.Result.stack1}}"
-
+        # Command 1: Produces metadata
+        echo "{\"index\": {{.Count.index}}, \"step\": \"metadata\", \"status\": \"ok\"}"
+      - |
+        # Command 2: Produces metric data
+        echo "{\"index\": {{.Count.index}}, \"step\": \"metrics\", \"value\": $((RANDOM % 100))}"  
+    output: |  # for aggregating outputs from the cmds
+      echo "--- Aggregation Summary ---"
+      # We use 'grep' to find JSON lines and 'jq' to format them into an array
+      echo '{{.Self.result}}' | grep "^{" | jq -s '{
+        total_records: length,
+        environment: "{{.Vars.env}}",
+        results: .
+      }'
   - name: stack3
     workDir: ./
     count: 1
