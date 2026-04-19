@@ -2,10 +2,10 @@ package shellexecutor
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,7 +13,37 @@ import (
 
 	"github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/function"
+	"mvdan.cc/sh/v3/interp"
+	"mvdan.cc/sh/v3/syntax"
 )
+
+var (
+	semaphoreMu sync.RWMutex
+	semaphoreCh = make(chan struct{}, 10)
+)
+
+func SetConcurrencyLimit(limit int) {
+	if limit <= 0 {
+		limit = 1
+	}
+	semaphoreMu.Lock()
+	semaphoreCh = make(chan struct{}, limit)
+	semaphoreMu.Unlock()
+}
+
+func acquire() {
+	semaphoreMu.RLock()
+	ch := semaphoreCh
+	semaphoreMu.RUnlock()
+	ch <- struct{}{}
+}
+
+func release() {
+	semaphoreMu.RLock()
+	ch := semaphoreCh
+	semaphoreMu.RUnlock()
+	<-ch
+}
 
 func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 	result := &config.Result{
@@ -174,23 +204,46 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 }
 
 func ShellExec(args ...string) ([]byte, error) {
+	acquire()
+	defer release()
+	if args[1] == "__mvdan__" {
+		return ShellExecMvdan(args[0], args[3])
+	}
 	execCmd := exec.Command(args[1], args[2], args[3])
 	execCmd.Dir = args[0]
 	return execCmd.CombinedOutput()
 }
 
+func ShellExecMvdan(workDir string, script string) ([]byte, error) {
+	parser := syntax.NewParser()
+	file, err := parser.Parse(strings.NewReader(script), "")
+	if err != nil {
+		return nil, err
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	runner, err := interp.New(
+		interp.Dir(workDir),
+		interp.StdIO(nil, &stdout, &stderr),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = runner.Run(context.Background(), file)
+	if stderr.Len() > 0 {
+		stdout.Write(stderr.Bytes())
+	}
+	if err != nil {
+		return stdout.Bytes(), err
+	}
+	return stdout.Bytes(), nil
+}
+
 func Shellargs(shell string, shellArg string) (string, string, error) {
 	if shell == "" {
-		switch runtime.GOOS {
-		case "windows":
-			shell = "powershell.exe"
-			shellArg = "-Command"
-		case "darwin", "linux":
-			shell = "sh"
-			shellArg = "-c"
-		default:
-			return "", "", fmt.Errorf("unsupported OS: %s", runtime.GOOS)
-		}
+		return "__mvdan__", "", nil
 	}
 	if shellArg == "" {
 		shellArg = "-c"

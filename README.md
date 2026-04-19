@@ -1,4 +1,4 @@
-# seristack(v0.2.2)
+# seristack(v0.3.0)
 
 **Run shell workflows via CLI or HTTP
 
@@ -15,7 +15,7 @@ Seristack is a lightweight automation engine designed to bridge the gap between 
     📦 Share output between stacks
     🌐 Expose stacks as HTTP endpoints
     🧠 Run as an MCP server for IDE integrations
-    🛠 Works with Bash, sh, and PowerShell
+    🛠 Works with mvdan shell (default), Bash, sh, and PowerShell
 
 
 ![HIGH LEVEL USAGE DIAGRAML](seristack_image.png)
@@ -81,10 +81,17 @@ stacks:
                                 # PIPELINE = execute all iterations serially, list of cmds executed concurrently
                                 # SEQUENTIAL = execute all iterations and theirs cmds serially. default is PARALLEL
     
-    vars:                       # vars take key=value pair of variables. default is empty
-      samplekey: samplevalue
-    shell: bash                 # shell takes sh as default for linux, darwin and powershell for windows
-    shellArg: -c                # shellArg takes -c as default for linux, darwin and -Command for windows
+    vars:                       # vars takes list of variable objects. default is empty
+      - name: samplekey
+        value: samplevalue
+        allowed_value: [samplevalue, devvalue]  # optional
+        # denied_value: [blocked]               # optional
+        # allowed_regex: regex("^[a-z]+$")     # optional
+        # denied_regex: regex("(?i)rm")        # optional
+        # Note: only one rule set can be used among
+        # allowed_value / denied_value / allowed_regex / denied_regex
+    shell: bash                 # optional. if not provided, mvdan shell interpreter is used by default
+    shellArg: -c                # optional for external shells
     dependsOn: []               # dependsOn takes list of stacks to start after them. default is []
     cmds:                       # cmds takes list of shell commands (linux, powershell)
       - |
@@ -98,8 +105,9 @@ stacks:
     continueOnError: false
     count: 3
     executionMode: SEQUENTIAL
-    vars:                       # vars take key=value pair of variables. default is empty
-      env: Dev
+    vars:
+      - name: env
+        value: Dev
     dependsOn: [stack1]          # runs after stack1 completes
     cmds:
       - |
@@ -120,7 +128,8 @@ stacks:
     workDir: ./
     count: 1
     vars:
-      invite: hello engineers
+      - name: invite
+        value: hello engineers
     cmds:
       - |
         echo "Current date and time:"
