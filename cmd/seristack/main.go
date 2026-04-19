@@ -13,6 +13,7 @@ func main() {
 
 var (
 	configFile string
+	limit      int
 )
 
 var rootCmd = &cobra.Command{
@@ -26,7 +27,7 @@ Visit https://seristack.getsaas.in/ for more information.
 See our work on https://github.com/TechXploreLabs/seristack.
 
 Apache 2.0 License.`,
-	Version: "0.2.2",
+	Version: "0.3.0",
 }
 
 func Execute() {
@@ -38,4 +39,5 @@ func Execute() {
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "config.yaml", "config file")
+	rootCmd.PersistentFlags().IntVarP(&limit, "limit", "l", 10, "limit concurrent shell executions")
 }

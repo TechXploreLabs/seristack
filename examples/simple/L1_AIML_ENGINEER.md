@@ -9,7 +9,8 @@ stacks:
     description: Validate and preprocess new training data
     count: 1
     vars:
-      dataset: s3://your-bucket/datasets/latest
+      - name: dataset
+        value: s3://your-bucket/datasets/latest
     cmds:
       - python scripts/preprocess.py --input={{.Vars.dataset}} --output=./data/processed
 

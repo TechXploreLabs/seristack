@@ -12,7 +12,8 @@ stacks:
     method: GET
     count: 1
     vars:
-      compartment_id: ocid1.compartment.oc1..your-compartment-id
+      - name: compartment_id
+        value: ocid1.compartment.oc1..your-compartment-id
     cmds:
       - |
         set -e
@@ -34,7 +35,8 @@ stacks:
     count: 1
     dependsOn: [check-compartment-health]
     vars:
-      db_id: ocid1.autonomousdatabase.oc1..your-db-id
+      - name: db_id
+        value: ocid1.autonomousdatabase.oc1..your-db-id
     cmds:
       - |
       set -e
@@ -61,8 +63,10 @@ stacks:
     count: 1
     dependsOn: [check-backup-status]
     vars:
-      namespace: your-namespace
-      bucket: prod-data-bucket
+      - name: namespace
+        value: your-namespace
+      - name: bucket
+        value: prod-data-bucket
     cmds:
       - |
         set -e

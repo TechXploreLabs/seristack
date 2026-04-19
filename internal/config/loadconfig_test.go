@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -33,7 +34,9 @@ stacks:
     workDir: "/tmp"
     continueOnError: true
     vars:
-      key: "value"
+      - name: "key"
+        value: "value"
+        allowed_value: ["value", "devvalue"]
     cmds:
       - "echo hello"
 `,
@@ -43,8 +46,16 @@ stacks:
 						Name:            "stack1",
 						WorkDir:         "/tmp",
 						ContinueOnError: true,
-						Vars:            map[string]string{"key": "value"},
-						Cmds:            []string{"echo hello"},
+						Variables: []VariableDef{
+							{
+								Name:         "key",
+								Value:        "value",
+								AllowedValue: []string{"value", "devvalue"},
+							},
+						},
+						Vars:     map[string]string{"key": "value"},
+						VarRules: map[string]VariableRuleSet{"key": {AllowedValue: []string{"value", "devvalue"}}},
+						Cmds:     []string{"echo hello"},
 					},
 				},
 			},
@@ -55,17 +66,42 @@ stacks:
 			yamlData: `
 stacks:
   - name: "stack2"
-    executionMode: PARALLEL"
+    executionMode: PARALLEL
 `,
 			wantConfig: &Config{
 				Stacks: []Stack{
 					{
 						Name:          "stack2",
 						ExecutionMode: "PARALLEL",
+						Vars:          map[string]string{},
+						VarRules:      map[string]VariableRuleSet{},
 					},
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "Invalid old vars map format",
+			yamlData: `
+stacks:
+  - name: "stack3"
+    vars:
+      key: "value"
+`,
+			wantErr: true,
+		},
+		{
+			name: "Invalid conflicting variable rules",
+			yamlData: `
+stacks:
+  - name: "stack4"
+    vars:
+      - name: "invite"
+        value: "hello"
+        allowed_value: ["hello"]
+        denied_regex: regex("^h.*")
+`,
+			wantErr: true,
 		},
 		{
 			name:     "Invalid YAML syntax",
@@ -86,6 +122,10 @@ stacks:
 			if !tt.wantErr {
 				if !reflect.DeepEqual(got, tt.wantConfig) {
 					t.Errorf("Loaded config does not match expected.\nGot: %+v\nWant: %+v", got, tt.wantConfig)
+				}
+			} else if tt.name == "Invalid conflicting variable rules" {
+				if err == nil || !strings.Contains(err.Error(), "only one ruleset is allowed") {
+					t.Fatalf("expected conflict ruleset error, got: %v", err)
 				}
 			}
 		})

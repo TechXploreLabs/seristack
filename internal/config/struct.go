@@ -8,20 +8,38 @@ import (
 // Individual stack
 
 type Stack struct {
-	Name            string            `yaml:"name"`
-	Description     string            `yaml:"description,omitempty"`
-	Method          string            `yaml:"method,omitempty"`
-	UrlPath         string            `yaml:"urlPath,omitempty"`
-	WorkDir         string            `yaml:"workDir,omitempty"`
-	ContinueOnError bool              `yaml:"continueOnError,omitempty"`
-	DependsOn       []string          `yaml:"dependsOn,omitempty"`
-	Vars            map[string]string `yaml:"vars,omitempty"`
-	ExecutionMode   string            `yaml:"executionMode,omitempty"`
-	Count           int               `yaml:"count,omitempty"`
-	Shell           string            `yaml:"shell,omitempty"`
-	ShellArg        string            `yaml:"shellArg,omitempty"`
-	Cmds            []string          `yaml:"cmds,omitempty"`
-	Output          string            `yaml:"output,omitempty"`
+	Name            string                     `yaml:"name"`
+	Description     string                     `yaml:"description,omitempty"`
+	Method          string                     `yaml:"method,omitempty"`
+	UrlPath         string                     `yaml:"urlPath,omitempty"`
+	WorkDir         string                     `yaml:"workDir,omitempty"`
+	ContinueOnError bool                       `yaml:"continueOnError,omitempty"`
+	DependsOn       []string                   `yaml:"dependsOn,omitempty"`
+	Variables       []VariableDef              `yaml:"vars,omitempty"`
+	Vars            map[string]string          `yaml:"-"`
+	VarRules        map[string]VariableRuleSet `yaml:"-"`
+	ExecutionMode   string                     `yaml:"executionMode,omitempty"`
+	Count           int                        `yaml:"count,omitempty"`
+	Shell           string                     `yaml:"shell,omitempty"`
+	ShellArg        string                     `yaml:"shellArg,omitempty"`
+	Cmds            []string                   `yaml:"cmds,omitempty"`
+	Output          string                     `yaml:"output,omitempty"`
+}
+
+type VariableDef struct {
+	Name         string   `yaml:"name"`
+	Value        string   `yaml:"value,omitempty"`
+	AllowedValue []string `yaml:"allowed_value,omitempty"`
+	DeniedValue  []string `yaml:"denied_value,omitempty"`
+	AllowedRegex string   `yaml:"allowed_regex,omitempty"`
+	DeniedRegex  string   `yaml:"denied_regex,omitempty"`
+}
+
+type VariableRuleSet struct {
+	AllowedValue []string
+	DeniedValue  []string
+	AllowedRegex string
+	DeniedRegex  string
 }
 
 // Root configuration

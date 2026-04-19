@@ -31,6 +31,12 @@ func NewConfigFromYAML(data []byte) (*config.Config, error) {
 		return &config.Config{}, fmt.Errorf("failed to decode stack config: %w", err)
 	}
 
+	for i := range stackDef.Stacks {
+		if err := config.NormalizeStackVariables(&stackDef.Stacks[i]); err != nil {
+			return &config.Config{}, fmt.Errorf("failed to normalize stack vars: %w", err)
+		}
+	}
+
 	return &stackDef, nil
 }
 

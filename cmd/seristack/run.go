@@ -8,6 +8,7 @@ import (
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/server"
+	"github.com/TechXploreLabs/seristack/internal/shellexecutor"
 )
 
 var (
@@ -48,6 +49,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("%s", color.RedString("Error: [failed to load config], %v", err))
 	}
+	shellexecutor.SetConcurrencyLimit(limit)
 	err = server.Server(config, &port, &addr, &skiproot)
 	if err != nil {
 		return err

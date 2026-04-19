@@ -51,7 +51,8 @@ stacks:
     urlPath: /deployment
     method: GET
     vars:
-      image_tag: latest
+      - name: image_tag
+        value: latest
     cmds:
       - |
         set -e

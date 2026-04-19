@@ -9,6 +9,7 @@ import (
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/mcpserver"
+	"github.com/TechXploreLabs/seristack/internal/shellexecutor"
 )
 
 var (
@@ -25,7 +26,7 @@ var mcpCmd = &cobra.Command{
   seristack mcp --type streamableHTTP --port 3000
   
   # Start sse
-  seristack run --config myconfig.yaml --type sse  --port 9090 --addr 0.0.0.0`,
+  seristack mcp --config myconfig.yaml --type sse  --port 9090 --addr 0.0.0.0`,
 	RunE: mcpServer,
 }
 
@@ -45,6 +46,7 @@ func mcpServer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("%s", color.RedString("Error: [failed to load config], %v", err))
 	}
+	shellexecutor.SetConcurrencyLimit(limit)
 	err = mcpserver.McpServer(config, mcptype, port, addr)
 	if err != nil {
 		return err
