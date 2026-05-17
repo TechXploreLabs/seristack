@@ -24,6 +24,7 @@ type Stack struct {
 	ShellArg        string                     `yaml:"shellArg,omitempty"`
 	Cmds            []string                   `yaml:"cmds,omitempty"`
 	Output          string                     `yaml:"output,omitempty"`
+	DiscardOutput   []string                   `yaml:"discardOutput,omitempty"`
 }
 
 type VariableDef struct {
