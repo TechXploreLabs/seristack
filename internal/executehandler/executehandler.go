@@ -54,6 +54,7 @@ func Execute(e *config.Executor, order *[][]string, output *string, varsMap *map
 				result := ExecuteStack(e, stack, output)
 				if e.Registry != nil {
 					registry.Set(e.Registry, stack.Name, result)
+					registry.Delete(e.Registry, stack.DiscardOutput)
 				}
 				resultChan <- result
 			}(stack, output)

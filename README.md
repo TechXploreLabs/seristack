@@ -1,4 +1,4 @@
-# seristack(v0.3.0)
+# seristack(v0.3.1)
 
 **Run shell workflows via CLI or HTTP
 
@@ -90,6 +90,7 @@ stacks:
         # denied_regex: regex("(?i)rm")        # optional
         # Note: only one rule set can be used among
         # allowed_value / denied_value / allowed_regex / denied_regex
+    discardOutput: [stack1] # Discard the output saved in the memory, after current stack completes
     shell: bash                 # optional. if not provided, mvdan shell interpreter is used by default
     shellArg: -c                # optional for external shells
     dependsOn: []               # dependsOn takes list of stacks to start after them. default is []

@@ -67,6 +67,21 @@ func Set(r *config.Registry, name string, result *config.Result) {
 	s.Results[name] = result
 }
 
+func Delete(r *config.Registry, names []string) {
+	if r == nil || len(names) == 0 {
+		return
+	}
+	for _, name := range names {
+		if name == "" {
+			continue
+		}
+		s := getShard(r, name)
+		s.Mu.Lock()
+		delete(s.Results, name)
+		s.Mu.Unlock()
+	}
+}
+
 func GetAllVars(r *config.Registry) map[string]string {
 	allVars := make(map[string]string)
 	for _, shard := range r.Shards {
