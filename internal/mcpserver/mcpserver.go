@@ -62,7 +62,7 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 	}
 	for varName := range stack.Vars {
 		options = append(options, mcp.WithString(varName,
-			mcp.Description(fmt.Sprintf("Variable '%s'for stack '%s'", varName, stack.Name)),
+			mcp.Description(fmt.Sprintf("Variable '%s' for stack '%s'", varName, stack.Name)),
 		))
 	}
 	tool := mcp.NewTool(stack.Name, options...)
