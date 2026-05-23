@@ -27,11 +27,15 @@ func Stackmap(e []config.Stack) map[string]*config.Stack {
 }
 
 // Vars override
-
 func MergeMaps(base, override map[string]string) map[string]string {
 	result := make(map[string]string)
-	maps.Copy(result, base)
-	maps.Copy(result, override)
+	maps.Copy(result, base) // copy all base keys first
+
+	for k, v := range override {
+		if _, exists := base[k]; exists { // only if key exists in base
+			result[k] = v
+		}
+	}
 	return result
 }
 
@@ -62,14 +66,13 @@ func Execute(e *config.Executor, order *[][]string, output *string, varsMap *map
 		wg.Wait()
 		close(resultChan)
 		batchFailed := false
-		if *output != "" {
-			for result := range resultChan {
+		for result := range resultChan {
+			if *output != "" {
 				consolidatedresult = append(consolidatedresult, result)
-				if !result.Success && !result.ContinueOnError {
-					batchFailed = true
-				}
 			}
-
+			if !result.Success && !result.ContinueOnError {
+				batchFailed = true
+			}
 		}
 		if batchFailed {
 			break
