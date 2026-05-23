@@ -12,7 +12,6 @@ import (
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/executehandler"
-	"github.com/TechXploreLabs/seristack/internal/trigger"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,10 +20,6 @@ func Server(config *conf.Config, port *string, addr *string, skip *bool) error {
 	hasRoutes := false
 	var registeredPatterns = make(map[string]bool)
 	stackMap := executehandler.Stackmap(config.Stacks)
-	if !*skip {
-		RegisterTriggerHandler(mux, config)
-		hasRoutes = true
-	}
 	for _, stack := range config.Stacks {
 		if stack.Method != "" {
 			pattern := stack.Name
@@ -48,25 +43,6 @@ func Server(config *conf.Config, port *string, addr *string, skip *bool) error {
 		return fmt.Errorf("No endpoint to serve")
 	}
 	return nil
-}
-
-func RegisterTriggerHandler(mux *http.ServeMux, config *conf.Config) {
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed. Expected GET", http.StatusMethodNotAllowed)
-			return
-		}
-		output := "yaml"
-		result := trigger.RunTrigger(config, &output, nil)
-		yamldata, _ := yaml.Marshal(result)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(yamldata)
-		log.Printf("%s / - Params: %v", r.Method, r.URL.Query())
-	}
-
-	mux.HandleFunc("/", handler)
-	fmt.Println("Registered: GET / (default)")
 }
 
 func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*conf.Stack) {

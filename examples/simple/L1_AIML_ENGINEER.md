@@ -48,8 +48,3 @@ To run it has pipeline
 ```bash
 seristack trigger
 ```
-
-To run it http server
-```bash
-seristack run
-```

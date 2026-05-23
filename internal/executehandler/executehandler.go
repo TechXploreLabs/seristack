@@ -62,11 +62,14 @@ func Execute(e *config.Executor, order *[][]string, output *string, varsMap *map
 		wg.Wait()
 		close(resultChan)
 		batchFailed := false
-		for result := range resultChan {
-			consolidatedresult = append(consolidatedresult, result)
-			if !result.Success && !result.ContinueOnError {
-				batchFailed = true
+		if *output != "" {
+			for result := range resultChan {
+				consolidatedresult = append(consolidatedresult, result)
+				if !result.Success && !result.ContinueOnError {
+					batchFailed = true
+				}
 			}
+
 		}
 		if batchFailed {
 			break
@@ -95,8 +98,7 @@ func ExecuteStack(e *config.Executor, stack *config.Stack, output *string) *conf
 		}
 	}
 
-	var result *config.Result
-	result = shellexecutor.ExecuteShell(e, stack)
+	result := shellexecutor.ExecuteShell(e, stack)
 	result.Duration = time.Since(start)
 	if *output == "" {
 		fmt.Printf(`
@@ -104,34 +106,27 @@ stack: %s
 continueOnError: %t
 duration: %.2fs
 success: %t
+output:
 `, stack.Name, result.ContinueOnError, result.Duration.Seconds(), result.Success)
 		if result.Error == "" {
-			color.Green(`
-output:
-┌─
-`)
 			for _, line := range strings.Split(strings.TrimSpace(result.Output), "\n") {
-				color.Green("│ %s\n", line)
+				color.Green(" %s\n", line)
 			}
-			color.Green("└─\n")
+			color.Green("\n")
 		}
 		if result.Error != "" {
-			color.Yellow(`
-output:
-┌─
-`)
+
 			for _, line := range strings.Split(strings.TrimSpace(result.Output), "\n") {
-				color.Yellow("│ %s\n", line)
+				color.Yellow(" %s\n", line)
 			}
-			color.Yellow("└─\n")
+			color.Yellow("\n")
 			color.Red(`
 error:
-┌─
 `)
 			for _, line := range strings.Split(strings.TrimSpace(result.Error), "\n") {
-				color.Red("│ %s\n", line)
+				color.Red(" %s\n", line)
 			}
-			color.Red("└─\n")
+			color.Red("\n")
 		}
 	}
 	return result
