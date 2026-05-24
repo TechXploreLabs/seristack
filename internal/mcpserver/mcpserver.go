@@ -2,6 +2,7 @@ package mcpserver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,6 @@ import (
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/executehandler"
-	"gopkg.in/yaml.v3"
 )
 
 func McpServer(config *conf.Config, transport string, port string, addr string) error {
@@ -84,8 +84,8 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 			SourceDir: sourceDir,
 		}
 		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
-		yamldata, _ := yaml.Marshal(result)
+		jsondata, _ := json.Marshal(result)
 		log.Printf("Tool execution completed: tool: %s", stack.Name)
-		return mcp.NewToolResultText(string(yamldata)), nil
+		return mcp.NewToolResultText(string(jsondata)), nil
 	})
 }

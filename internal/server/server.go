@@ -12,7 +12,6 @@ import (
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/executehandler"
-	"gopkg.in/yaml.v3"
 )
 
 func Server(config *conf.Config, port *string, addr *string, skip *bool) error {
@@ -66,10 +65,10 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 		stackCopy := *stackMap[stack.Name]
 		stackCopy.Vars = executehandler.MergeMaps(stackCopy.Vars, vars)
 		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
-		yamldata, _ := yaml.Marshal(result)
+		jsondata, _ := json.Marshal(result)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(yamldata)
+		w.Write(jsondata)
 		log.Printf("%s %s - Params: %v - Success",
 			r.Method, stack.Name, r.URL.Query())
 	}
