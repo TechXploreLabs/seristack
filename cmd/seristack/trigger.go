@@ -7,9 +7,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-
-	"slices"
 
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/shellexecutor"
@@ -50,7 +47,6 @@ Examples:
 func init() {
 	rootCmd.AddCommand(triggerCmd)
 	triggerCmd.Flags().StringVarP(&stack, "stack", "s", "", "run a particular stack")
-	triggerCmd.Flags().StringVarP(&output, "output", "o", "", "output format for result yaml or json")
 	triggerCmd.Flags().StringArrayVarP(&vars, "vars", "v", []string{}, "override variables (key=value)")
 	triggerCmd.Flags().StringVar(&varsJSON, "vars-json", "", "override variables as JSON object")
 }
@@ -122,10 +118,7 @@ func setupTrigger(cmd *cobra.Command, args []string) error {
 	for k, v := range flagVarsMap {
 		varsMap[k] = v
 	}
-	outputformat := []string{"yaml", "json"}
-	if output != "" && !slices.Contains(outputformat, output) {
-		return fmt.Errorf("%s", color.RedString("Error: supported output format is yaml/json"))
-	}
+
 	config, err := conf.LoadConfig(configFile)
 	if err != nil {
 		return fmt.Errorf("%s", color.RedString("Error: [failed to load config], %v", err))
@@ -137,15 +130,6 @@ func setupTrigger(cmd *cobra.Command, args []string) error {
 		}
 	}
 	shellexecutor.SetConcurrencyLimit(limit)
-	consolidatedresult := trigger.RunTrigger(config, &output, &varsMap)
-	if consolidatedresult != nil {
-		if output == "yaml" {
-			yamldata, _ := yaml.Marshal(map[string]any{"result": &consolidatedresult})
-			fmt.Println(string(yamldata))
-		} else {
-			jsondata, _ := json.MarshalIndent(map[string]any{"result": &consolidatedresult}, "", " ")
-			fmt.Println(string(jsondata))
-		}
-	}
+	trigger.RunTrigger(config, &output, &varsMap)
 	return nil
 }

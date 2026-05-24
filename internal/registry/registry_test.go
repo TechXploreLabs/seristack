@@ -17,39 +17,39 @@ func newTestRegistry(shardCount uint32) *config.Registry {
 	return r
 }
 
-func TestDelete_RemovesOnlyRequestedStacks(t *testing.T) {
+func TestGetVarsByNames_ReturnsOnlyRequestedExistingStacks(t *testing.T) {
 	r := newTestRegistry(8)
 
 	Set(r, "build", &config.Result{Name: "build", Output: "build-output"})
 	Set(r, "test", &config.Result{Name: "test", Output: "test-output"})
 	Set(r, "deploy", &config.Result{Name: "deploy", Output: "deploy-output"})
 
-	Delete(r, []string{"build", "test"})
+	selected := GetVarsByNames(r, []string{"test", "missing", ""})
 
-	allVars := GetAllVars(r)
-	if _, ok := allVars["build"]; ok {
-		t.Fatalf("expected build output to be discarded")
+	if len(selected) != 1 {
+		t.Fatalf("expected only one selected output, got %d (%v)", len(selected), selected)
 	}
-	if _, ok := allVars["test"]; ok {
-		t.Fatalf("expected test output to be discarded")
-	}
-	if got, ok := allVars["deploy"]; !ok || got != "deploy-output" {
-		t.Fatalf("expected deploy output to be retained, got: %q", got)
+	if got, ok := selected["test"]; !ok || got != "test-output" {
+		t.Fatalf("expected test output to be returned, got: %q", got)
 	}
 }
 
-func TestDelete_NoOpForNilRegistryOrEmptyNames(t *testing.T) {
-	Delete(nil, []string{"any"})
+func TestGetVarsByNames_NoOpForNilRegistryOrEmptyNames(t *testing.T) {
+	selected := GetVarsByNames(nil, []string{"stack1"})
+	if len(selected) != 0 {
+		t.Fatalf("expected empty map for nil registry, got: %v", selected)
+	}
 
 	r := newTestRegistry(4)
 	Set(r, "stack1", &config.Result{Name: "stack1", Output: "out1"})
 
-	Delete(r, nil)
-	Delete(r, []string{})
-	Delete(r, []string{""})
+	selected = GetVarsByNames(r, nil)
+	if len(selected) != 0 {
+		t.Fatalf("expected empty map for nil names, got: %v", selected)
+	}
 
-	allVars := GetAllVars(r)
-	if got, ok := allVars["stack1"]; !ok || got != "out1" {
-		t.Fatalf("expected stack1 output to remain unchanged, got: %q", got)
+	selected = GetVarsByNames(r, []string{})
+	if len(selected) != 0 {
+		t.Fatalf("expected empty map for empty names, got: %v", selected)
 	}
 }

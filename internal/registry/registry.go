@@ -82,14 +82,21 @@ func Delete(r *config.Registry, names []string) {
 	}
 }
 
-func GetAllVars(r *config.Registry) map[string]string {
-	allVars := make(map[string]string)
-	for _, shard := range r.Shards {
-		shard.Mu.RLock()
-		for stackName, result := range shard.Results {
-			allVars[stackName] = result.Output
-		}
-		shard.Mu.RUnlock()
+func GetVarsByNames(r *config.Registry, names []string) map[string]string {
+	if r == nil || len(names) == 0 {
+		return map[string]string{}
 	}
-	return allVars
+	selected := make(map[string]string, len(names))
+	for _, name := range names {
+		if name == "" {
+			continue
+		}
+		s := getShard(r, name)
+		s.Mu.RLock()
+		if result, ok := s.Results[name]; ok {
+			selected[name] = result.Output
+		}
+		s.Mu.RUnlock()
+	}
+	return selected
 }
