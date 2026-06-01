@@ -34,6 +34,7 @@ type VariableDef struct {
 	DeniedValue  []string `yaml:"denied_value,omitempty"`
 	AllowedRegex string   `yaml:"allowed_regex,omitempty"`
 	DeniedRegex  string   `yaml:"denied_regex,omitempty"`
+	Required     bool     `yaml:"required,omitempty"`
 }
 
 type VariableRuleSet struct {
@@ -41,6 +42,7 @@ type VariableRuleSet struct {
 	DeniedValue  []string
 	AllowedRegex string
 	DeniedRegex  string
+	Required     bool
 }
 
 // Root configuration

@@ -104,6 +104,36 @@ stacks:
 			wantErr: true,
 		},
 		{
+			name: "Required-only rule is preserved in VarRules",
+			yamlData: `
+stacks:
+  - name: "stack_required"
+    vars:
+      - name: "token"
+        value: ""
+        required: true
+`,
+			wantConfig: &Config{
+				Stacks: []Stack{
+					{
+						Name: "stack_required",
+						Variables: []VariableDef{
+							{
+								Name:     "token",
+								Value:    "",
+								Required: true,
+							},
+						},
+						Vars: map[string]string{"token": ""},
+						VarRules: map[string]VariableRuleSet{
+							"token": {Required: true},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name:     "Invalid YAML syntax",
 			yamlData: ": bad yaml", // truly invalid YAML, should cause error
 			wantErr:  true,
