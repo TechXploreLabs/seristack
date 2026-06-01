@@ -31,7 +31,7 @@ func LoadConfig(filename string) (*Config, error) {
 }
 
 func (v VariableRuleSet) IsEmpty() bool {
-	return len(v.AllowedValue) == 0 && len(v.DeniedValue) == 0 && strings.TrimSpace(v.AllowedRegex) == "" && strings.TrimSpace(v.DeniedRegex) == ""
+	return len(v.AllowedValue) == 0 && len(v.DeniedValue) == 0 && strings.TrimSpace(v.AllowedRegex) == "" && strings.TrimSpace(v.DeniedRegex) == "" && !v.Required
 }
 
 func NormalizeStackVariables(stack *Stack) error {
@@ -53,6 +53,7 @@ func NormalizeStackVariables(stack *Stack) error {
 			DeniedValue:  variable.DeniedValue,
 			AllowedRegex: strings.TrimSpace(variable.AllowedRegex),
 			DeniedRegex:  strings.TrimSpace(variable.DeniedRegex),
+			Required:     variable.Required,
 		}
 
 		ruleSetCount := 0

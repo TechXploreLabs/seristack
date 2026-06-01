@@ -139,6 +139,25 @@ func TestValidateStackVars(t *testing.T) {
 			expectError: true,
 			errContains: "matches denied_regex",
 		},
+		{
+			name: "required variable validation failure when value is blank",
+			stack: &config.Stack{
+				Variables: []config.VariableDef{{Name: "token", Value: "   ", Required: true}},
+				Vars:      map[string]string{"token": "   "},
+				VarRules:  map[string]config.VariableRuleSet{"token": {Required: true}},
+			},
+			expectError: true,
+			errContains: "value for variable 'token' is required",
+		},
+		{
+			name: "required variable validation success when value is present",
+			stack: &config.Stack{
+				Variables: []config.VariableDef{{Name: "token", Value: "abc", Required: true}},
+				Vars:      map[string]string{"token": "abc"},
+				VarRules:  map[string]config.VariableRuleSet{"token": {Required: true}},
+			},
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {

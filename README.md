@@ -1,4 +1,4 @@
-# seristack(v0.3.2)
+# seristack(v0.3.3)
 
 **Run shell workflows via CLI or HTTP
 
@@ -84,6 +84,7 @@ stacks:
     vars:                       # vars takes list of variable objects. default is empty
       - name: samplekey
         value: samplevalue
+        required: true # optional
         allowed_value: [samplevalue, devvalue]  # optional
         # denied_value: [blocked]               # optional
         # allowed_regex: regex("^[a-z]+$")     # optional

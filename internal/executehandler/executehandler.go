@@ -145,44 +145,51 @@ func ValidateStackVars(stack *config.Stack) error {
 		if !ok {
 			return fmt.Errorf("variable validation failed: variable '%s' is required", varName)
 		}
+		trimmedValue := strings.TrimSpace(value)
 
-		if len(rule.AllowedValue) > 0 {
-			if !slices.Contains(rule.AllowedValue, value) {
-				return fmt.Errorf("variable validation failed for '%s': value '%s' must be one of %v", varName, value, rule.AllowedValue)
-			}
+		if rule.Required && trimmedValue == "" {
+			return fmt.Errorf("variable validation failed: value for variable '%s' is required", varName)
 		}
 
-		if len(rule.DeniedValue) > 0 {
-			if slices.Contains(rule.DeniedValue, value) {
-				return fmt.Errorf("variable validation failed for '%s': value '%s' is denied", varName, value)
+		if trimmedValue != "" {
+			if len(rule.AllowedValue) > 0 {
+				if !slices.Contains(rule.AllowedValue, value) {
+					return fmt.Errorf("variable validation failed for '%s': value '%s' must be one of %v", varName, value, rule.AllowedValue)
+				}
 			}
-		}
 
-		if strings.TrimSpace(rule.AllowedRegex) != "" {
-			pattern, err := extractRegexPattern(rule.AllowedRegex)
-			if err != nil {
-				return fmt.Errorf("variable validation failed for '%s': %w", varName, err)
+			if len(rule.DeniedValue) > 0 {
+				if slices.Contains(rule.DeniedValue, value) {
+					return fmt.Errorf("variable validation failed for '%s': value '%s' is denied", varName, value)
+				}
 			}
-			re, err := regexp.Compile(pattern)
-			if err != nil {
-				return fmt.Errorf("variable validation failed for '%s': invalid allowed_regex '%s': %w", varName, pattern, err)
-			}
-			if !re.MatchString(value) {
-				return fmt.Errorf("variable validation failed for '%s': value '%s' does not match allowed_regex '%s'", varName, value, pattern)
-			}
-		}
 
-		if strings.TrimSpace(rule.DeniedRegex) != "" {
-			pattern, err := extractRegexPattern(rule.DeniedRegex)
-			if err != nil {
-				return fmt.Errorf("variable validation failed for '%s': %w", varName, err)
+			if strings.TrimSpace(rule.AllowedRegex) != "" {
+				pattern, err := extractRegexPattern(rule.AllowedRegex)
+				if err != nil {
+					return fmt.Errorf("variable validation failed for '%s': %w", varName, err)
+				}
+				re, err := regexp.Compile(pattern)
+				if err != nil {
+					return fmt.Errorf("variable validation failed for '%s': invalid allowed_regex '%s': %w", varName, pattern, err)
+				}
+				if !re.MatchString(value) {
+					return fmt.Errorf("variable validation failed for '%s': value '%s' does not match allowed_regex '%s'", varName, value, pattern)
+				}
 			}
-			re, err := regexp.Compile(pattern)
-			if err != nil {
-				return fmt.Errorf("variable validation failed for '%s': invalid denied_regex '%s': %w", varName, pattern, err)
-			}
-			if re.MatchString(value) {
-				return fmt.Errorf("variable validation failed for '%s': value '%s' matches denied_regex '%s'", varName, value, pattern)
+
+			if strings.TrimSpace(rule.DeniedRegex) != "" {
+				pattern, err := extractRegexPattern(rule.DeniedRegex)
+				if err != nil {
+					return fmt.Errorf("variable validation failed for '%s': %w", varName, err)
+				}
+				re, err := regexp.Compile(pattern)
+				if err != nil {
+					return fmt.Errorf("variable validation failed for '%s': invalid denied_regex '%s': %w", varName, pattern, err)
+				}
+				if re.MatchString(value) {
+					return fmt.Errorf("variable validation failed for '%s': value '%s' matches denied_regex '%s'", varName, value, pattern)
+				}
 			}
 		}
 	}
