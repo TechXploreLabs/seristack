@@ -130,6 +130,9 @@ func setupTrigger(cmd *cobra.Command, args []string) error {
 		}
 	}
 	shellexecutor.SetConcurrencyLimit(limit)
-	trigger.RunTrigger(config, &output, &varsMap)
+	_, err = trigger.RunTrigger(config, &output, &varsMap)
+	if err != nil {
+		return fmt.Errorf("%s", color.RedString("Error:  %v", err))
+	}
 	return nil
 }

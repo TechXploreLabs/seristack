@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
+
+const DefaultCommandTimeout = time.Hour
 
 // Load the yaml file for config extraction
 
@@ -25,9 +28,29 @@ func LoadConfig(filename string) (*Config, error) {
 		if err := NormalizeStackVariables(&config.Stacks[i]); err != nil {
 			return nil, err
 		}
+		if err := NormalizeStackTimeout(&config.Stacks[i]); err != nil {
+			return nil, err
+		}
 	}
 
 	return &config, nil
+}
+
+func NormalizeStackTimeout(stack *Stack) error {
+	if strings.TrimSpace(stack.Timeouts) == "" {
+		stack.Timeouts = DefaultCommandTimeout.String()
+		return nil
+	}
+
+	duration, err := time.ParseDuration(stack.Timeouts)
+	if err != nil {
+		return fmt.Errorf("invalid stack '%s' timeouts: %w", stack.Name, err)
+	}
+	if duration <= 0 {
+		return fmt.Errorf("invalid stack '%s' timeouts: timeout must be greater than 0", stack.Name)
+	}
+
+	return nil
 }
 
 func (v VariableRuleSet) IsEmpty() bool {
