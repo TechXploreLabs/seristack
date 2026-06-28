@@ -23,6 +23,7 @@ type Stack struct {
 	Shell           string                     `yaml:"shell,omitempty"`
 	ShellArg        string                     `yaml:"shellArg,omitempty"`
 	Cmds            []string                   `yaml:"cmds,omitempty"`
+	Timeouts        string                     `yaml:"timeouts,omitempty"`
 	Output          string                     `yaml:"output,omitempty"`
 	DiscardOutput   []string                   `yaml:"discardOutput,omitempty"`
 }

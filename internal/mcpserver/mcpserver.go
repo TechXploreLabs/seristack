@@ -17,7 +17,7 @@ import (
 func McpServer(config *conf.Config, transport string, port string, addr string) error {
 	s := server.NewMCPServer(
 		"seristack",
-		"0.1.2",
+		"0.3.4",
 		server.WithToolCapabilities(true),
 	)
 	hasRoutes := false

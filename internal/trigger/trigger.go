@@ -8,7 +8,6 @@ import (
 	exe "github.com/TechXploreLabs/seristack/internal/executehandler"
 	"github.com/TechXploreLabs/seristack/internal/function"
 	"github.com/TechXploreLabs/seristack/internal/registry"
-	"github.com/fatih/color"
 )
 
 func SingleStackCheck(config *conf.Config, stack *string) (*conf.Config, error) {
@@ -24,16 +23,15 @@ func SingleStackCheck(config *conf.Config, stack *string) (*conf.Config, error) 
 	return config, nil
 }
 
-func RunTrigger(config *conf.Config, output *string, varsMap *map[string]string) []*conf.Result {
+func RunTrigger(config *conf.Config, output *string, varsMap *map[string]string) ([]*conf.Result, error) {
 	order, err := function.ExecutionOrder(config.Stacks)
 	if err != nil {
-		color.Red("dependency resolution failed: %v", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("dependency resolution failed due to %v", err)
+
 	}
 	sourceDir, err := os.Getwd()
 	if err != nil {
-		color.Red("failed to get working directory: %v", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("failed to get working directory %v", err)
 	}
 	executor := &conf.Executor{
 		Registry:  registry.NewRegistry(&order),
@@ -43,10 +41,10 @@ func RunTrigger(config *conf.Config, output *string, varsMap *map[string]string)
 	switch o := *output; o {
 	case "":
 		exe.Execute(executor, &order, output, varsMap)
-		return nil
+		return nil, nil
 	case "yaml", "json":
 		consolidatedresult := exe.Execute(executor, &order, output, varsMap)
-		return consolidatedresult
+		return consolidatedresult, nil
 	}
-	return nil
+	return nil, nil
 }

@@ -35,6 +35,9 @@ func NewConfigFromYAML(data []byte) (*config.Config, error) {
 		if err := config.NormalizeStackVariables(&stackDef.Stacks[i]); err != nil {
 			return &config.Config{}, fmt.Errorf("failed to normalize stack vars: %w", err)
 		}
+		if err := config.NormalizeStackTimeout(&stackDef.Stacks[i]); err != nil {
+			return &config.Config{}, fmt.Errorf("failed to normalize stack timeout: %w", err)
+		}
 	}
 
 	return &stackDef, nil
@@ -46,7 +49,10 @@ func OpsySeristack(conf *Config) (Result, error) {
 		return Result{}, fmt.Errorf("%w", err)
 	}
 	output := conf.Format
-	result := trigger.RunTrigger(config, &output, &conf.Vars)
+	result, err := trigger.RunTrigger(config, &output, &conf.Vars)
+	if err != nil {
+		return Result{}, fmt.Errorf("%w", err)
+	}
 	actionResult := Result{
 		Name:            result[0].Name,
 		Success:         result[0].Success,

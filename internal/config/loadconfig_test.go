@@ -56,6 +56,7 @@ stacks:
 						Vars:     map[string]string{"key": "value"},
 						VarRules: map[string]VariableRuleSet{"key": {AllowedValue: []string{"value", "devvalue"}}},
 						Cmds:     []string{"echo hello"},
+						Timeouts: DefaultCommandTimeout.String(),
 					},
 				},
 			},
@@ -75,6 +76,7 @@ stacks:
 						ExecutionMode: "PARALLEL",
 						Vars:          map[string]string{},
 						VarRules:      map[string]VariableRuleSet{},
+						Timeouts:      DefaultCommandTimeout.String(),
 					},
 				},
 			},
@@ -128,10 +130,55 @@ stacks:
 						VarRules: map[string]VariableRuleSet{
 							"token": {Required: true},
 						},
+						Timeouts: DefaultCommandTimeout.String(),
 					},
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "Valid stack timeout is preserved",
+			yamlData: `
+stacks:
+  - name: "stack_timeout"
+    timeouts: 5m
+    cmds:
+      - "echo hello"
+`,
+			wantConfig: &Config{
+				Stacks: []Stack{
+					{
+						Name:     "stack_timeout",
+						Timeouts: "5m",
+						Cmds:     []string{"echo hello"},
+						Vars:     map[string]string{},
+						VarRules: map[string]VariableRuleSet{},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid stack timeout",
+			yamlData: `
+stacks:
+  - name: "stack_bad_timeout"
+    timeouts: never
+    cmds:
+      - "echo hello"
+`,
+			wantErr: true,
+		},
+		{
+			name: "Non-positive stack timeout",
+			yamlData: `
+stacks:
+  - name: "stack_zero_timeout"
+    timeouts: 0s
+    cmds:
+      - "echo hello"
+`,
+			wantErr: true,
 		},
 		{
 			name:     "Invalid YAML syntax",

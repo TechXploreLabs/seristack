@@ -22,6 +22,12 @@ var mcpCmd = &cobra.Command{
 	Use:   "mcp",
 	Short: "Start MCP server, expose stack as tools",
 	Long: `
+  Production note:
+    MCP tools can trigger configured Seristack stacks. For public or shared
+    environments, bind to 127.0.0.1 or a private network and expose through
+    Nginx/Caddy for TLS, authentication, authorization, rate limiting, and
+    request size limits.
+
   # Start streamableHTTP
   seristack mcp --type streamableHTTP --port 3000
   
