@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seristack Config Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --green: #10b981;
+            --green-soft: rgba(16, 185, 129, 0.12);
+            --blue-soft: rgba(59, 130, 246, 0.10);
+            --code: #111827;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: "Outfit", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.10), transparent 35%),
+                radial-gradient(circle at 90% 20%, rgba(59, 130, 246, 0.10), transparent 35%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(15, 23, 42, 0.92);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+        }
+
+        .nav,
+        .layout,
+        .hero {
+            width: min(1180px, calc(100% - 2rem));
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 0;
+            gap: 1rem;
+        }
+
+        .logo {
+            color: var(--green);
+            font-family: "JetBrains Mono", monospace;
+            font-weight: 800;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .nav-links a:hover { color: var(--green); }
+
+        .hero {
+            padding: 4rem 0 2rem;
+        }
+
+        .eyebrow {
+            color: var(--green);
+            font-family: "JetBrains Mono", monospace;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            line-height: 1.05;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #34d399, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .lead {
+            max-width: 780px;
+            color: var(--muted);
+            font-size: 1.15rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 270px 1fr;
+            gap: 2rem;
+            padding: 2rem 0 5rem;
+        }
+
+        aside {
+            position: sticky;
+            top: 6rem;
+            height: fit-content;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem;
+        }
+
+        aside h2 {
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        aside a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 0.35rem 0;
+            font-size: 0.95rem;
+        }
+
+        aside a:hover { color: var(--green); }
+
+        main {
+            min-width: 0;
+        }
+
+        section {
+            background: rgba(30, 41, 59, 0.78);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            color: var(--green);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            color: var(--text);
+            margin: 1.25rem 0 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        p, li { color: var(--muted); }
+
+        ul { margin-left: 1.3rem; }
+
+        code {
+            font-family: "JetBrains Mono", monospace;
+            background: rgba(15, 23, 42, 0.85);
+            color: #d1fae5;
+            padding: 0.12rem 0.35rem;
+            border-radius: 6px;
+            font-size: 0.92em;
+        }
+
+        pre {
+            background: var(--code);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--text);
+            white-space: pre;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--text);
+        }
+
+        td { color: var(--muted); }
+
+        .note {
+            background: linear-gradient(135deg, var(--green-soft), var(--blue-soft));
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .mini-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--muted);
+            position: relative;
+            z-index: 1;
+        }
+
+        footer a { color: var(--green); text-decoration: none; }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            aside { position: static; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a class="logo" href="../index.html">seristack</a>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub →</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="hero">
+        <p class="eyebrow">Documentation</p>
+        <h1>Config Reference</h1>
+        <p class="lead">
+            A complete guide to every Seristack YAML attribute: stack definitions, variables,
+            validation rules, execution modes, timeouts, HTTP endpoints, MCP tools, and output handling.
+        </p>
+    </div>
+
+    <div class="layout">
+        <aside>
+            <h2>On this page</h2>
+            <a href="#root">Root object</a>
+            <a href="#stack-attributes">Stack attributes</a>
+            <a href="#variables">Variables</a>
+            <a href="#execution-modes">Execution modes</a>
+            <a href="#timeouts">Timeouts</a>
+            <a href="#shell">Shell</a>
+            <a href="#commands-output">Commands & output</a>
+            <a href="#http">HTTP behavior</a>
+            <a href="#mcp">MCP behavior</a>
+            <a href="#complete-example">Complete example</a>
+        </aside>
+
+        <main>
+            <section id="root">
+                <h2>Root object</h2>
+                <p>Seristack configs are YAML files with a root <code>stacks</code> list.</p>
+                <pre><code>stacks:
+  - name: example
+    cmds:
+      - echo "hello from seristack"</code></pre>
+                <table>
+                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody><tr><td><code>stacks</code></td><td>list</td><td>yes</td><td>List of stack/workflow definitions.</td></tr></tbody>
+                </table>
+            </section>
+
+            <section id="stack-attributes">
+                <h2>Stack attributes</h2>
+                <table>
+                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>name</code></td><td>string</td><td>yes</td><td>none</td><td>Unique stack name. Used by CLI selection, HTTP routes, MCP tools, dependencies, and registry output keys.</td></tr>
+                        <tr><td><code>description</code></td><td>string</td><td>no</td><td>empty</td><td>Human-readable description. Required for exposing a stack as an MCP tool.</td></tr>
+                        <tr><td><code>method</code></td><td>string</td><td>no</td><td>empty</td><td>HTTP method such as <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, or <code>DELETE</code>. Required for HTTP endpoint exposure.</td></tr>
+                        <tr><td><code>urlPath</code></td><td>string</td><td>no</td><td><code>/&lt;name&gt;</code></td><td>Custom HTTP route path.</td></tr>
+                        <tr><td><code>workDir</code></td><td>string</td><td>no</td><td>source/config directory behavior</td><td>Working directory for command execution.</td></tr>
+                        <tr><td><code>continueOnError</code></td><td>boolean</td><td>no</td><td><code>false</code></td><td>Continue command execution after failures and record errors.</td></tr>
+                        <tr><td><code>dependsOn</code></td><td>list</td><td>no</td><td><code>[]</code></td><td>Stacks that must run before this stack.</td></tr>
+                        <tr><td><code>vars</code></td><td>list</td><td>no</td><td>empty</td><td>Variable definitions and validation rules.</td></tr>
+                        <tr><td><code>executionMode</code></td><td>string</td><td>no</td><td><code>PARALLEL</code></td><td>Concurrency strategy for count iterations and commands.</td></tr>
+                        <tr><td><code>count</code></td><td>integer</td><td>no</td><td><code>0</code></td><td>Number of times to run commands. <code>0</code> skips execution.</td></tr>
+                        <tr><td><code>timeouts</code></td><td>string</td><td>no</td><td><code>1h</code></td><td>Per-command timeout using Go duration syntax.</td></tr>
+                        <tr><td><code>shell</code></td><td>string</td><td>no</td><td>mvdan shell</td><td>External shell executable such as <code>bash</code>, <code>sh</code>, or <code>powershell</code>.</td></tr>
+                        <tr><td><code>shellArg</code></td><td>string</td><td>no</td><td><code>-c</code></td><td>Argument passed to the external shell before the script.</td></tr>
+                        <tr><td><code>cmds</code></td><td>list</td><td>no</td><td>empty</td><td>Commands/scripts executed by the stack.</td></tr>
+                        <tr><td><code>output</code></td><td>string</td><td>no</td><td>empty</td><td>Optional post-processing command using <code>{{.Self.result}}</code>.</td></tr>
+                        <tr><td><code>discardOutput</code></td><td>list</td><td>no</td><td>empty</td><td>Registry output keys to remove after the current stack completes.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="variables">
+                <h2>Variables and validation</h2>
+                <p>Variables can be used in commands with <code>{{.Vars.variable_name}}</code>.</p>
+                <pre><code>vars:
+  - name: env
+    value: dev
+    required: true
+    allowed_value: [dev, stage, prod]</code></pre>
+                <table>
+                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>name</code></td><td>string</td><td>yes</td><td>Variable name. Must be unique within the stack.</td></tr>
+                        <tr><td><code>value</code></td><td>string</td><td>no</td><td>Default variable value.</td></tr>
+                        <tr><td><code>required</code></td><td>boolean</td><td>no</td><td>Final value must not be empty.</td></tr>
+                        <tr><td><code>allowed_value</code></td><td>list</td><td>no</td><td>Allows only listed values.</td></tr>
+                        <tr><td><code>denied_value</code></td><td>list</td><td>no</td><td>Rejects listed values.</td></tr>
+                        <tr><td><code>allowed_regex</code></td><td>string</td><td>no</td><td>Allows only values matching <code>regex(...)</code>.</td></tr>
+                        <tr><td><code>denied_regex</code></td><td>string</td><td>no</td><td>Rejects values matching <code>regex(...)</code>.</td></tr>
+                    </tbody>
+                </table>
+                <div class="note">
+                    Only one of <code>allowed_value</code>, <code>denied_value</code>, <code>allowed_regex</code>, or <code>denied_regex</code> can be used per variable. <code>required</code> can be combined with one of them.
+                </div>
+                <p>Runtime values can come from CLI flags, HTTP query/form/JSON body, HTTP <code>X-*</code> headers, and MCP tool arguments.</p>
+            </section>
+
+            <section id="execution-modes">
+                <h2>Execution modes</h2>
+                <table>
+                    <thead><tr><th>Mode</th><th>Count iterations</th><th>Commands inside each iteration</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>PARALLEL</code></td><td>concurrent</td><td>concurrent</td></tr>
+                        <tr><td><code>STAGE</code></td><td>concurrent</td><td>sequential</td></tr>
+                        <tr><td><code>PIPELINE</code></td><td>sequential</td><td>concurrent</td></tr>
+                        <tr><td><code>SEQUENTIAL</code></td><td>sequential</td><td>sequential</td></tr>
+                    </tbody>
+                </table>
+                <p>Use <code>SEQUENTIAL</code> when ordering matters. Use <code>PARALLEL</code> when maximum concurrency is desired.</p>
+            </section>
+
+            <section id="timeouts">
+                <h2>Timeouts</h2>
+                <p><code>timeouts</code> controls the maximum duration for each command execution. Default: <code>1h</code>.</p>
+                <div class="grid">
+                    <div class="mini-card"><code>500ms</code><p>500 milliseconds</p></div>
+                    <div class="mini-card"><code>30s</code><p>30 seconds</p></div>
+                    <div class="mini-card"><code>5m</code><p>5 minutes</p></div>
+                    <div class="mini-card"><code>1h</code><p>1 hour</p></div>
+                    <div class="mini-card"><code>1h30m</code><p>1 hour 30 minutes</p></div>
+                    <div class="mini-card"><code>2.5h</code><p>2 hours 30 minutes</p></div>
+                </div>
+                <div class="note">Supported units: <code>ns</code>, <code>us</code>/<code>µs</code>, <code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>. Use <code>24h</code> instead of <code>1d</code>.</div>
+            </section>
+
+            <section id="shell">
+                <h2>Shell settings</h2>
+                <p>If <code>shell</code> is omitted, Seristack uses the built-in mvdan shell interpreter. External shells can be configured with <code>shell</code> and <code>shellArg</code>.</p>
+                <pre><code>shell: bash
+shellArg: -c</code></pre>
+            </section>
+
+            <section id="commands-output">
+                <h2>Commands, output, and registry cleanup</h2>
+                <h3><code>cmds</code></h3>
+                <pre><code>cmds:
+  - |
+    echo "starting"
+    echo "finished"</code></pre>
+                <h3><code>output</code></h3>
+                <p>Post-process accumulated stack output through <code>{{.Self.result}}</code>.</p>
+                <pre><code>output: |
+  echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'</code></pre>
+                <h3><code>discardOutput</code></h3>
+                <pre><code>discardOutput: [build, test]</code></pre>
+            </section>
+
+            <section id="http">
+                <h2>HTTP endpoint behavior</h2>
+                <p>A stack becomes an HTTP endpoint when <code>method</code> is set.</p>
+                <pre><code>name: greet-api
+method: GET
+urlPath: /greet</code></pre>
+                <p>HTTP variables can come from query parameters, form values, JSON request body, and headers beginning with <code>X-</code>.</p>
+            </section>
+
+            <section id="mcp">
+                <h2>MCP tool behavior</h2>
+                <p>A stack becomes an MCP tool when <code>description</code> is set. Variables declared in <code>vars</code> become MCP tool arguments.</p>
+            </section>
+
+            <section id="complete-example">
+                <h2>Complete example</h2>
+                <pre><code>stacks:
+  - name: greet-api
+    description: Greets a user from CLI, HTTP, or MCP
+    method: GET
+    urlPath: /greet
+    workDir: ./
+    count: 1
+    timeouts: 30s
+    executionMode: SEQUENTIAL
+    vars:
+      - name: name
+        value: engineer
+        required: true
+        allowed_regex: regex("^[a-zA-Z0-9_-]+$")
+      - name: env
+        value: dev
+        allowed_value: [dev, stage, prod]
+    cmds:
+      - |
+        echo "Hello {{.Vars.name}} from {{.Vars.env}}"
+
+  - name: collect-metadata
+    description: Produces JSON metadata for aggregation
+    dependsOn: [greet-api]
+    count: 2
+    timeouts: 5m
+    executionMode: SEQUENTIAL
+    vars:
+      - name: env
+        value: dev
+    cmds:
+      - |
+        echo "{\"index\": {{.Count.index}}, \"env\": \"{{.Vars.env}}\", \"status\": \"ok\"}"
+    output: |
+      echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'
+
+  - name: cleanup-output
+    dependsOn: [collect-metadata]
+    discardOutput: [greet-api]
+    count: 1
+    timeouts: 10s
+    cmds:
+      - echo "discarded greet-api output from memory"</code></pre>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        Apache License | <a href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub</a>
+    </footer>
+</body>
+</html>
