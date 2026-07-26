@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -60,10 +61,28 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 	options := []mcp.ToolOption{
 		mcp.WithDescription(stack.Description),
 	}
-	for varName := range stack.Vars {
-		options = append(options, mcp.WithString(varName,
-			mcp.Description(fmt.Sprintf("Variable '%s' for stack '%s'", varName, stack.Name)),
-		))
+	for _, varName := range stack.Variables {
+		desc := fmt.Sprintf("Variable '%s' for stack '%s'.", varName.Name, stack.Name)
+
+		if len(varName.AllowedValue) > 0 {
+			desc += fmt.Sprintf(" Allowed values: %s.", strings.Join(varName.AllowedValue, ", "))
+		}
+		if len(varName.DeniedValue) > 0 {
+			desc += fmt.Sprintf(" Denied values: %s.", strings.Join(varName.DeniedValue, ", "))
+		}
+		if varName.AllowedRegex != "" {
+			desc += fmt.Sprintf(" Must match regex: %s.", varName.AllowedRegex)
+		}
+		if varName.DeniedRegex != "" {
+			desc += fmt.Sprintf(" Must NOT match regex: %s.", varName.DeniedRegex)
+		}
+		stringOpts := []mcp.PropertyOption{
+			mcp.Description(desc),
+		}
+		if varName.Required {
+			stringOpts = append(stringOpts, mcp.Required())
+		}
+		options = append(options, mcp.WithString(varName.Name, stringOpts...))
 	}
 	tool := mcp.NewTool(stack.Name, options...)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {

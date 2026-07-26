@@ -1,6 +1,5 @@
-# seristack(v0.3.4)
+# seristack(v0.3.5)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/TechXploreLabs/seristack)](https://goreportcard.com/report/github.com/TechXploreLabs/seristack)
 [![Go Reference](https://pkg.go.dev/badge/github.com/TechXploreLabs/seristack.svg)](https://pkg.go.dev/github.com/TechXploreLabs/seristack)
 [![Go Version](https://img.shields.io/badge/go-1.25.5-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/github/license/TechXploreLabs/seristack)](LICENSE)
