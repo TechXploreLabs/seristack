@@ -27,7 +27,7 @@ func NewRegistry(order *[][]string) *config.Registry {
 	for i := range r.Shards {
 		r.Shards[i] = &config.Shard{
 			Results: make(map[string]*config.Result),
-			Vars:    make(map[string]interface{}),
+			Vars:    make(map[string]any),
 		}
 	}
 	return r

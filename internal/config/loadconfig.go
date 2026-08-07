@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -14,7 +15,8 @@ const DefaultCommandTimeout = time.Hour
 // Load the yaml file for config extraction
 
 func LoadConfig(filename string) (*Config, error) {
-	data, err := os.ReadFile(filename)
+	cleanPath := filepath.Clean(filename)
+	data, err := os.ReadFile(cleanPath)
 	if err != nil {
 		return nil, err
 	}

@@ -18,6 +18,8 @@ type Stack struct {
 	Variables       []VariableDef              `yaml:"vars,omitempty"`
 	Vars            map[string]string          `yaml:"-"`
 	VarRules        map[string]VariableRuleSet `yaml:"-"`
+	MatchAccess     string                     `yaml:"matchAccess,omitempty"` // ANY, ALL
+	Access          []AccessRule               `yaml:"access,omitempty"`
 	ExecutionMode   string                     `yaml:"executionMode,omitempty"`
 	Count           int                        `yaml:"count,omitempty"`
 	Shell           string                     `yaml:"shell,omitempty"`
@@ -26,6 +28,11 @@ type Stack struct {
 	Timeouts        string                     `yaml:"timeouts,omitempty"`
 	Output          string                     `yaml:"output,omitempty"`
 	DiscardOutput   []string                   `yaml:"discardOutput,omitempty"`
+}
+
+type AccessRule struct {
+	HeaderName  string   `yaml:"headerName"`
+	HeaderValue []string `yaml:"headerValue"`
 }
 
 type VariableDef struct {
