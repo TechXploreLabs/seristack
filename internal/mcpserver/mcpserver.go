@@ -22,7 +22,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string) 
 	}
 	s := server.NewMCPServer(
 		"seristack",
-		"0.3.4",
+		"0.4.0",
 		server.WithToolCapabilities(true),
 	)
 	hasRoutes := false

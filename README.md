@@ -1,4 +1,4 @@
-# seristack(v0.3.5)
+# seristack
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/TechXploreLabs/seristack.svg)](https://pkg.go.dev/github.com/TechXploreLabs/seristack)
 [![Go Version](https://img.shields.io/badge/go-1.25.5-00ADD8?logo=go)](https://go.dev/)

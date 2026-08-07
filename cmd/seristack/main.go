@@ -27,7 +27,7 @@ Visit https://seristack.getsaas.in/ for more information.
 See our work on https://github.com/TechXploreLabs/seristack.
 
 Apache 2.0 License.`,
-	Version: "0.3.5",
+	Version: "0.4.0",
 }
 
 func Execute() {

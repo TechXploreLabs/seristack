@@ -166,7 +166,9 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 			wg.Add(1)
 			go func(idx int) {
 				defer wg.Done()
-				executeIteration(idx)
+				if err := executeIteration(idx); err != nil {
+					_ = err
+				}
 			}(index)
 		} else {
 			if err := executeIteration(index); err != nil {

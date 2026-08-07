@@ -33,7 +33,7 @@ func New(path string) (*Logger, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
 		return nil, fmt.Errorf("failed to create audit log directory: %w", err)
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) //nolint:gosec // G304: path is supplied by the operator via --audit-log CLI flag, not user input
 	if err != nil {
 		return nil, fmt.Errorf("failed to open audit log file: %w", err)
 	}

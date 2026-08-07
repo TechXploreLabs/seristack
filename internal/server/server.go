@@ -196,7 +196,7 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
-				slog.Error("failed to write json error response", "error", err)
+				slog.Error("Method not found", "error", err)
 			}
 			slog.Error("request failed",
 				"requestID", requestID,
@@ -216,7 +216,7 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
 			if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
-				slog.Error("failed to write json error response", "error", err)
+				slog.Error("access denied: insufficient permissions to execute this stack", "error", err)
 			}
 			slog.Error("request failed",
 				"requestID", requestID,
