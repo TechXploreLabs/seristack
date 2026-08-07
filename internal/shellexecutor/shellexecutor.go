@@ -231,7 +231,7 @@ func ShellExec(args ...string) ([]byte, error) {
 	if args[1] == "__mvdan__" {
 		return ShellExecMvdan(ctx, args[0], args[3], timeout)
 	}
-	execCmd := exec.CommandContext(ctx, args[1], args[2], args[3])
+	execCmd := exec.CommandContext(ctx, args[1], args[2], args[3]) //nolint:gosec // G204: shell binary and args come from operator YAML config
 	execCmd.Dir = args[0]
 	output, err := execCmd.CombinedOutput()
 	if ctx.Err() == context.DeadlineExceeded {

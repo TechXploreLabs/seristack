@@ -209,7 +209,7 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 		if !checkAccess(r, stack.Access, stack.MatchAccess) {
 			errorResponse := ErrorResponse{
 				ErrorCode:    apperrors.FORBIDDEN.String(),
-				ErrorMessage: fmt.Sprintf("Method not allowed. Expected %s", stack.Method),
+				ErrorMessage: fmt.Sprintf("access denied: insufficient permissions to execute this stack %s", stack.Method),
 				Timestamp:    time.Now().Format(time.RFC3339),
 				RequestID:    requestID,
 			}

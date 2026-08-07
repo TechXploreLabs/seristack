@@ -56,7 +56,7 @@ func calculateOptimalShards(stackCount int) int {
 
 func getShard(r *config.Registry, key string) *config.Shard {
 	h := fnv.New32a()
-	h.Write([]byte(key))
+	_, _ = h.Write([]byte(key)) // G104: fnv hash.Write never returns an error
 	return r.Shards[h.Sum32()%r.ShardCount]
 }
 
