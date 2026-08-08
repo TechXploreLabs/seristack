@@ -22,7 +22,7 @@ func NewRegistry(order *[][]string) *config.Registry {
 	shardCount := calculateOptimalShards(batch_length[0])
 	r := &config.Registry{
 		Shards:     make([]*config.Shard, shardCount),
-		ShardCount: uint32(shardCount), //nolint:gosec // G115: calculateOptimalShards returns values in [2,512], well within uint32 range
+		ShardCount: uint32(shardCount), //nolint:gosec // #nosec G115 -- calculateOptimalShards returns values in [2,512], well within uint32 range
 	}
 	for i := range r.Shards {
 		r.Shards[i] = &config.Shard{
