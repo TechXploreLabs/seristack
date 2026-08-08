@@ -5,9 +5,9 @@
 [![License](https://img.shields.io/github/license/TechXploreLabs/seristack)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/TechXploreLabs/seristack?include_prereleases)](https://github.com/TechXploreLabs/seristack/releases)
 
-**Run shell workflows via CLI or HTTP
+**Run shell workflows via CLI, HTTP, or AI agents**
 
-Seristack is a lightweight automation engine designed to bridge the gap between local task execution and remote triggers. Define your stacks in YAML, manage dependencies, and expose your automation via a built-in HTTP server.
+Seristack is a lightweight automation engine designed for DevOps, Platform, SRE, and Cloud teams. Define shell workflows in YAML, manage dependencies, expose them as HTTP endpoints, and let AI agents call them as MCP tools.
 
 [seristack](https://github.com/TechXploreLabs/seristack)
 
@@ -15,15 +15,17 @@ Documentation:
 
 - [Config Reference](docs/config-reference.md)
 
-# Features
+## Features
 
     🚀 Run multiple command stacks from a single config
     🔁 Repeat stacks with serial or concurrent execution
     🔗 Define dependencies between stacks
-    🧩 Variable substitution using templates
+    🧩 Variable substitution with validation rules
     📦 Share output between stacks
     🌐 Expose stacks as HTTP endpoints
-    🧠 Run as an MCP server for IDE integrations
+    🔐 Per-stack authorization via identity headers
+    📋 Structured audit log for every stack execution
+    🧠 Run as an MCP server for AI agent and IDE integrations
     🛠 Works with mvdan shell (default), Bash, sh, and PowerShell
 
 
@@ -37,80 +39,56 @@ brew install TechXploreLabs/tap/seristack
 
 ### Linux (using release archive)
 
-1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_linux_ARCH.tar.gz` (`ARCH` matches your system, e.g., `amd64`, `arm64`).
+1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_linux_ARCH.tar.gz`.
 2. Extract the archive:
    ```bash
    tar -xzf seristack_VERSION_linux_ARCH.tar.gz
    ```
-3. Move the `seristack` binary to a directory in your `PATH`:
+3. Move the binary to your PATH:
    ```bash
    sudo mv seristack /usr/local/bin/
-   ```
-4. Set execute permissions (just in case):
-   ```bash
    sudo chmod +x /usr/local/bin/seristack
    ```
-5. Verify installation:
+4. Verify:
    ```bash
    seristack --help
    ```
 
 ### Windows (using release archive)
 
-1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_windows_ARCH.zip` or `.gz` file (where `ARCH` matches your system, e.g., `amd64`).
-2. Extract the zip/gz file (Right click → Extract all, or use a tool like 7-Zip).
-3. Move `seristack.exe` to a folder in your `%PATH%` (such as `C:\Windows`, or better, a custom tools folder included in PATH).
-4. Open PowerShell or Command Prompt and verify installation:
+1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_windows_ARCH.zip`.
+2. Extract and move `seristack.exe` to a folder in your `%PATH%`.
+3. Verify:
    ```powershell
    seristack --help
    ```
 
 
-# Sample stack yaml file
+## Sample config
 
 For a full explanation of every YAML attribute, see the [Config Reference](docs/config-reference.md).
 
 ```yaml
-# description about seristack
-# config.yaml
-
 stacks:
-  - name: stack1                # name of the stack (REQUIRED)
-    workDir: ./                 # working directory to execute the cmds. default is "./"
-    description: Used for printing  
-                  welcome message               # used for adding the stack as tool in mcp server, if descrption is empty then 
-                                                # it won't be added
-    method: GET                 # Http methods needs to be added for http server
-    urlPath: /show              # Optional, If not provided stack name will be added as path, ex /stack1 
-    continueOnError: false      # if cmds has error, true will not stop execution, false will stop. default is false
-    count: 3                    # count = 0 will not run cmds, count = 3 runs entire cmds three times. default is 0
-    timeouts: 1h                # timeout for each command execution in this stack. default is 1h
-                                # supports Go duration values like 500ms, 30s, 5m, 1h, 1h30m
-    executionMode: PARALLEL     # if count = 3 and executionMode is PARALLEL, then all three iterations of list 
-                                # cmds execute parallellely . Valid options are, [PARALLEL/STAGE/PIPELINE/SEQUENTIAL]. 
-                                # STAGE = execute all iterations conncurrently, list of cmds execeuted serially
-                                # PIPELINE = execute all iterations serially, list of cmds executed concurrently
-                                # SEQUENTIAL = execute all iterations and theirs cmds serially. default is PARALLEL
-    
-    vars:                       # vars takes list of variable objects. default is empty
+  - name: stack1
+    workDir: ./
+    description: Print welcome message
+    method: GET
+    urlPath: /show
+    continueOnError: false
+    count: 3
+    timeouts: 1h
+    executionMode: PARALLEL
+    vars:
       - name: samplekey
         value: samplevalue
-        required: true # optional
-        allowed_value: [samplevalue, devvalue]  # optional
-        # denied_value: [blocked]               # optional
-        # allowed_regex: regex("^[a-z]+$")     # optional
-        # denied_regex: regex("(?i)rm")        # optional
-        # Note: only one rule set can be used among
-        # allowed_value / denied_value / allowed_regex / denied_regex
-    discardOutput: [stack1] # Discard the output saved in the memory, after current stack completes
-    shell: bash                 # optional. if not provided, mvdan shell interpreter is used by default
-    shellArg: -c                # optional for external shells
-    dependsOn: []               # dependsOn takes list of stacks to start after them. default is []
-    cmds:                       # cmds takes list of shell commands (linux, powershell)
+        required: true
+        allowed_value: [samplevalue, devvalue]
+    cmds:
       - |
-        export samplekey={{.Vars.samplekey}}    # to use vars for substitution
+        export samplekey={{.Vars.samplekey}}
         echo $samplekey
-        echo "count={{.Count.index}}"         # index of count iterations
+        echo "count={{.Count.index}}"
         echo "Hey i'm seristack!"
 
   - name: stack2
@@ -121,146 +99,185 @@ stacks:
     vars:
       - name: env
         value: Dev
-    dependsOn: [stack1]          # runs after stack1 completes
+    dependsOn: [stack1]
     cmds:
       - |
-        # Command 1: Produces metadata
         echo "{\"index\": {{.Count.index}}, \"step\": \"metadata\", \"status\": \"ok\"}"
       - |
-        # Command 2: Produces metric data
-        echo "{\"index\": {{.Count.index}}, \"step\": \"metrics\", \"value\": $((RANDOM % 100))}"  
-    output: |  # for aggregating outputs from the cmds
+        echo "{\"index\": {{.Count.index}}, \"step\": \"metrics\", \"value\": $((RANDOM % 100))}"
+    output: |
       echo "--- Aggregation Summary ---"
-      # We use 'grep' to find JSON lines and 'jq' to format them into an array
       echo '{{.Self.result}}' | grep "^{" | jq -s '{
         total_records: length,
         environment: "{{.Vars.env}}",
         results: .
       }'
-  - name: stack3
-    workDir: ./
-    count: 1
-    vars:
-      - name: invite
-        value: hello engineers
-    cmds:
-      - |
-        echo "Current date and time:"
-        echo `date`
 ```
 
-# Running the stacks
-
-1. Trigger entire stacks, default is config.yaml.
+## Running stacks
 
 ```bash
+# Trigger all stacks
 seristack trigger -c config.yaml
 
-or
+# Trigger a specific stack
+seristack trigger -c config.yaml -s stack1
 
-seristack trigger
-```
-
-2. Run the particular stack.
-
-```bash
-seristack trigger -c config.yaml -s stack3
-```
-
-3. Init the http server with endpoint. ctrl+c will stop the server process.
-
-```bash
+# Start the HTTP server
 seristack run -c config.yaml
-```
 
-4. Init the mcpserver. ctrl+c will stop the server process.
-
-```bash
+# Start the MCP server
 seristack mcp -t streamableHTTP
 ```
 
-# Production deployment and authentication
 
-Seristack can execute shell commands, so avoid exposing it directly to the public internet.
-The recommended production pattern is to run Seristack on `127.0.0.1` or a private network
-and put a reverse proxy such as **Nginx** or **Caddy** in front of it.
+## Production deployment
 
-Use the reverse proxy for:
+Seristack executes shell commands. Never expose it directly to the public internet.
 
-- TLS/HTTPS termination
-- authentication and authorization
-- IP allowlists
-- rate limiting
-- request body size limits
-- access logging
+The production pattern is:
 
-Seristack focuses on stack execution, variable validation, HTTP endpoint routing, and MCP tool
-exposure. Authentication is intentionally best handled at the edge by a battle-tested proxy.
+```
+Client → nginx / caddy (TLS, AuthN) → seristack on 127.0.0.1 (AuthZ, execution)
+```
 
-## HTTP API behind a reverse proxy
-
-Start Seristack bound to localhost:
+Start seristack bound to localhost:
 
 ```bash
 seristack run --config config.yaml --addr 127.0.0.1 --port 8080
 ```
 
-Then expose it through Nginx or Caddy.
+The reverse proxy handles TLS, authentication, and rate limiting. Seristack handles per-stack authorization and execution.
 
-### Nginx example with Basic Auth
 
-Create a password file:
+## Per-stack authorization
 
-```bash
-htpasswd -c /etc/nginx/.seristack_htpasswd admin
+Seristack checks identity headers forwarded by nginx/caddy after they validate the user. Every IdP (Entra ID, OCI IAM, GCP IAM, AWS Cognito, Okta) forwards group and role information as HTTP headers via oauth2-proxy or a native OIDC integration.
+
+Add an `access` block to any stack to restrict who can execute it:
+
+```yaml
+stacks:
+  - name: deploy-production
+    method: POST
+    urlPath: /deploy/production
+    matchAccess: ANY        # ANY (default) or ALL
+    access:
+      - headerName: "X-Auth-Request-Groups"
+        headerValue: ["sre", "platform"]
+      - headerName: "X-Auth-Request-Roles"
+        headerValue: ["admin"]
+    count: 1
+    cmds:
+      - ./deploy.sh
 ```
 
-Example Nginx config:
+- `matchAccess: ANY` — access is granted if any one rule matches (OR logic). Default.
+- `matchAccess: ALL` — every rule must match (AND logic).
+- No `access` block — any authenticated user can execute the stack.
+
+The header names depend on your IdP and proxy:
+
+| IdP | Proxy | Headers forwarded |
+|---|---|---|
+| Entra ID / Azure AD | oauth2-proxy | `X-Auth-Request-Groups`, `X-Auth-Request-Roles`, `X-Auth-Request-Email` |
+| GCP IAM | IAP | `X-Goog-Authenticated-User-Email` |
+| AWS Cognito | ALB | `X-Amzn-Oidc-Data` |
+| OCI IAM | nginx + oauth2-proxy | `X-Auth-Request-Groups`, `X-Auth-Request-Email` |
+| Okta / Auth0 | oauth2-proxy | `X-Auth-Request-Groups`, `X-Auth-Request-Roles` |
+
+
+## Audit log
+
+Enable a structured JSON audit trail for every stack execution:
+
+```bash
+seristack run \
+  --audit-log /var/log/seristack/audit.log \
+  --identity-header "user=X-Auth-Request-Email" \
+  --identity-header "groups=X-Auth-Request-Groups" \
+  --identity-header "roles=X-Auth-Request-Roles"
+```
+
+Every execution — success or failure — writes one JSON line:
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "event": "stack_executed",
+  "request_id": "abc-123",
+  "stack": "deploy-production",
+  "path": "/deploy/production",
+  "method": "POST",
+  "source_ip": "127.0.0.1:54231",
+  "identity": {
+    "user": "alice@company.com",
+    "groups": "sre,platform"
+  },
+  "vars": {"env": "production", "version": "v1.2.3"},
+  "success": true,
+  "duration_ms": 1423
+}
+```
+
+Query the audit log with `jq`:
+
+```bash
+# Who ran deploys today
+jq 'select(.stack == "deploy-production")' /var/log/seristack/audit.log
+
+# All failures
+jq 'select(.success == false)' /var/log/seristack/audit.log
+
+# Everything a specific user ran
+jq 'select(.identity.user == "alice@company.com")' /var/log/seristack/audit.log
+
+# Executions over 30 seconds
+jq 'select(.duration_ms > 30000)' /var/log/seristack/audit.log
+```
+
+Use `logrotate` to manage audit log rotation. Do not pass secrets as stack vars — they will appear in the audit log. Secrets should come from environment variables or a secrets manager inside the shell script.
+
+
+## nginx example with IdP integration
 
 ```nginx
 server {
     listen 443 ssl;
     server_name seristack.example.com;
 
-    ssl_certificate /etc/letsencrypt/live/seristack.example.com/fullchain.pem;
+    ssl_certificate     /etc/letsencrypt/live/seristack.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/seristack.example.com/privkey.pem;
 
-    client_max_body_size 1m;
+    location /oauth2/ {
+        proxy_pass http://127.0.0.1:4180;
+        proxy_set_header Host $host;
+    }
 
     location / {
-        auth_basic "Seristack";
-        auth_basic_user_file /etc/nginx/.seristack_htpasswd;
+        # Validate identity via oauth2-proxy
+        auth_request /oauth2/auth;
+
+        # Forward identity headers from oauth2-proxy to seristack
+        auth_request_set $user   $upstream_http_x_auth_request_email;
+        auth_request_set $groups $upstream_http_x_auth_request_groups;
+
+        proxy_set_header X-Auth-Request-Email  $user;
+        proxy_set_header X-Auth-Request-Groups $groups;
+        proxy_set_header X-Request-ID          $request_id;
 
         proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Request-ID $request_id;
     }
 }
 ```
 
-For stricter production use, add Nginx rate limiting and/or IP allowlists.
-
-### Caddy example with Basic Auth
-
-Generate a password hash:
-
-```bash
-caddy hash-password
-```
-
-Example `Caddyfile`:
+## Caddy example with IdP integration
 
 ```caddyfile
 seristack.example.com {
-    request_body {
-        max_size 1MB
-    }
-
-    basicauth {
-        admin <PASTE_CADDY_HASHED_PASSWORD_HERE>
+    forward_auth http://oauth2-proxy:4180 {
+        uri /oauth2/auth
+        copy_headers X-Auth-Request-Email X-Auth-Request-Groups X-Auth-Request-Roles
     }
 
     reverse_proxy 127.0.0.1:8080 {
@@ -269,67 +286,52 @@ seristack.example.com {
 }
 ```
 
-## MCP server security
-
-The same rule applies to MCP transports. Start MCP on localhost/private networking unless you
-are deliberately exposing it through a protected proxy:
+## MCP server
 
 ```bash
-seristack mcp --type streamableHTTP --addr 127.0.0.1 --port 8080
+seristack mcp -t streamableHTTP --addr 127.0.0.1 --port 8081
 ```
 
-If exposing MCP externally, protect it with Nginx/Caddy authentication, TLS, rate limits, and
-network restrictions. MCP clients can trigger the configured stack tools, so treat MCP endpoints
-with the same security posture as the HTTP API.
+Stacks with a `description` field are registered as MCP tools. AI agents (Claude, Cursor, Copilot) can call them directly. Apply the same nginx/caddy security posture in front of the MCP server as you would for the HTTP server.
 
-## Request validation
 
-Seristack supports variable-level validation in `vars` using:
-
-- `required`
-- `allowed_value`
-- `denied_value`
-- `allowed_regex`
-- `denied_regex`
-
-Use these rules to restrict inputs accepted by HTTP endpoints and MCP tools.
-
-## Command timeout values
-
-The stack-level `timeouts` field controls the maximum duration allowed for each command execution
-inside that stack.
-
-If `timeouts` is not set, Seristack uses the default command timeout: **`1h`**.
-
-Seristack uses Go duration syntax through `time.ParseDuration`, so timeout values support these
-units:
-
-- `ns` — nanoseconds
-- `us` or `µs` — microseconds
-- `ms` — milliseconds
-- `s` — seconds
-- `m` — minutes
-- `h` — hours
-
-Examples:
+## Variable validation
 
 ```yaml
-timeouts: 500ms   # 500 milliseconds
-timeouts: 30s     # 30 seconds
-timeouts: 5m      # 5 minutes
-timeouts: 1h      # 1 hour
-timeouts: 1h30m   # 1 hour and 30 minutes
-timeouts: 2.5h    # 2 hours and 30 minutes
+vars:
+  - name: env
+    value: staging
+    required: true
+    allowed_value: [staging, production]
+
+  - name: version
+    required: true
+    allowed_regex: regex("^[a-zA-Z0-9._-]+$")
+
+  - name: command
+    denied_regex: regex("(?i)rm|delete|drop")
 ```
 
-Timeouts must be greater than zero. Values like `0s`, `-1m`, `1d`, or `never` are invalid.
-Use `24h` instead of `1d` if you need a one-day timeout.
+Only variables declared in `vars` can be overridden by HTTP requests or MCP arguments. Undeclared variable names from HTTP inputs are dropped.
+
+
+## run command reference
+
+```
+seristack run [flags]
+
+Flags:
+  -c, --config string              config file (default "config.yaml")
+  -a, --addr string                bind address (default "127.0.0.1")
+  -p, --port string                server port (default "8080")
+      --audit-log string           path to audit log file (enables audit logging when set)
+      --identity-header strings    map identity header to a key: "user=X-Auth-Request-Email" (repeatable)
+```
+
 
 # Support the project
 
-If Seristack helps you turn shell scripts or runbooks into internal APIs and MCP tools, consider
-supporting the project by starring the repository, sharing feedback, opening issues, contributing
-examples, or sponsoring future development.
+If Seristack helps your team turn shell scripts or runbooks into internal APIs and MCP tools, consider supporting the project by starring the repository, sharing feedback, opening issues, or contributing examples.
 
 
 # License
