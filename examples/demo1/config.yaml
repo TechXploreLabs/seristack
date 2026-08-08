@@ -1,0 +1,43 @@
+stacks:
+- name: stack1
+  count: 1
+  description: Welcome message for the user
+  method: GET
+  vars:
+  - name: user_name
+    required: true
+    allowed_regex : regex("^[a-z]+$")
+  cmds:
+  - |
+    echo "Hi {{.Vars.user_name}}, Welcome to seristack opensource tool."
+
+- name: stack2
+  count: 1
+  description: current date and time
+  method: GET
+  dependsOn: ["stack1"]
+  cmds:
+  - echo `date`
+
+- name: stack3
+  count: 1
+  description: live data about the operations
+  method: POST
+  dependsOn: ["stack2"]
+  vars:
+  - name: env_name
+    required: true
+    allowed_value: [dev, stage, prod]
+  cmds:
+  - |
+    if [ {{.Vars.env_name}} == "dev" ];then
+      echo "For {{.Vars.env_name}} env , the operations completed successfully"
+    fi
+  - |
+    if [ {{.Vars.env_name}} == "stage" ];then
+      echo "For {{.Vars.env_name}} env , the operations partially completed"
+    fi
+  - |
+    if [ {{.Vars.env_name}} == "prod" ];then
+      echo "For {{.Vars.env_name}} env , the operations completed with error"
+    fi
