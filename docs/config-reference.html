@@ -234,6 +234,18 @@
             margin: 1rem 0;
         }
 
+        .note p { color: var(--text); }
+
+        .warning {
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning p { color: #fde68a; }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -245,6 +257,20 @@
             border-radius: 12px;
             padding: 1rem;
             background: rgba(15, 23, 42, 0.5);
+        }
+
+        .badge {
+            display: inline-block;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-left: 0.5rem;
+            vertical-align: middle;
         }
 
         footer {
@@ -280,7 +306,8 @@
         <h1>Config Reference</h1>
         <p class="lead">
             A complete guide to every Seristack YAML attribute: stack definitions, variables,
-            validation rules, execution modes, timeouts, HTTP endpoints, MCP tools, and output handling.
+            validation rules, execution modes, timeouts, HTTP endpoints, per-stack authorization,
+            audit logging, MCP tools, and output handling.
         </p>
     </div>
 
@@ -293,8 +320,9 @@
             <a href="#execution-modes">Execution modes</a>
             <a href="#timeouts">Timeouts</a>
             <a href="#shell">Shell</a>
-            <a href="#commands-output">Commands & output</a>
+            <a href="#commands-output">Commands &amp; output</a>
             <a href="#http">HTTP behavior</a>
+            <a href="#authorization">Authorization (HTTP)</a>
             <a href="#mcp">MCP behavior</a>
             <a href="#complete-example">Complete example</a>
         </aside>
@@ -322,7 +350,9 @@
                         <tr><td><code>description</code></td><td>string</td><td>no</td><td>empty</td><td>Human-readable description. Required for exposing a stack as an MCP tool.</td></tr>
                         <tr><td><code>method</code></td><td>string</td><td>no</td><td>empty</td><td>HTTP method such as <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, or <code>DELETE</code>. Required for HTTP endpoint exposure.</td></tr>
                         <tr><td><code>urlPath</code></td><td>string</td><td>no</td><td><code>/&lt;name&gt;</code></td><td>Custom HTTP route path.</td></tr>
-                        <tr><td><code>workDir</code></td><td>string</td><td>no</td><td>source/config directory behavior</td><td>Working directory for command execution.</td></tr>
+                        <tr><td><code>matchAccess</code></td><td>string</td><td>no</td><td><code>ANY</code></td><td>How multiple <code>access</code> rules are evaluated. <code>ANY</code> grants access if one rule matches. <code>ALL</code> requires every rule to match. HTTP only.</td></tr>
+                        <tr><td><code>access</code></td><td>list</td><td>no</td><td>empty</td><td>Per-stack HTTP authorization rules. Each rule checks an identity header forwarded by nginx or Caddy against allowed values. HTTP only.</td></tr>
+                        <tr><td><code>workDir</code></td><td>string</td><td>no</td><td>config directory</td><td>Working directory for command execution.</td></tr>
                         <tr><td><code>continueOnError</code></td><td>boolean</td><td>no</td><td><code>false</code></td><td>Continue command execution after failures and record errors.</td></tr>
                         <tr><td><code>dependsOn</code></td><td>list</td><td>no</td><td><code>[]</code></td><td>Stacks that must run before this stack.</td></tr>
                         <tr><td><code>vars</code></td><td>list</td><td>no</td><td>empty</td><td>Variable definitions and validation rules.</td></tr>
@@ -359,7 +389,10 @@
                     </tbody>
                 </table>
                 <div class="note">
-                    Only one of <code>allowed_value</code>, <code>denied_value</code>, <code>allowed_regex</code>, or <code>denied_regex</code> can be used per variable. <code>required</code> can be combined with one of them.
+                    <p>Only one of <code>allowed_value</code>, <code>denied_value</code>, <code>allowed_regex</code>, or <code>denied_regex</code> can be used per variable. <code>required</code> can be combined with one of them.</p>
+                </div>
+                <div class="warning">
+                    <p>Do not pass secrets as stack vars. They will appear in the audit log and in slog output. Secrets should come from environment variables or a secrets manager inside the shell script.</p>
                 </div>
                 <p>Runtime values can come from CLI flags, HTTP query/form/JSON body, HTTP <code>X-*</code> headers, and MCP tool arguments.</p>
             </section>
@@ -389,7 +422,7 @@
                     <div class="mini-card"><code>1h30m</code><p>1 hour 30 minutes</p></div>
                     <div class="mini-card"><code>2.5h</code><p>2 hours 30 minutes</p></div>
                 </div>
-                <div class="note">Supported units: <code>ns</code>, <code>us</code>/<code>µs</code>, <code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>. Use <code>24h</code> instead of <code>1d</code>.</div>
+                <div class="note"><p>Supported units: <code>ns</code>, <code>us</code>/<code>µs</code>, <code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>. Use <code>24h</code> instead of <code>1d</code>.</p></div>
             </section>
 
             <section id="shell">
@@ -417,62 +450,208 @@ shellArg: -c</code></pre>
             <section id="http">
                 <h2>HTTP endpoint behavior</h2>
                 <p>A stack becomes an HTTP endpoint when <code>method</code> is set.</p>
-                <pre><code>name: greet-api
-method: GET
-urlPath: /greet</code></pre>
+                <pre><code>name: deploy
+method: POST
+urlPath: /deploy</code></pre>
                 <p>HTTP variables can come from query parameters, form values, JSON request body, and headers beginning with <code>X-</code>.</p>
+                <pre><code># query param
+curl "http://127.0.0.1:8080/deploy?env=staging"
+
+# JSON body
+curl -X POST http://127.0.0.1:8080/deploy \
+  -H "Content-Type: application/json" \
+  -d '{"env": "staging", "version": "v1.2.3"}'</code></pre>
+            </section>
+
+            <section id="authorization">
+                <h2>Authorization (HTTP)</h2>
+                <p>
+                    The <code>access</code> block restricts which users or groups can execute an HTTP stack endpoint.
+                    Seristack reads identity headers forwarded by nginx or Caddy after they validate the user against your IdP.
+                </p>
+                <div class="note">
+                    <p><strong>HTTP only.</strong> The <code>access</code> and <code>matchAccess</code> fields apply to HTTP endpoints only. MCP tool calls bypass this check. Secure MCP at the transport level using nginx, Caddy, or network policy.</p>
+                </div>
+
+                <h3>Basic usage</h3>
+                <pre><code>stacks:
+  - name: deploy
+    method: POST
+    urlPath: /deploy
+    matchAccess: ANY
+    access:
+      - headerName: "X-Auth-Request-Groups"
+        headerValue: ["sre", "platform"]
+      - headerName: "X-Auth-Request-Roles"
+        headerValue: ["admin"]
+    cmds:
+      - ./deploy.sh</code></pre>
+
+                <h3><code>access</code> rule attributes</h3>
+                <table>
+                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>headerName</code></td><td>string</td><td>yes</td><td>The exact HTTP header name to read. Must match what nginx or Caddy forwards.</td></tr>
+                        <tr><td><code>headerValue</code></td><td>list</td><td>yes</td><td>Allowed values. Access granted if the header contains any of these values. Comma-separated header values are split automatically.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3><code>matchAccess</code> values</h3>
+                <table>
+                    <thead><tr><th>Value</th><th>Behaviour</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>ANY</code></td><td>Access granted if <strong>any one</strong> rule matches. Default.</td></tr>
+                        <tr><td><code>ALL</code></td><td>Access granted only if <strong>every</strong> rule matches.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Examples</h3>
+                <pre><code># Any member of sre or platform can run
+access:
+  - headerName: "X-Auth-Request-Groups"
+    headerValue: ["sre", "platform"]
+
+# Must be in devops AND have admin role
+matchAccess: ALL
+access:
+  - headerName: "X-Auth-Request-Groups"
+    headerValue: ["devops"]
+  - headerName: "X-Auth-Request-Roles"
+    headerValue: ["admin"]
+
+# Specific user only
+access:
+  - headerName: "X-Auth-Request-Email"
+    headerValue: ["oncall@company.com"]</code></pre>
+
+                <h3>Identity header names by IdP</h3>
+                <table>
+                    <thead><tr><th>IdP</th><th>Proxy</th><th>Group header</th><th>Role header</th><th>Email header</th></tr></thead>
+                    <tbody>
+                        <tr><td>Entra ID / Azure AD</td><td>oauth2-proxy</td><td><code>X-Auth-Request-Groups</code></td><td><code>X-Auth-Request-Roles</code></td><td><code>X-Auth-Request-Email</code></td></tr>
+                        <tr><td>GCP IAM</td><td>IAP</td><td>—</td><td>—</td><td><code>X-Goog-Authenticated-User-Email</code></td></tr>
+                        <tr><td>AWS Cognito</td><td>ALB</td><td><code>X-Amzn-Oidc-Data</code></td><td>—</td><td>—</td></tr>
+                        <tr><td>OCI IAM</td><td>nginx + oauth2-proxy</td><td><code>X-Auth-Request-Groups</code></td><td>—</td><td><code>X-Auth-Request-Email</code></td></tr>
+                        <tr><td>Okta / Auth0</td><td>oauth2-proxy</td><td><code>X-Auth-Request-Groups</code></td><td><code>X-Auth-Request-Roles</code></td><td><code>X-Auth-Request-Email</code></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Testing without nginx (local development)</h3>
+                <p>Pass identity headers directly in curl while developing locally:</p>
+                <pre><code># Granted — group matches
+curl -X POST http://127.0.0.1:8080/deploy \
+  -H "X-Auth-Request-Groups: sre" \
+  -H "Content-Type: application/json" \
+  -d '{"env": "staging"}'
+
+# Denied — group not in access block
+curl -X POST http://127.0.0.1:8080/deploy \
+  -H "X-Auth-Request-Groups: intern" \
+  -H "Content-Type: application/json" \
+  -d '{"env": "staging"}'</code></pre>
+
+                <h3>Audit log</h3>
+                <p>Enable a structured JSON audit trail for every HTTP stack execution via CLI flags:</p>
+                <pre><code>seristack run \
+  --audit-log /var/log/seristack/audit.log \
+  --identity-header "user=X-Auth-Request-Email" \
+  --identity-header "groups=X-Auth-Request-Groups" \
+  --identity-header "roles=X-Auth-Request-Roles"</code></pre>
+                <p>Every execution writes one JSON line:</p>
+                <pre><code>{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "event": "stack_executed",
+  "stack": "deploy",
+  "path": "/deploy",
+  "method": "POST",
+  "source_ip": "127.0.0.1:54231",
+  "identity": {
+    "user": "alice@company.com",
+    "groups": "sre,platform"
+  },
+  "vars": {"env": "staging", "version": "v1.2.3"},
+  "success": true,
+  "duration_ms": 1423
+}</code></pre>
+                <p>Query with <code>jq</code>:</p>
+                <pre><code># All failures
+jq 'select(.success == false)' /var/log/seristack/audit.log
+
+# Everything a specific user ran
+jq 'select(.identity.user == "alice@company.com")' /var/log/seristack/audit.log
+
+# Slow executions over 30s
+jq 'select(.duration_ms > 30000)' /var/log/seristack/audit.log</code></pre>
             </section>
 
             <section id="mcp">
                 <h2>MCP tool behavior</h2>
                 <p>A stack becomes an MCP tool when <code>description</code> is set. Variables declared in <code>vars</code> become MCP tool arguments.</p>
+                <div class="note">
+                    <p>The <code>access</code> block does not apply to MCP tool calls. MCP access is controlled at the transport level — put nginx or Caddy in front of the MCP server port and restrict by network, token, or IP.</p>
+                </div>
             </section>
 
             <section id="complete-example">
                 <h2>Complete example</h2>
                 <pre><code>stacks:
-  - name: greet-api
-    description: Greets a user from CLI, HTTP, or MCP
-    method: GET
-    urlPath: /greet
-    workDir: ./
+  - name: deploy
+    description: Deploy the application to a target environment
+    method: POST
+    urlPath: /deploy
+    matchAccess: ANY
+    access:
+      - headerName: "X-Auth-Request-Groups"
+        headerValue: ["sre", "platform"]
+      - headerName: "X-Auth-Request-Roles"
+        headerValue: ["admin"]
     count: 1
-    timeouts: 30s
+    timeouts: 10m
     executionMode: SEQUENTIAL
     vars:
-      - name: name
-        value: engineer
-        required: true
-        allowed_regex: regex("^[a-zA-Z0-9_-]+$")
       - name: env
-        value: dev
-        allowed_value: [dev, stage, prod]
+        value: staging
+        required: true
+        allowed_value: [staging, production]
+      - name: version
+        required: true
+        allowed_regex: regex("^[a-zA-Z0-9._-]+$")
     cmds:
       - |
-        echo "Hello {{.Vars.name}} from {{.Vars.env}}"
+        echo "Deploying {{.Vars.version}} to {{.Vars.env}}"
+        kubectl set image deployment/app app={{.Vars.version}}
 
   - name: collect-metadata
     description: Produces JSON metadata for aggregation
-    dependsOn: [greet-api]
+    dependsOn: [deploy]
     count: 2
     timeouts: 5m
     executionMode: SEQUENTIAL
     vars:
       - name: env
-        value: dev
+        value: staging
     cmds:
       - |
         echo "{\"index\": {{.Count.index}}, \"env\": \"{{.Vars.env}}\", \"status\": \"ok\"}"
     output: |
       echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'
 
-  - name: cleanup-output
+  - name: cleanup
     dependsOn: [collect-metadata]
-    discardOutput: [greet-api]
+    discardOutput: [deploy]
     count: 1
     timeouts: 10s
     cmds:
-      - echo "discarded greet-api output from memory"</code></pre>
+      - echo "discarded deploy output from memory"</code></pre>
+
+                <p>Start the server with audit logging enabled:</p>
+                <pre><code>seristack run \
+  --config config.yaml \
+  --addr 127.0.0.1 \
+  --port 8080 \
+  --audit-log /var/log/seristack/audit.log \
+  --identity-header "user=X-Auth-Request-Email" \
+  --identity-header "groups=X-Auth-Request-Groups"</code></pre>
             </section>
         </main>
     </div>
