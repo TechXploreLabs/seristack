@@ -16,9 +16,13 @@ import (
 )
 
 func McpServer(config *conf.Config, transport string, port string, addr string) error {
+	sourceDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
 	s := server.NewMCPServer(
 		"seristack",
-		"0.3.4",
+		"0.4.0",
 		server.WithToolCapabilities(true),
 	)
 	hasRoutes := false
@@ -29,7 +33,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string) 
 			if registeredPatterns[stack.Name] {
 				return fmt.Errorf("duplicate tool registration:  %q ", stack.Name)
 			}
-			registerStackTool(s, stack, stackMap)
+			registerStackTool(s, stack, stackMap, sourceDir)
 			hasRoutes = true
 			registeredPatterns[stack.Name] = true
 		}
@@ -57,7 +61,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string) 
 	}
 }
 
-func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[string]*conf.Stack) {
+func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[string]*conf.Stack, sourceDir string) {
 	options := []mcp.ToolOption{
 		mcp.WithDescription(stack.Description),
 	}

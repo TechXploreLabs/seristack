@@ -21,22 +21,26 @@ stacks:
 
 | Attribute | Type | Required | Default | Used by | Description |
 |---|---:|---:|---|---|---|
-| `name` | string | yes | none | CLI, HTTP, MCP, dependencies | Unique stack name. Used for stack selection, default HTTP route, MCP tool name, dependencies, and registry output keys. |
-| `description` | string | no | empty | MCP | Human-readable description. Stacks with a non-empty description are registered as MCP tools. |
-| `method` | string | no | empty | HTTP | HTTP method for endpoint exposure, such as `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`. If empty, the stack is not exposed as an HTTP endpoint. |
-| `urlPath` | string | no | `/<name>` | HTTP | Custom HTTP route path. If omitted, the stack name is used as the path. |
-| `workDir` | string | no | source/config directory behavior | shell execution | Working directory for command execution, resolved relative to the Seristack source/config execution directory. |
-| `continueOnError` | boolean | no | `false` | execution | If `true`, Seristack records command errors and continues. If `false`, command failures stop execution. |
-| `dependsOn` | list of strings | no | `[]` | execution order | Stack names that must run before this stack. |
-| `vars` | list | no | empty | CLI, HTTP, MCP, templating | Variable definitions and validation rules. Runtime values can override declared variables. |
-| `executionMode` | string | no | `PARALLEL` | execution | Controls concurrency between count iterations and command execution. Valid values: `PARALLEL`, `STAGE`, `PIPELINE`, `SEQUENTIAL`. |
-| `count` | integer | no | `0` | execution | Number of times to run the stack commands. `0` skips command execution. |
-| `timeouts` | string | no | `1h` | shell execution | Per-command timeout using Go duration syntax, such as `30s`, `5m`, or `1h30m`. |
-| `shell` | string | no | built-in mvdan shell | shell execution | External shell executable, such as `bash`, `sh`, `pwsh`, or `powershell`. |
-| `shellArg` | string | no | `-c` for external shells | shell execution | Argument passed to the external shell before the command script. |
-| `cmds` | list of strings | no | empty | shell execution | Commands/scripts executed by the stack. Usually required for useful stacks. |
-| `output` | string | no | empty | output aggregation | Optional post-processing command that can use `{{.Self.result}}` to aggregate command output. |
-| `discardOutput` | list of strings | no | empty | registry cleanup | Stack output keys to remove from the in-memory registry after this stack completes. |
+| `name` | string | yes | none | CLI, HTTP, MCP, dependencies | Unique stack name. |
+| `description` | string | no | empty | MCP | Stacks with a non-empty description are registered as MCP tools. |
+| `method` | string | no | empty | HTTP | HTTP method (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`). If empty, the stack is not exposed as an HTTP endpoint. |
+| `urlPath` | string | no | `/<name>` | HTTP | Custom HTTP route path. |
+| `matchAccess` | string | no | `ANY` | HTTP | How multiple `access` rules are evaluated. `ANY` grants access if one rule matches. `ALL` requires every rule to match. |
+| `access` | list | no | empty | HTTP | Per-stack authorization rules. Each rule checks an HTTP header against allowed values. |
+| `workDir` | string | no | config directory | shell execution | Working directory for command execution. |
+| `continueOnError` | boolean | no | `false` | execution | If `true`, records errors and continues. If `false`, stops on failure. |
+| `dependsOn` | list of strings | no | `[]` | execution order | Stack names that must complete before this stack runs. |
+| `vars` | list | no | empty | CLI, HTTP, MCP, templating | Variable definitions and validation rules. |
+| `executionMode` | string | no | `PARALLEL` | execution | Controls concurrency. Valid values: `PARALLEL`, `STAGE`, `PIPELINE`, `SEQUENTIAL`. |
+| `count` | integer | no | `0` | execution | Number of times to run the stack. `0` skips execution. |
+| `timeouts` | string | no | `1h` | shell execution | Per-command timeout. Uses Go duration syntax: `30s`, `5m`, `1h30m`. |
+| `shell` | string | no | mvdan shell | shell execution | External shell: `bash`, `sh`, `pwsh`, `powershell`. |
+| `shellArg` | string | no | `-c` | shell execution | Argument passed to the external shell before the command script. |
+| `cmds` | list of strings | no | empty | shell execution | Commands executed by the stack. |
+| `output` | string | no | empty | output aggregation | Post-processing command. Can use `{{.Self.result}}` to aggregate output. |
+| `discardOutput` | list of strings | no | empty | registry cleanup | Stack output keys to remove from memory after this stack completes. |
+
+---
 
 ## `name`
 
@@ -44,21 +48,25 @@ stacks:
 name: deploy-api
 ```
 
-`name` must be unique. It is used for:
+`name` must be unique across all stacks. It is used for:
 
 - `seristack trigger -s <name>`
-- default HTTP path when `urlPath` is not set
+- Default HTTP path when `urlPath` is not set
 - MCP tool name
-- dependency references through `dependsOn`
-- output registry keys
+- Dependency references in `dependsOn`
+- Output registry keys shared between stacks
+
+---
 
 ## `description`
 
 ```yaml
-description: Restart the application service
+description: Deploy the application to a target environment
 ```
 
-In MCP mode, stacks with a non-empty `description` are registered as MCP tools. If the description is empty, the stack is not added as an MCP tool.
+In MCP mode, stacks with a non-empty `description` are registered as MCP tools. If the description is empty, the stack is not added.
+
+---
 
 ## `method` and `urlPath`
 
@@ -67,21 +75,95 @@ method: POST
 urlPath: /deploy
 ```
 
-Set `method` to expose a stack as an HTTP endpoint. `urlPath` is optional. If `urlPath` is omitted, Seristack uses `/<stack-name>`.
-
-Example:
-
-```yaml
-name: greet-api
-method: GET
-urlPath: /greet
-```
-
-Request example:
+Set `method` to expose a stack as an HTTP endpoint. If `urlPath` is omitted, Seristack uses `/<stack-name>`.
 
 ```bash
-curl 'http://127.0.0.1:8080/greet?name=alice&env=dev'
+curl -X POST 'http://127.0.0.1:8080/deploy' \
+  -H 'Content-Type: application/json' \
+  -d '{"env": "staging", "version": "v1.2.3"}'
 ```
+
+---
+
+## `access` and `matchAccess`
+
+Per-stack authorization. Seristack checks HTTP headers forwarded by nginx or Caddy after they validate the user against your IdP.
+
+```yaml
+matchAccess: ANY
+access:
+  - headerName: "X-Auth-Request-Groups"
+    headerValue: ["sre", "platform"]
+  - headerName: "X-Auth-Request-Roles"
+    headerValue: ["admin"]
+```
+
+### `access` attributes
+
+| Attribute | Type | Required | Description |
+|---|---:|---:|---|
+| `headerName` | string | yes | The exact HTTP header name to read. |
+| `headerValue` | list of strings | yes | Allowed values. Access is granted if the header contains any of these values. |
+
+### `matchAccess` values
+
+| Value | Behaviour |
+|---|---|
+| `ANY` | Access granted if **any one** rule matches. Default. |
+| `ALL` | Access granted only if **every** rule matches. |
+
+### How it works
+
+Your nginx or Caddy config forwards identity headers after validating the user's JWT or token:
+
+```nginx
+auth_request_set $groups $upstream_http_x_auth_request_groups;
+proxy_set_header X-Auth-Request-Groups $groups;
+```
+
+Seristack reads those headers and compares them to the `access` block. Header values can be comma-separated (e.g. `sre,platform,devops`) and Seristack splits them automatically.
+
+### No `access` block
+
+If a stack has no `access` block, any authenticated user reaching seristack can execute it. Use nginx or Caddy authentication to ensure only authenticated users can reach seristack at all.
+
+### Examples
+
+**Any member of sre or platform can run:**
+```yaml
+access:
+  - headerName: "X-Auth-Request-Groups"
+    headerValue: ["sre", "platform"]
+```
+
+**Must be in devops group AND have admin role:**
+```yaml
+matchAccess: ALL
+access:
+  - headerName: "X-Auth-Request-Groups"
+    headerValue: ["devops"]
+  - headerName: "X-Auth-Request-Roles"
+    headerValue: ["admin"]
+```
+
+**Specific user only:**
+```yaml
+access:
+  - headerName: "X-Auth-Request-Email"
+    headerValue: ["oncall@company.com"]
+```
+
+### Identity header names by IdP
+
+| IdP | Proxy | Group header | Role header | Email header |
+|---|---|---|---|---|
+| Entra ID / Azure AD | oauth2-proxy | `X-Auth-Request-Groups` | `X-Auth-Request-Roles` | `X-Auth-Request-Email` |
+| GCP IAM | IAP | — | — | `X-Goog-Authenticated-User-Email` |
+| AWS Cognito | ALB | `X-Amzn-Oidc-Data` | — | — |
+| OCI IAM | nginx + oauth2-proxy | `X-Auth-Request-Groups` | — | `X-Auth-Request-Email` |
+| Okta / Auth0 | oauth2-proxy | `X-Auth-Request-Groups` | `X-Auth-Request-Roles` | `X-Auth-Request-Email` |
+
+---
 
 ## `workDir`
 
@@ -89,7 +171,9 @@ curl 'http://127.0.0.1:8080/greet?name=alice&env=dev'
 workDir: ./scripts
 ```
 
-Sets the working directory for shell command execution.
+Sets the working directory for shell command execution, resolved relative to the Seristack process working directory.
+
+---
 
 ## `continueOnError`
 
@@ -97,8 +181,10 @@ Sets the working directory for shell command execution.
 continueOnError: true
 ```
 
-- `false`: stop execution on command failure
-- `true`: continue execution and record the error in the result
+- `false` — stop execution on command failure (default)
+- `true` — record the error and continue
+
+---
 
 ## `dependsOn`
 
@@ -106,7 +192,7 @@ continueOnError: true
 dependsOn: [build, test]
 ```
 
-Runs the current stack after the listed stacks complete.
+Runs the current stack after the listed stacks complete. Seristack resolves dependencies topologically.
 
 ```yaml
 stacks:
@@ -118,11 +204,18 @@ stacks:
     dependsOn: [build]
     cmds:
       - go test ./...
+
+  - name: deploy
+    dependsOn: [test]
+    cmds:
+      - ./deploy.sh
 ```
+
+---
 
 ## `vars`
 
-Variables are declared as a list of objects.
+Variables are declared as a list. Declared variables can be overridden at runtime from HTTP, CLI, or MCP. Undeclared variable names from external inputs are dropped.
 
 ```yaml
 vars:
@@ -130,51 +223,52 @@ vars:
     value: dev
 ```
 
-Use variables in commands with:
+Use variables in commands:
 
 ```text
 {{.Vars.env}}
 ```
 
-Runtime values can come from:
+### Runtime variable sources
 
-- CLI `--vars`
-- CLI `--vars-json`
-- HTTP query parameters
-- HTTP form values
-- HTTP JSON body
-- HTTP headers beginning with `X-`
-- MCP tool arguments
+| Source | How |
+|---|---|
+| CLI | `--vars key=value` or `--vars-json '{"key":"value"}'` |
+| HTTP query params | `?env=staging` |
+| HTTP form body | `application/x-www-form-urlencoded` |
+| HTTP JSON body | `application/json` with `{"env": "staging"}` |
+| HTTP headers | Any header starting with `X-` |
+| MCP | Tool arguments matching declared variable names |
 
-Only variables already declared in `vars` are overridden by runtime values.
-
-## Variable attributes
+### Variable attributes
 
 | Attribute | Type | Required | Default | Description |
 |---|---:|---:|---|---|
 | `name` | string | yes | none | Variable name. Must be unique within the stack. |
-| `value` | string | no | empty | Default variable value. |
+| `value` | string | no | empty | Default value. |
 | `required` | boolean | no | `false` | If `true`, the final value must not be empty. |
-| `allowed_value` | list of strings | no | empty | Allows only values from the list. |
-| `denied_value` | list of strings | no | empty | Rejects values from the list. |
-| `allowed_regex` | string | no | empty | Allows only values matching `regex(...)`. |
-| `denied_regex` | string | no | empty | Rejects values matching `regex(...)`. |
+| `allowed_value` | list of strings | no | empty | Allows only values from this list. |
+| `denied_value` | list of strings | no | empty | Rejects values in this list. |
+| `allowed_regex` | string | no | empty | Allows only values matching the pattern. |
+| `denied_regex` | string | no | empty | Rejects values matching the pattern. |
+
+Use only one rule per variable: `allowed_value`, `denied_value`, `allowed_regex`, or `denied_regex`. `required` can be combined with any of them.
 
 ### Variable validation examples
 
 ```yaml
 vars:
   - name: env
-    value: dev
+    value: staging
     required: true
-    allowed_value: [dev, stage, prod]
+    allowed_value: [dev, staging, production]
 ```
 
 ```yaml
 vars:
-  - name: service
+  - name: version
     required: true
-    allowed_regex: regex("^[a-zA-Z0-9_-]+$")
+    allowed_regex: regex("^[a-zA-Z0-9._-]+$")
 ```
 
 ```yaml
@@ -183,22 +277,15 @@ vars:
     denied_regex: regex("(?i)rm|delete|drop")
 ```
 
-Only one of these rule sets can be used for a single variable:
+> **Note:** Do not pass secrets as stack vars. They will appear in the audit log and in logs. Secrets should come from environment variables or a secrets manager inside the shell script.
 
-- `allowed_value`
-- `denied_value`
-- `allowed_regex`
-- `denied_regex`
-
-`required` can be combined with one of those rule sets.
+---
 
 ## `executionMode`
 
 ```yaml
 executionMode: SEQUENTIAL
 ```
-
-Valid values:
 
 | Value | Count iterations | Commands inside each iteration |
 |---|---|---|
@@ -207,7 +294,9 @@ Valid values:
 | `PIPELINE` | sequential | concurrent |
 | `SEQUENTIAL` | sequential | sequential |
 
-Use `SEQUENTIAL` when ordering matters. Use `PARALLEL` when maximum concurrency is desired.
+Default is `PARALLEL`.
+
+---
 
 ## `count`
 
@@ -217,15 +306,17 @@ count: 3
 
 Number of times to run the stack commands.
 
-- `count: 0` skips command execution
-- `count: 1` runs once
-- `count: 3` runs three times
+- `count: 0` — skip execution
+- `count: 1` — run once
+- `count: 3` — run three times
 
-Inside commands, use the current iteration index with:
+Use the current iteration index in commands:
 
 ```text
 {{.Count.index}}
 ```
+
+---
 
 ## `timeouts`
 
@@ -233,11 +324,9 @@ Inside commands, use the current iteration index with:
 timeouts: 30s
 ```
 
-Controls the maximum duration for each command execution in the stack. Default: `1h`.
+Maximum duration for each command execution in the stack. Default: `1h`.
 
-Seristack uses Go duration syntax through `time.ParseDuration`.
-
-Supported units:
+Uses Go duration syntax:
 
 | Unit | Meaning |
 |---|---|
@@ -247,8 +336,6 @@ Supported units:
 | `s` | seconds |
 | `m` | minutes |
 | `h` | hours |
-
-Examples:
 
 ```yaml
 timeouts: 500ms
@@ -260,16 +347,9 @@ timeouts: 2.5h
 timeouts: 24h
 ```
 
-Invalid examples:
+Invalid values: `0s`, `-1m`, `1d`, `never`. Use `24h` instead of `1d`.
 
-```yaml
-timeouts: 0s
-timeouts: -1m
-timeouts: 1d
-timeouts: never
-```
-
-Use `24h` instead of `1d`.
+---
 
 ## `shell` and `shellArg`
 
@@ -278,36 +358,28 @@ shell: bash
 shellArg: -c
 ```
 
-If `shell` is omitted, Seristack uses the built-in mvdan shell interpreter. If an external shell is configured, `shellArg` defaults to `-c` when omitted.
-
-Examples:
-
-```yaml
-shell: bash
-shellArg: -c
-```
+If `shell` is omitted, Seristack uses the built-in mvdan shell interpreter. `shellArg` defaults to `-c` when using an external shell.
 
 ```yaml
 shell: powershell
 shellArg: /C
 ```
 
+---
+
 ## `cmds`
 
 ```yaml
 cmds:
   - echo "hello"
-  - echo "world"
-```
-
-Commands can be single-line or multi-line scripts.
-
-```yaml
-cmds:
   - |
     echo "starting"
     echo "finished"
 ```
+
+Commands run in the stack's `workDir`. Use `{{.Vars.key}}` for variable substitution and `{{.Self.result}}` to access output from previous commands in the same stack.
+
+---
 
 ## `output`
 
@@ -316,11 +388,9 @@ output: |
   echo '{{.Self.result}}' | jq -s '.'
 ```
 
-Optional post-processing command. The accumulated command output is available through:
+Optional post-processing command. Runs after all `cmds` complete. The accumulated output from `cmds` is available through `{{.Self.result}}`.
 
-```text
-{{.Self.result}}
-```
+---
 
 ## `discardOutput`
 
@@ -328,69 +398,82 @@ Optional post-processing command. The accumulated command output is available th
 discardOutput: [build, test]
 ```
 
-Removes saved outputs from the in-memory registry after the current stack completes.
+Removes the named stack outputs from the in-memory registry after the current stack completes. Use this to free memory when downstream stacks no longer need earlier outputs.
 
-Use this to reduce memory usage or prevent later stacks from reading outputs that are no longer needed.
-
-## HTTP endpoint behavior
-
-A stack becomes an HTTP endpoint when `method` is set.
-
-HTTP variables can come from:
-
-- query parameters
-- form values
-- JSON request body
-- headers beginning with `X-`
-
-## MCP tool behavior
-
-A stack becomes an MCP tool when `description` is set. Variables declared in `vars` become MCP tool arguments.
+---
 
 ## Complete example
 
 ```yaml
 stacks:
-  - name: greet-api
-    description: Greets a user from CLI, HTTP, or MCP
-    method: GET
-    urlPath: /greet
-    workDir: ./
+  - name: deploy
+    description: Deploy the application to a target environment
+    method: POST
+    urlPath: /deploy
+    matchAccess: ANY
+    access:
+      - headerName: "X-Auth-Request-Groups"
+        headerValue: ["sre", "platform"]
+      - headerName: "X-Auth-Request-Roles"
+        headerValue: ["admin"]
     count: 1
-    timeouts: 30s
+    timeouts: 10m
     executionMode: SEQUENTIAL
     vars:
-      - name: name
-        value: engineer
+      - name: env
+        value: staging
         required: true
-        allowed_regex: regex("^[a-zA-Z0-9_-]+$")
-      - name: env
-        value: dev
-        allowed_value: [dev, stage, prod]
+        allowed_value: [staging, production]
+      - name: version
+        required: true
+        allowed_regex: regex("^[a-zA-Z0-9._-]+$")
     cmds:
       - |
-        echo "Hello {{.Vars.name}} from {{.Vars.env}}"
+        echo "Deploying {{.Vars.version}} to {{.Vars.env}}"
+        kubectl set image deployment/app app={{.Vars.version}}
 
-  - name: collect-metadata
-    description: Produces JSON metadata for aggregation
-    dependsOn: [greet-api]
-    count: 2
+  - name: smoke-test
+    description: Run smoke tests against a deployed environment
+    method: POST
+    urlPath: /smoke-test
+    dependsOn: [deploy]
+    access:
+      - headerName: "X-Auth-Request-Groups"
+        headerValue: ["sre", "platform", "qa"]
+    count: 1
     timeouts: 5m
-    executionMode: SEQUENTIAL
     vars:
       - name: env
-        value: dev
+        value: staging
+        allowed_value: [staging, production]
     cmds:
       - |
-        echo "{\"index\": {{.Count.index}}, \"env\": \"{{.Vars.env}}\", \"status\": \"ok\"}"
-    output: |
-      echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'
+        echo "Running smoke tests against {{.Vars.env}}"
+        curl -sf https://app-{{.Vars.env}}.internal/health
 
-  - name: cleanup-output
-    dependsOn: [collect-metadata]
-    discardOutput: [greet-api]
+  - name: notify
+    description: Send Slack notification
+    dependsOn: [smoke-test]
     count: 1
     timeouts: 10s
+    vars:
+      - name: message
+        value: "Deployment complete"
     cmds:
-      - echo "discarded greet-api output from memory"
+      - |
+        curl -s -X POST "$SLACK_WEBHOOK" \
+          -H 'Content-Type: application/json' \
+          -d "{\"text\": \"{{.Vars.message}}\"}"
+```
+
+Start the server with audit logging:
+
+```bash
+seristack run \
+  --config config.yaml \
+  --addr 127.0.0.1 \
+  --port 8080 \
+  --audit-log /var/log/seristack/audit.log \
+  --identity-header "user=X-Auth-Request-Email" \
+  --identity-header "groups=X-Auth-Request-Groups"
 ```

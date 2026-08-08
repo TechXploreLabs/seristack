@@ -7,6 +7,7 @@ const (
 	BAD_REQUEST        ErrorCode = "BAD_REQUEST"
 	INTERNAL_ERROR     ErrorCode = "INTERNAL_ERROR"
 	NOT_FOUND          ErrorCode = "NOT_FOUND"
+	FORBIDDEN          ErrorCode = "FORBIDDEN"
 )
 
 func (e ErrorCode) String() string {
