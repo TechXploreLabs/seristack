@@ -473,7 +473,5 @@ seristack run \
   --config config.yaml \
   --addr 127.0.0.1 \
   --port 8080 \
-  --audit-log /var/log/seristack/audit.log \
-  --identity-header "user=X-Auth-Request-Email" \
-  --identity-header "groups=X-Auth-Request-Groups"
+  --audit-log /var/log/seristack/audit.log
 ```
