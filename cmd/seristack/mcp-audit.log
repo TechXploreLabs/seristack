@@ -1,0 +1,2 @@
+{"timestamp":"2026-08-22T14:00:36Z","event":"stack_executed","stack":"stack1","path":"","method":"","identity":{"X-Auth-Request-Groups":"sre"},"vars":{"user_name":"seristack"},"success":true,"duration_ms":2}
+{"timestamp":"2026-08-22T14:01:45Z","event":"stack_executed","stack":"stack2","path":"","method":"","identity":{"X-Auth-Request-Groups":"sr"},"success":true,"duration_ms":278}
