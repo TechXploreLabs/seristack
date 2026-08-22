@@ -57,13 +57,25 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 		sseServer := server.NewSSEServer(s, server.WithBaseURL("http://"+addr+":"+port))
 		handler := mcpIdentityMiddleware(sseServer)
 		fmt.Printf("MCP SSE server starting on http://%s:%s/sse\n", addr, port)
-		return http.ListenAndServe(addr+":"+port, handler)
+		srv := &http.Server{
+			Addr:              addr + ":" + port,
+			Handler:           handler,
+			ReadHeaderTimeout: 30 * time.Second,
+			IdleTimeout:       60 * time.Second,
+		}
+		return srv.ListenAndServe()
 
 	case "streamableHTTP":
 		httpServer := server.NewStreamableHTTPServer(s)
 		handler := mcpIdentityMiddleware(httpServer)
 		fmt.Printf("MCP Streamable HTTP server starting on http://%s:%s/mcp\n", addr, port)
-		return http.ListenAndServe(addr+":"+port, handler)
+		srv := &http.Server{
+			Addr:              addr + ":" + port,
+			Handler:           handler,
+			ReadHeaderTimeout: 30 * time.Second,
+			IdleTimeout:       60 * time.Second,
+		}
+		return srv.ListenAndServe()
 
 	default:
 		return fmt.Errorf("unsupported transport %q — use stdio, sse, or streamableHTTP", transport)
@@ -191,14 +203,16 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
 		jsondata, _ := json.Marshal(result)
 		if auditLogger != nil {
-			auditLogger.Write(audit.Entry{
+			if err := auditLogger.Write(audit.Entry{
 				Stack:      stack.Name,
 				Identity:   identityFromContext(ctx),
 				Vars:       vars,
 				Success:    result.Success,
 				DurationMs: time.Since(start).Milliseconds(),
 				Error:      result.Error,
-			})
+			}); err != nil {
+				log.Printf("audit log write failed: %v", err)
+			}
 		}
 		log.Printf("Tool execution completed: tool: %s", stack.Name)
 		return mcp.NewToolResultText(string(jsondata)), nil
