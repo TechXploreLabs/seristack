@@ -10,7 +10,7 @@ case "$OS" in
   linux*)  OS="linux" ;;
   darwin*) OS="darwin" ;;
   *) echo "Unsupported OS: $OS"; exit 1 ;;
-es0
+esac
 
 # Detect Architecture
 ARCH="$(uname -m)"
