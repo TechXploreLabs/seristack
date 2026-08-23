@@ -37,7 +37,7 @@ type ErrorResponse struct {
 	RequestID    string `json:"request_id,omitempty"`
 }
 
-func Server(config *conf.Config, port *string, addr *string, auditLogger *audit.Logger, identityHeaders map[string]string) error {
+func Server(config *conf.Config, port *string, addr *string, auditLogger *audit.Logger) error {
 	sourceDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
@@ -55,7 +55,7 @@ func Server(config *conf.Config, port *string, addr *string, auditLogger *audit.
 			if registeredPatterns[pattern] {
 				return fmt.Errorf("duplicate route registration: pattern %q is already registered or urlPath already resgistered", stack.Name)
 			}
-			RegisterHandler(mux, stack, stackMap, sourceDir, auditLogger, identityHeaders)
+			RegisterHandler(mux, stack, stackMap, sourceDir, auditLogger)
 			hasRoutes = true
 			registeredPatterns[pattern] = true
 		}
@@ -165,24 +165,23 @@ func splitHeader(val string) []string {
 	return out
 }
 
-func extractIdentity(r *http.Request, identityHeaders map[string]string) map[string]string {
+func extractIdentity(r *http.Request, identityHeaders []conf.AccessRule) map[string]string {
 	if len(identityHeaders) == 0 {
 		return nil
 	}
 	identity := make(map[string]string)
-	for key, headerName := range identityHeaders {
-		if val := r.Header.Get(headerName); val != "" {
-			identity[key] = val
+	for _, header := range identityHeaders {
+		if val := r.Header.Get(header.HeaderName); val != "" {
+			identity[header.HeaderName] = val
 		}
 	}
 	return identity
 }
 
-func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*conf.Stack, sourceDir string, auditLogger *audit.Logger,
-	identityHeaders map[string]string) {
+func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*conf.Stack, sourceDir string, auditLogger *audit.Logger) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		output := "yaml"
+		output := "json"
 		requestID := r.Header.Get("X-Request-ID")
 
 		if stack.Method != "" && r.Method != strings.ToUpper(stack.Method) {
@@ -260,7 +259,7 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 				Path:       r.URL.Path,
 				Method:     r.Method,
 				SourceIP:   r.RemoteAddr,
-				Identity:   extractIdentity(r, identityHeaders),
+				Identity:   extractIdentity(r, stack.Access),
 				Vars:       vars,
 				Success:    result.Success,
 				DurationMs: time.Since(start).Milliseconds(),

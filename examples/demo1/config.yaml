@@ -3,6 +3,11 @@ stacks:
   count: 1
   description: Welcome message for the user
   method: GET
+  access:
+      - headerName: "X-Auth-Request-Groups"
+        headerValue: ["sre", "platform"]
+      - headerName: "X-Auth-Request-Roles"
+        headerValue: ["admin"]
   vars:
   - name: user_name
     required: true

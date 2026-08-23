@@ -5,11 +5,15 @@
 [![License](https://img.shields.io/github/license/TechXploreLabs/seristack)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/TechXploreLabs/seristack?include_prereleases)](https://github.com/TechXploreLabs/seristack/releases)
 
-**Run shell workflows via CLI, HTTP, or AI agents**
+**One YAML config. CLI command, HTTP endpoint, and MCP tool — all at once.**
 
 Seristack is a lightweight automation engine designed for DevOps, Platform, SRE, and Cloud teams. Define shell workflows in YAML, manage dependencies, expose them as HTTP endpoints, and let AI agents call them as MCP tools.
 
 [seristack](https://github.com/TechXploreLabs/seristack)
+
+## Why Seristack
+- [Hidden truth](https://www.youtube.com/watch?v=pOzPoRpoS7k&t=9s). An analysis and need of this tool.
+
 
 Documentation:
 
@@ -39,6 +43,12 @@ brew install TechXploreLabs/tap/seristack
 
 ### Linux (using release archive)
 
+```bash
+curl -fsSL https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.sh | bash
+```
+
+### OR
+
 1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_linux_ARCH.tar.gz`.
 2. Extract the archive:
    ```bash
@@ -55,6 +65,12 @@ brew install TechXploreLabs/tap/seristack
    ```
 
 ### Windows (using release archive)
+
+```bash
+irm https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.ps1 | iex
+```
+
+### OR
 
 1. Go to [Seristack Releases](https://github.com/TechXploreLabs/seristack/releases) and download the latest `seristack_VERSION_windows_ARCH.zip`.
 2. Extract and move `seristack.exe` to a folder in your `%PATH%`.
@@ -193,10 +209,7 @@ Enable a structured JSON audit trail for every stack execution:
 
 ```bash
 seristack run \
-  --audit-log /var/log/seristack/audit.log \
-  --identity-header "user=X-Auth-Request-Email" \
-  --identity-header "groups=X-Auth-Request-Groups" \
-  --identity-header "roles=X-Auth-Request-Roles"
+  --audit-log /var/log/seristack/audit.log
 ```
 
 Every execution — success or failure — writes one JSON line:

@@ -553,10 +553,7 @@ curl -X POST http://127.0.0.1:8080/deploy \
                 <h3>Audit log</h3>
                 <p>Enable a structured JSON audit trail for every HTTP stack execution via CLI flags:</p>
                 <pre><code>seristack run \
-  --audit-log /var/log/seristack/audit.log \
-  --identity-header "user=X-Auth-Request-Email" \
-  --identity-header "groups=X-Auth-Request-Groups" \
-  --identity-header "roles=X-Auth-Request-Roles"</code></pre>
+  --audit-log /var/log/seristack/audit.log</code></pre>
                 <p>Every execution writes one JSON line:</p>
                 <pre><code>{
   "timestamp": "2024-01-15T10:30:00Z",
@@ -649,9 +646,7 @@ jq 'select(.duration_ms > 30000)' /var/log/seristack/audit.log</code></pre>
   --config config.yaml \
   --addr 127.0.0.1 \
   --port 8080 \
-  --audit-log /var/log/seristack/audit.log \
-  --identity-header "user=X-Auth-Request-Email" \
-  --identity-header "groups=X-Auth-Request-Groups"</code></pre>
+  --audit-log /var/log/seristack/audit.log</code></pre>
             </section>
         </main>
     </div>

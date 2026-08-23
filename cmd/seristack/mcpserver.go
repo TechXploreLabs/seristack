@@ -7,14 +7,16 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
+	"github.com/TechXploreLabs/seristack/internal/audit"
 	conf "github.com/TechXploreLabs/seristack/internal/config"
 	"github.com/TechXploreLabs/seristack/internal/mcpserver"
 	"github.com/TechXploreLabs/seristack/internal/shellexecutor"
 )
 
 var (
-	mcptype string
-	addr    string
+	mcptype         string
+	addr            string
+	mcpAuditLogPath string
 )
 
 // runCmd represents the run command
@@ -31,19 +33,24 @@ var mcpCmd = &cobra.Command{
   seristack mcp --type streamableHTTP --port 3000
   
   # Start sse
-  seristack mcp --config myconfig.yaml --type sse  --port 9090 --addr 0.0.0.0`,
+  seristack mcp --config myconfig.yaml --type sse  --port 9090 --addr 0.0.0.0
+
+  # streamableHTTP with audit log
+    seristack mcp --type streamableHTTP --port 8081 \
+      --audit-log /var/log/seristack/mcp-audit.log`,
 	RunE: mcpServer,
 }
 
 func init() {
 	rootCmd.AddCommand(mcpCmd)
 	mcpCmd.Flags().StringVarP(&port, "port", "p", "8080", "mcp server port (overrides config)")
-	mcpCmd.Flags().StringVarP(&mcptype, "type", "t", "", "mcp server type sse/streamableHTTP")
+	mcpCmd.Flags().StringVarP(&mcptype, "type", "t", "stdio", "mcp server type stdio/sse/streamableHTTP")
 	mcpCmd.Flags().StringVarP(&addr, "addr", "a", "127.0.0.1", "addr is 127.0.0.1 or 0.0.0.0")
+	mcpCmd.Flags().StringVar(&mcpAuditLogPath, "audit-log", "", "path to audit log file (enables audit logging when set)")
 }
 
 func mcpServer(cmd *cobra.Command, args []string) error {
-	mcp_type := []string{"sse", "streamableHTTP"}
+	mcp_type := []string{"stdio", "sse", "streamableHTTP"}
 	if mcptype != "" && !slices.Contains(mcp_type, mcptype) {
 		return fmt.Errorf("%s", color.RedString("Error: supported mcp type sse/streamableHTTP"))
 	}
@@ -52,7 +59,15 @@ func mcpServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s", color.RedString("Error: [failed to load config], %v", err))
 	}
 	shellexecutor.SetConcurrencyLimit(limit)
-	err = mcpserver.McpServer(config, mcptype, port, addr)
+	var auditLogger *audit.Logger
+	if mcpAuditLogPath != "" {
+		auditLogger, err = audit.New(mcpAuditLogPath)
+		if err != nil {
+			return fmt.Errorf("%s", color.RedString("Error: [failed to initialise audit log], %v", err))
+		}
+		defer auditLogger.Close()
+	}
+	err = mcpserver.McpServer(config, mcptype, port, addr, auditLogger)
 	if err != nil {
 		return err
 	}
