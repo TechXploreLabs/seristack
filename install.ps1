@@ -3,36 +3,44 @@ $ErrorActionPreference = "Stop"
 $Repo = "TechXploreLabs/seristack"
 $BinaryName = "seristack"
 
-# Detect OS architecture
+# ------------------------------------------------------------
+# Detect Windows architecture
+# ------------------------------------------------------------
 $Arch = if ([Environment]::Is64BitOperatingSystem) {
     "amd64"
 } else {
     "386"
 }
 
-# Get latest release
-$ReleaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest"
+# ------------------------------------------------------------
+# Get latest GitHub release
+# ------------------------------------------------------------
+Write-Host "Checking latest seristack release..."
+
+$ReleaseInfo = Invoke-RestMethod `
+    -Uri "https://api.github.com/repos/$Repo/releases/latest"
 
 $Tag = $ReleaseInfo.tag_name
 $Version = $Tag.TrimStart("v")
 
-# Expected asset name
-$ExpectedAssetName = "${BinaryName}_${Version}_windows_${Arch}.zip"
+# ------------------------------------------------------------
+# Build release asset name
+# ------------------------------------------------------------
+$ArchiveName = "${BinaryName}_${Version}_windows_${Arch}.tar.gz"
 
-# Find the asset from the release
 $Asset = $ReleaseInfo.assets |
-    Where-Object { $_.name -eq $ExpectedAssetName } |
+    Where-Object { $_.name -eq $ArchiveName } |
     Select-Object -First 1
 
 if (-not $Asset) {
     Write-Host ""
-    Write-Host "ERROR: Could not find Windows $Arch release asset." -ForegroundColor Red
+    Write-Host "ERROR: Release asset not found." -ForegroundColor Red
     Write-Host ""
     Write-Host "Expected:"
-    Write-Host "  $ExpectedAssetName"
+    Write-Host "  $ArchiveName"
     Write-Host ""
     Write-Host "Available assets:"
-    
+
     foreach ($ReleaseAsset in $ReleaseInfo.assets) {
         Write-Host "  $($ReleaseAsset.name)"
     }
@@ -40,59 +48,104 @@ if (-not $Asset) {
     exit 1
 }
 
-$ZipName = $Asset.name
 $DownloadUrl = $Asset.browser_download_url
 
+# ------------------------------------------------------------
+# Temporary directory
+# ------------------------------------------------------------
 $TempFolder = Join-Path $env:TEMP "seristack_install"
 
-# Clean previous installation directory
 if (Test-Path $TempFolder) {
     Remove-Item -Recurse -Force $TempFolder
 }
 
-New-Item -ItemType Directory -Force -Path $TempFolder | Out-Null
+New-Item `
+    -ItemType Directory `
+    -Force `
+    -Path $TempFolder | Out-Null
 
-$ZipPath = Join-Path $TempFolder $ZipName
+$ArchivePath = Join-Path $TempFolder $ArchiveName
 
+# ------------------------------------------------------------
+# Download
+# ------------------------------------------------------------
+Write-Host ""
 Write-Host "Downloading ${BinaryName} ${Tag}..."
-Write-Host "Asset: $ZipName"
+Write-Host "Asset: $ArchiveName"
 
 Invoke-WebRequest `
     -Uri $DownloadUrl `
-    -OutFile $ZipPath
+    -OutFile $ArchivePath
 
+# ------------------------------------------------------------
+# Extract
+# ------------------------------------------------------------
 Write-Host "Extracting..."
 
-Expand-Archive `
-    -Path $ZipPath `
-    -DestinationPath $TempFolder `
-    -Force
+tar -xzf $ArchivePath -C $TempFolder
 
+# ------------------------------------------------------------
+# Locate executable
+# ------------------------------------------------------------
+$ExeSource = Join-Path $TempFolder "${BinaryName}.exe"
+
+if (-not (Test-Path $ExeSource)) {
+    Write-Host ""
+    Write-Host "ERROR: $BinaryName.exe was not found in the archive." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Archive contents:"
+
+    Get-ChildItem -Recurse $TempFolder |
+        ForEach-Object {
+            Write-Host "  $($_.FullName)"
+        }
+
+    Remove-Item -Recurse -Force $TempFolder
+    exit 1
+}
+
+# ------------------------------------------------------------
 # Install destination
-$InstallDir = Join-Path $env:LOCALAPPDATA "Programs\seristack"
+# ------------------------------------------------------------
+$InstallDir = Join-Path `
+    $env:LOCALAPPDATA `
+    "Programs\seristack"
 
 New-Item `
     -ItemType Directory `
     -Force `
     -Path $InstallDir | Out-Null
 
-$ExeSource = Join-Path $TempFolder "${BinaryName}.exe"
-$ExeDestination = Join-Path $InstallDir "${BinaryName}.exe"
+$ExeDestination = Join-Path `
+    $InstallDir `
+    "${BinaryName}.exe"
 
-if (-not (Test-Path $ExeSource)) {
-    Write-Error "Could not find $BinaryName.exe inside $ZipName"
-    exit 1
-}
+# ------------------------------------------------------------
+# Install binary
+# ------------------------------------------------------------
+Write-Host "Installing to:"
+Write-Host "  $InstallDir"
 
 Move-Item `
     -Path $ExeSource `
     -Destination $ExeDestination `
     -Force
 
-# Add to User PATH
-$UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+# ------------------------------------------------------------
+# Add installation directory to User PATH
+# ------------------------------------------------------------
+$UserPath = [Environment]::GetEnvironmentVariable(
+    "Path",
+    "User"
+)
 
-if ($UserPath -notlike "*$InstallDir*") {
+$PathEntries = if ([string]::IsNullOrWhiteSpace($UserPath)) {
+    @()
+} else {
+    $UserPath -split ";"
+}
+
+if ($PathEntries -notcontains $InstallDir) {
 
     $NewUserPath = if ([string]::IsNullOrWhiteSpace($UserPath)) {
         $InstallDir
@@ -106,23 +159,34 @@ if ($UserPath -notlike "*$InstallDir*") {
         "User"
     )
 
-    $env:Path += ";$InstallDir"
+    # Update PATH for the current PowerShell process
+    if ($env:Path -notlike "*$InstallDir*") {
+        $env:Path += ";$InstallDir"
+    }
 
     Write-Host "Added $InstallDir to User PATH."
 }
 
+# ------------------------------------------------------------
+# Cleanup
+# ------------------------------------------------------------
 Remove-Item `
     -Recurse `
     -Force `
     $TempFolder
 
+# ------------------------------------------------------------
+# Verify installation
+# ------------------------------------------------------------
 Write-Host ""
-Write-Host "Installation complete!"
+Write-Host "Installation complete!" -ForegroundColor Green
+Write-Host "Version: $Tag"
 Write-Host "Installed: $ExeDestination"
 Write-Host ""
 
-# Verify
+Write-Host "Testing seristack..."
 & $ExeDestination --help
 
 Write-Host ""
-Write-Host "You may need to restart your terminal for PATH changes to take effect."
+Write-Host "You may need to restart your terminal before running:"
+Write-Host "  seristack"
