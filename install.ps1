@@ -11,7 +11,7 @@ $ReleaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releas
 $Tag = $ReleaseInfo.tag_name
 $Version = $Tag.TrimStart("v")
 
-$ZipName = "${BinaryName}_${Version}_windows_${Arch}.zip"
+$ZipName = "${BinaryName}_${Version}_windows_amd64.zip"
 $DownloadUrl = "https://github.com/$Repo/releases/download/${Tag}/${ZipName}"
 
 $TempFolder = Join-Path $env:TEMP "seristack_install"
