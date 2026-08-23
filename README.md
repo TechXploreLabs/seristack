@@ -5,11 +5,13 @@
 [![License](https://img.shields.io/github/license/TechXploreLabs/seristack)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/TechXploreLabs/seristack?include_prereleases)](https://github.com/TechXploreLabs/seristack/releases)
 
-**Turn local terminal commands into production grade HTTP webhooks and AI agent tools**
+**Turn local terminal commands into production grade HTTP webhooks , AI agent tools and exectuion pipeline**
 
 Seristack is a lightweight automation engine designed for DevOps, Platform, SRE, and Cloud teams. Define shell workflows in YAML, manage dependencies, expose them as HTTP endpoints, and let AI agents call them as MCP tools.
 
 [seristack](https://github.com/TechXploreLabs/seristack)
+
+https://www.youtube.com/watch?v=pOzPoRpoS7k&t=9s
 
 Documentation:
 
@@ -39,7 +41,9 @@ brew install TechXploreLabs/tap/seristack
 
 ### Linux (using release archive)
 
+```bash
 curl -fsSL https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.sh | bash
+```
 
 ### OR
 
@@ -60,7 +64,9 @@ curl -fsSL https://raw.githubusercontent.com/TechXploreLabs/seristack/main/insta
 
 ### Windows (using release archive)
 
+```bash
 irm https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.ps1 | iex
+```
 
 ### OR
 

@@ -20,11 +20,7 @@
             --code-bg: #1e293b;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Outfit', sans-serif;
@@ -36,11 +32,9 @@
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
                 radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 85% 85%, rgba(96, 165, 250, 0.08) 0%, transparent 40%);
             pointer-events: none;
@@ -107,9 +101,7 @@
             font-weight: 600;
         }
 
-        .secondary-link:hover {
-            color: #10b981;
-        }
+        .secondary-link:hover { color: #10b981; }
 
         .hero {
             padding: 5rem 0 4rem;
@@ -141,27 +133,6 @@
             margin: 0 auto 3rem;
         }
 
-        .badges {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.85rem;
-            border-radius: 999px;
-            background: rgba(30, 41, 59, 0.85);
-            border: 1px solid var(--dark-border);
-            color: var(--text);
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
         .hero-actions {
             display: flex;
             justify-content: center;
@@ -170,8 +141,7 @@
             margin-top: 2rem;
         }
 
-        .cta-primary,
-        .cta-secondary {
+        .cta-primary, .cta-secondary {
             padding: 0.9rem 1.5rem;
             border-radius: 10px;
             font-weight: 700;
@@ -200,8 +170,12 @@
             background: rgba(16, 185, 129, 0.1);
         }
 
-        .features {
-            padding: 4rem 0;
+        section { padding: 4rem 0; }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #10b981;
         }
 
         .features-list {
@@ -234,6 +208,31 @@
             font-size: 1.25rem;
         }
 
+        /* Video section */
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--dark-border);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.12);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: 0;
+        }
+
+        .video-caption {
+            text-align: center;
+            color: var(--text-dim);
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -253,14 +252,8 @@
             font-size: 1.25rem;
         }
 
-        .card p,
-        .card li {
-            color: var(--text-dim);
-        }
-
-        .card ul {
-            margin-left: 1.25rem;
-        }
+        .card p, .card li { color: var(--text-dim); }
+        .card ul { margin-left: 1.25rem; }
 
         .callout {
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.1));
@@ -270,25 +263,10 @@
             margin-top: 1.5rem;
         }
 
-        .callout p {
-            color: var(--text-dim);
-            margin-bottom: 1rem;
-        }
+        .callout p { color: var(--text-dim); margin-bottom: 1rem; }
+        .callout p:last-child { margin-bottom: 0; }
 
-        section {
-            padding: 4rem 0;
-        }
-
-        h2 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            color: #10b981;
-        }
-
-        .install-grid {
-            display: grid;
-            gap: 3rem;
-        }
+        .install-grid { display: grid; gap: 3rem; }
 
         .install-section {
             background: var(--dark-card);
@@ -303,17 +281,9 @@
             color: #10b981;
         }
 
-        .install-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
+        .install-steps { display: flex; flex-direction: column; gap: 1.5rem; }
 
-        .step {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
+        .step { display: flex; flex-direction: column; gap: 0.75rem; }
 
         .step-number {
             font-weight: 700;
@@ -321,9 +291,7 @@
             font-size: 0.875rem;
         }
 
-        .step-desc {
-            color: var(--text-dim);
-        }
+        .step-desc { color: var(--text-dim); }
 
         .code-block {
             background: var(--code-bg);
@@ -365,21 +333,10 @@
             display: block;
         }
 
-        .comment {
-            color: #6a9955;
-        }
-
-        .keyword {
-            color: #569cd6;
-        }
-
-        .string {
-            color: #ce9178;
-        }
-
-        .number {
-            color: #b5cea8;
-        }
+        .comment { color: #6a9955; }
+        .keyword { color: #569cd6; }
+        .string { color: #ce9178; }
+        .number { color: #b5cea8; }
 
         .yaml-example {
             margin-top: 2rem;
@@ -409,10 +366,7 @@
             color: #10b981;
         }
 
-        .usage-grid {
-            display: grid;
-            gap: 2rem;
-        }
+        .usage-grid { display: grid; gap: 2rem; }
 
         .usage-item h4 {
             font-size: 1.125rem;
@@ -425,6 +379,20 @@
             margin-bottom: 1rem;
         }
 
+        .new-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            margin-left: 0.4rem;
+            vertical-align: middle;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         footer {
             padding: 3rem 0 2rem;
             border-top: 1px solid var(--dark-border);
@@ -434,21 +402,10 @@
         }
 
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            .tagline {
-                font-size: 1.25rem;
-            }
-
-            .description {
-                font-size: 1rem;
-            }
-
-            .features-list {
-                grid-template-columns: 1fr;
-            }
+            h1 { font-size: 2.5rem; }
+            .tagline { font-size: 1.25rem; }
+            .description { font-size: 1rem; }
+            .features-list ul { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -459,7 +416,7 @@
                 <a href="#" class="logo">seristack</a>
                 <div class="nav-links">
                     <a href="docs/config-reference.html" class="secondary-link">Docs</a>
-                    <a href="docs/examples.html" class="secondary-link">Examples</a>
+                    <a href="#demo" class="secondary-link">Demo</a>
                     <a href="#security" class="secondary-link">Security</a>
                     <a href="#support" class="secondary-link">Support</a>
                     <a href="https://github.com/TechXploreLabs/seristack" class="github-link" target="_blank">GitHub →</a>
@@ -472,14 +429,15 @@
         <section class="hero">
             <div class="container">
                 <h1>seristack</h1>
-                <p class="tagline">Turn shell workflows into CLI commands, HTTP APIs, and MCP tools.</p>
+                <p class="tagline">Turn local terminal commands into production grade HTTP webhooks , AI agent tools and exectuion pipeline.</p>
                 <p class="description">
-                    Seristack is a lightweight YAML-driven automation engine for DevOps, platform, and AI-agent workflows.
-                    Define stacks once, run them locally, expose them as REST-style endpoints, or publish them as MCP tools
-                    for IDEs and agent clients.
+                    Seristack is a lightweight YAML-driven automation engine for DevOps, Platform, SRE, and Cloud teams.
+                    Define stacks once — run them locally, expose them as HTTP endpoints with per-stack authorization,
+                    or publish them as MCP tools for AI agents and IDEs.
                 </p>
                 <div class="hero-actions">
-                    <a href="#configuration" class="cta-primary">See YAML Example</a>
+                    <a href="#demo" class="cta-primary">Watch Demo</a>
+                    <a href="#configuration" class="cta-secondary">See YAML Example</a>
                     <a href="https://github.com/TechXploreLabs/seristack" class="cta-secondary" target="_blank">View on GitHub</a>
                 </div>
             </div>
@@ -496,7 +454,10 @@
                         <li>Variable substitution using templates</li>
                         <li>Share output between stacks</li>
                         <li>Expose stacks as HTTP endpoints</li>
-                        <li>Run as an MCP server for IDE integrations</li>
+                        <li>Per-stack HTTP authorization via identity headers</li>
+                        <li>Structured audit log for every execution</li>
+                        <li>Run as an MCP server — stdio, SSE, streamableHTTP</li>
+                        <li>Per-tool MCP authorization for SSE and streamableHTTP</li>
                         <li>Validate inputs with required, allowed, denied, and regex rules</li>
                         <li>Per-command timeouts using Go duration syntax</li>
                         <li>Works with mvdan shell (default), Bash, sh, and PowerShell</li>
@@ -511,7 +472,7 @@
                 <div class="card-grid">
                     <div class="card">
                         <h3>One stack, three interfaces</h3>
-                        <p>Use the same YAML stack as a local CLI command, an internal HTTP API, or an MCP tool for AI-enabled clients.</p>
+                        <p>Use the same YAML stack as a local CLI command, an internal HTTP API, or an MCP tool for AI-enabled clients — all from the same config file.</p>
                     </div>
                     <div class="card">
                         <h3>Script-to-API without a backend</h3>
@@ -519,9 +480,31 @@
                     </div>
                     <div class="card">
                         <h3>MCP-native automation</h3>
-                        <p>Create AI-callable tools from YAML instead of hand-coding a custom MCP server for every internal operation.</p>
+                        <p>Create AI-callable tools from YAML instead of hand-coding a custom MCP server. Supports stdio for Claude Desktop and Cursor, and streamableHTTP for remote clients.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Production-ready AuthZ</h3>
+                        <p>Restrict which users or groups can run which stacks using identity headers forwarded by nginx or Caddy. Works with any IdP — Entra ID, OCI IAM, GCP, AWS Cognito, Okta.</p>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section id="demo">
+            <div class="container">
+                <h2>See it in action</h2>
+                <div class="video-wrapper">
+                    <iframe
+                        src="https://www.youtube.com/embed/pOzPoRpoS7k"
+                        title="Seristack Demo — CLI, HTTP API, and MCP with AI agent"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="video-caption">
+                    Demo: running stacks via CLI, HTTP API, and MCP server with a Gemini AI agent —
+                    all from the same YAML config.
+                </p>
             </div>
         </section>
 
@@ -529,7 +512,6 @@
             <div class="container">
                 <h2>Installation</h2>
                 <div class="install-grid">
-                    <!-- Mac/Linux Homebrew -->
                     <div class="install-section">
                         <h3>Mac and Linux (Homebrew)</h3>
                         <div class="code-block">
@@ -538,7 +520,6 @@
                         </div>
                     </div>
 
-                    <!-- Linux Manual -->
                     <div class="install-section">
                         <h3>Linux (Release Archive)</h3>
                         <div class="install-steps">
@@ -547,9 +528,7 @@
                                 <p class="step-desc">Download the latest release from GitHub:</p>
                                 <div class="code-block">
                                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                    <code># Download from https://github.com/TechXploreLabs/seristack/releases
-# Look for: seristack_VERSION_linux_ARCH.tar.gz
-VERSION=v0.4.0
+                                    <code>VERSION=vX.X.X
 ARCH=amd64   # amd64 | arm64
 
 curl -LO "https://github.com/TechXploreLabs/seristack/releases/download/${VERSION}/seristack_${VERSION#v}_linux_${ARCH}.tar.gz"</code>
@@ -583,18 +562,12 @@ sudo chmod +x /usr/local/bin/seristack</code>
                         </div>
                     </div>
 
-                    <!-- Windows -->
                     <div class="install-section">
                         <h3>Windows (Release Archive)</h3>
                         <div class="install-steps">
                             <div class="step">
                                 <span class="step-number">STEP 1</span>
-                                <p class="step-desc">Download the latest release from GitHub:</p>
-                                <div class="code-block">
-                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                    <code># Download from https://github.com/TechXploreLabs/seristack/releases
-# Look for: seristack_VERSION_windows_ARCH.zip</code>
-                                </div>
+                                <p class="step-desc">Download from <a href="https://github.com/TechXploreLabs/seristack/releases" style="color:#10b981;">GitHub Releases</a> — look for seristack_VERSION_windows_ARCH.zip</p>
                             </div>
                             <div class="step">
                                 <span class="step-number">STEP 2</span>
@@ -602,11 +575,11 @@ sudo chmod +x /usr/local/bin/seristack</code>
                             </div>
                             <div class="step">
                                 <span class="step-number">STEP 3</span>
-                                <p class="step-desc">Move seristack.exe to a folder in your %PATH% (e.g., C:\Windows or a custom tools folder)</p>
+                                <p class="step-desc">Move seristack.exe to a folder in your %PATH%</p>
                             </div>
                             <div class="step">
                                 <span class="step-number">STEP 4</span>
-                                <p class="step-desc">Verify installation in PowerShell:</p>
+                                <p class="step-desc">Verify in PowerShell:</p>
                                 <div class="code-block">
                                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                                     <code>seristack --help</code>
@@ -625,52 +598,45 @@ sudo chmod +x /usr/local/bin/seristack</code>
                     <h3>Sample YAML Configuration</h3>
                     <div class="code-block" style="margin-top: 0;">
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                        <code># config.yaml
-
-stacks:
-  - name: greet-api
-    description: Greets a user from CLI, HTTP, or MCP
-    method: GET
-    urlPath: /greet
-    workDir: ./
+                        <code>stacks:
+  - name: deploy
+    description: Deploy the application to a target environment
+    method: POST
+    urlPath: /deploy
+    matchAccess: ANY
+    access:
+      - headerName: "X-Auth-Request-Groups"
+        headerValue: ["sre", "platform"]
     count: 1
-    timeouts: 30s
+    timeouts: 10m
     executionMode: SEQUENTIAL
     vars:
-      - name: name
-        value: engineer
-        required: true
-        allowed_regex: regex("^[a-zA-Z0-9_-]+$")
       - name: env
-        value: dev
-        allowed_value: [dev, stage, prod]
+        value: staging
+        required: true
+        allowed_value: [staging, production]
+      - name: version
+        required: true
+        allowed_regex: regex("^[a-zA-Z0-9._-]+$")
     cmds:
       - |
-        echo "Hello {{.Vars.name}} from {{.Vars.env}}"
+        echo "Deploying {{.Vars.version}} to {{.Vars.env}}"
+        kubectl set image deployment/app app={{.Vars.version}}
 
   - name: collect-metadata
     description: Produces JSON metadata for aggregation
-    dependsOn: [greet-api]
+    dependsOn: [deploy]
     count: 2
     timeouts: 5m
     executionMode: SEQUENTIAL
     vars:
       - name: env
-        value: dev
+        value: staging
     cmds:
       - |
         echo "{\"index\": {{.Count.index}}, \"env\": \"{{.Vars.env}}\", \"status\": \"ok\"}"
     output: |
-      echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'
-
-  - name: cleanup-output
-    dependsOn: [collect-metadata]
-    discardOutput: [greet-api]
-    count: 1
-    timeouts: 10s
-    cmds:
-      - echo "discarded greet-api output from memory"
-                        </code>
+      echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'</code>
                     </div>
                 </div>
 
@@ -678,54 +644,53 @@ stacks:
                     <h3>Running Stacks</h3>
                     <div class="usage-grid">
                         <div class="usage-item">
-                            <h4>1. Trigger entire stacks</h4>
-                            <p>Run all stacks defined in the config file (default: config.yaml)</p>
+                            <h4>1. Trigger all stacks</h4>
+                            <p>Run all stacks defined in the config file</p>
                             <div class="code-block">
                                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack trigger -c config.yaml
-<span class="comment"># or simply:</span>
-seristack trigger</code>
+                                <code>seristack trigger -c config.yaml</code>
                             </div>
                         </div>
 
                         <div class="usage-item">
-                            <h4>2. Run a specific stack</h4>
+                            <h4>2. Trigger a specific stack</h4>
                             <p>Execute only a particular stack by name</p>
                             <div class="code-block">
                                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack trigger -c config.yaml -s stack3</code>
+                                <code>seristack trigger -c config.yaml -s deploy \
+  --vars env=staging \
+  --vars version=v1.2.3</code>
                             </div>
                         </div>
 
                         <div class="usage-item">
-                            <h4>2a. Pass variables at runtime</h4>
-                            <p>Use repeated --vars or a single --vars-json payload for multiple values</p>
+                            <h4>3. Start HTTP API server</h4>
+                            <p>Expose stacks as HTTP endpoints with audit logging</p>
                             <div class="code-block">
                                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack trigger -c config.yaml -s stack1 \
-  --vars name=alice \
-  --vars 'payload={"team":"platform"}'
-
-seristack trigger -c config.yaml -s stack1 \
-  --vars-json '{"name":"alice","env":"dev","payload":{"team":"platform"}}'</code>
+                                <code>seristack run -c config.yaml \
+  --addr 127.0.0.1 --port 8080 \
+  --audit-log /var/log/seristack/audit.log</code>
                             </div>
                         </div>
 
                         <div class="usage-item">
-                            <h4>3. Start HTTP server</h4>
-                            <p>Initialize the HTTP server with defined endpoints (Ctrl+C to stop)</p>
+                            <h4>4. MCP server — stdio (Claude Desktop, Cursor, VS Code)</h4>
+                            <p>AI client spawns seristack as a subprocess — no port needed</p>
                             <div class="code-block">
                                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack run -c config.yaml</code>
+                                <code>seristack mcp --type stdio -c config.yaml</code>
                             </div>
                         </div>
 
                         <div class="usage-item">
-                            <h4>4. Launch MCP server</h4>
-                            <p>Expose stacks to IDEs and MCP-enabled clients (Ctrl+C to stop)</p>
+                            <h4>5. MCP server — streamableHTTP (remote clients, SDK apps)</h4>
+                            <p>Network-accessible MCP server with per-tool authorization and audit log</p>
                             <div class="code-block">
                                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack mcp -t streamableHTTP</code>
+                                <code>seristack mcp --type streamableHTTP \
+  --addr 127.0.0.1 --port 8081 \
+  --audit-log /var/log/seristack/mcp-audit.log</code>
                             </div>
                         </div>
                     </div>
@@ -738,30 +703,54 @@ seristack trigger -c config.yaml -s stack1 \
                 <h2>Production Security</h2>
                 <div class="callout">
                     <p>
-                        Seristack can execute shell commands, so do not expose it directly to the public internet.
-                        The recommended production setup is to bind Seristack to <strong>127.0.0.1</strong> or a private
-                        network and place <strong>Nginx</strong> or <strong>Caddy</strong> in front of it.
+                        Seristack executes shell commands — do not expose it directly to the public internet.
+                        Bind to <strong>127.0.0.1</strong> and place <strong>nginx</strong> or <strong>Caddy</strong> in front.
                     </p>
                     <p>
-                        Use the reverse proxy for TLS, authentication, authorization, IP allowlists, rate limiting,
-                        request body limits, and access logging.
+                        The reverse proxy handles TLS, authentication (JWT, API token, OAuth2), and rate limiting.
+                        Seristack handles per-stack authorization using identity headers forwarded by the proxy.
                     </p>
                 </div>
                 <div class="card-grid" style="margin-top: 1.5rem;">
                     <div class="card">
-                        <h3>HTTP API</h3>
-                        <p>Run the HTTP server locally and expose selected endpoints through a protected reverse proxy.</p>
+                        <h3>HTTP AuthZ</h3>
+                        <p>Restrict which groups or roles can execute each stack. Declare rules in YAML — works with any IdP through nginx or Caddy.</p>
                         <div class="code-block">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>seristack run --config config.yaml --addr 127.0.0.1 --port 8080</code>
+                            <code>matchAccess: ANY
+access:
+  - headerName: "X-Auth-Request-Groups"
+    headerValue: ["sre", "platform"]</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Audit log</h3>
+                        <p>Every stack execution logged as JSON — who ran it, what vars, success or failure, duration. Query with jq.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <code>jq 'select(.success == false)' audit.log
+jq 'select(.identity["X-Auth-Request-Email"] == "alice@company.com")' audit.log</code>
                         </div>
                     </div>
                     <div class="card">
                         <h3>MCP server</h3>
-                        <p>Treat MCP endpoints with the same security posture as the HTTP API because MCP clients can trigger stack tools.</p>
+                        <p>For stdio: OS-level access control — whoever can run the binary has full access. For streamableHTTP and SSE: same access block applies per tool.</p>
                         <div class="code-block">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>seristack mcp --type streamableHTTP --addr 127.0.0.1 --port 8080</code>
+                            <code>seristack mcp --type streamableHTTP \
+  --addr 127.0.0.1 --port 8081</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Variable validation</h3>
+                        <p>All HTTP and MCP inputs validated before shell execution. Use allowlists — not denylists — for maximum protection.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <code>vars:
+  - name: env
+    allowed_value: [staging, production]
+  - name: version
+    allowed_regex: regex("^[a-zA-Z0-9._-]+$")</code>
                         </div>
                     </div>
                 </div>
@@ -774,7 +763,7 @@ seristack trigger -c config.yaml -s stack1 \
                 <div class="card-grid">
                     <div class="card">
                         <h3>Variable rules</h3>
-                        <p>Restrict incoming CLI, HTTP, and MCP inputs before commands run.</p>
+                        <p>Restrict incoming CLI, HTTP, and MCP inputs before commands run. Only vars declared in YAML can be overridden — undeclared keys are dropped.</p>
                         <ul>
                             <li><code>required</code></li>
                             <li><code>allowed_value</code></li>
@@ -785,7 +774,7 @@ seristack trigger -c config.yaml -s stack1 \
                     </div>
                     <div class="card">
                         <h3>Command timeouts</h3>
-                        <p>Each stack can define a per-command timeout using Go duration syntax. Default is <strong>1h</strong>.</p>
+                        <p>Each stack defines a per-command timeout using Go duration syntax. Default is <strong>1h</strong>.</p>
                         <div class="code-block">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                             <code>timeouts: 500ms
@@ -805,13 +794,23 @@ timeouts: 2.5h</code>
                 <h2>Support the Project</h2>
                 <div class="card-grid">
                     <div class="card">
-                        <h3>Support the project</h3>
+                        <h3>Star and contribute</h3>
                         <p>
-                            If Seristack saves you from building custom internal automation APIs or MCP servers, consider
-                            starring the repository, sharing feedback, opening issues, or sponsoring future development.
+                            If Seristack saves you from building custom internal automation APIs or MCP servers,
+                            consider starring the repository, opening issues, or contributing stacks and docs.
                         </p>
                         <div class="hero-actions" style="justify-content: flex-start; margin-top: 1rem;">
                             <a href="https://github.com/TechXploreLabs/seristack" class="cta-secondary" target="_blank">Star on GitHub</a>
+                            <a href="https://github.com/TechXploreLabs/seristack/blob/main/CONTRIBUTING.md" class="cta-secondary" target="_blank">Contributing guide</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Security</h3>
+                        <p>
+                            Found a vulnerability? Please report it privately — do not open a public issue.
+                        </p>
+                        <div class="hero-actions" style="justify-content: flex-start; margin-top: 1rem;">
+                            <a href="https://github.com/TechXploreLabs/seristack/security/advisories/new" class="cta-secondary" target="_blank">Report privately</a>
                         </div>
                     </div>
                 </div>
@@ -821,7 +820,7 @@ timeouts: 2.5h</code>
 
     <footer>
         <div class="container">
-            <p>Apache License | <a href="https://github.com/TechXploreLabs/seristack" style="color: #10b981; text-decoration: none;">GitHub</a></p>
+            <p>Apache License | <a href="https://github.com/TechXploreLabs/seristack" style="color: #10b981; text-decoration: none;">GitHub</a> | <a href="docs/config-reference.html" style="color: #10b981; text-decoration: none;">Docs</a></p>
         </div>
     </footer>
 
@@ -829,12 +828,9 @@ timeouts: 2.5h</code>
         function copyCode(button) {
             const codeBlock = button.parentElement;
             const code = codeBlock.querySelector('code').innerText;
-            
             navigator.clipboard.writeText(code).then(() => {
                 button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
+                setTimeout(() => { button.textContent = 'Copy'; }, 2000);
             });
         }
     </script>
