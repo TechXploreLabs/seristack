@@ -5,13 +5,15 @@
 [![License](https://img.shields.io/github/license/TechXploreLabs/seristack)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/TechXploreLabs/seristack?include_prereleases)](https://github.com/TechXploreLabs/seristack/releases)
 
-**Turn local terminal commands into production grade HTTP webhooks , AI agent tools and exectuion pipeline**
+**One YAML config. CLI command, HTTP endpoint, and MCP tool — all at once.**
 
 Seristack is a lightweight automation engine designed for DevOps, Platform, SRE, and Cloud teams. Define shell workflows in YAML, manage dependencies, expose them as HTTP endpoints, and let AI agents call them as MCP tools.
 
 [seristack](https://github.com/TechXploreLabs/seristack)
 
-https://www.youtube.com/watch?v=pOzPoRpoS7k&t=9s
+## Why Seristack
+- [Hidden truth](https://www.youtube.com/watch?v=pOzPoRpoS7k&t=9s). An analysis and need of this tool.
+
 
 Documentation:
 
