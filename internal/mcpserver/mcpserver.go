@@ -181,13 +181,25 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 	tool := mcp.NewTool(stack.Name, options...)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		start := time.Now()
+		vars := make(map[string]string)
 		log.Printf("Tool called: tool: %s, args: %v", stack.Name, req.Params.Arguments)
 		if !checkMCPAccess(ctx, stack.Access, stack.MatchAccess) {
+			if auditLogger != nil {
+				if err := auditLogger.Write(audit.Entry{
+					Stack:      stack.Name,
+					Identity:   identityFromContext(ctx),
+					Success:    false,
+					DurationMs: time.Since(start).Milliseconds(),
+					Error:      "access denied: insufficient permissions to call this tool",
+				}); err != nil {
+					log.Printf("audit log write failed: %v", err)
+				}
+			}
 			log.Printf("MCP access denied: tool: %s", stack.Name)
 			return mcp.NewToolResultError("access denied: insufficient permissions to call this tool"), nil
 		}
 		output := "json"
-		vars := make(map[string]string)
+
 		if args, ok := req.Params.Arguments.(map[string]any); ok {
 			for k, v := range args {
 				vars[k] = fmt.Sprintf("%v", v)
