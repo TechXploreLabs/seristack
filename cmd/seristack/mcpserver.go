@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	mcptype         string
-	addr            string
-	mcpAuditLogPath string
+	mcptype                string
+	addr                   string
+	mcpAuditLogPath        string
+	excludeIdentityHeaders []string
 )
 
 // runCmd represents the run command
@@ -37,7 +38,13 @@ var mcpCmd = &cobra.Command{
 
   # streamableHTTP with audit log
     seristack mcp --type streamableHTTP --port 8081 \
-      --audit-log /var/log/seristack/mcp-audit.log`,
+      --audit-log /var/log/seristack/mcp-audit.log
+
+  # exclude specific headers from audit log
+	seristack mcp --type streamableHTTP --port 8081 \
+		--audit-log /var/log/seristack/mcp-audit.log \
+		--exclude-identity-headers "X-Internal-Token" \
+		--exclude-identity-headers "X-Debug-Header"`,
 	RunE: mcpServer,
 }
 
@@ -47,6 +54,7 @@ func init() {
 	mcpCmd.Flags().StringVarP(&mcptype, "type", "t", "stdio", "mcp server type stdio/sse/streamableHTTP")
 	mcpCmd.Flags().StringVarP(&addr, "addr", "a", "127.0.0.1", "addr is 127.0.0.1 or 0.0.0.0")
 	mcpCmd.Flags().StringVar(&mcpAuditLogPath, "audit-log", "", "path to audit log file (enables audit logging when set)")
+	mcpCmd.Flags().StringArrayVar(&excludeIdentityHeaders, "exclude-identity-headers", nil, "exclude headers appearing in the audit log")
 }
 
 func mcpServer(cmd *cobra.Command, args []string) error {
@@ -67,7 +75,7 @@ func mcpServer(cmd *cobra.Command, args []string) error {
 		}
 		defer auditLogger.Close()
 	}
-	err = mcpserver.McpServer(config, mcptype, port, addr, auditLogger)
+	err = mcpserver.McpServer(config, mcptype, port, addr, auditLogger, excludeIdentityHeaders)
 	if err != nil {
 		return err
 	}

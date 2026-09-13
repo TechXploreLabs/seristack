@@ -21,6 +21,7 @@ type Entry struct {
 	Vars       map[string]string `json:"vars,omitempty"`
 	Success    bool              `json:"success"`
 	DurationMs int64             `json:"duration_ms"`
+	Output     string            `json:"output,omitempty"`
 	Error      string            `json:"error,omitempty"`
 }
 

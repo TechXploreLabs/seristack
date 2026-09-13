@@ -39,7 +39,11 @@ Examples:
   seristack run --config myconfig.yaml --port 9090 --addr 127.0.0.1
  
   # Start with audit log enabled
-  seristack run --audit-log /var/log/seristack/audit.log`,
+  seristack run --audit-log /var/log/seristack/audit.log
+  # exclude specific headers from audit log
+  seristack run --audit-log /var/log/seristack/mcp-audit.log \
+	--exclude-identity-headers "X-Internal-Token" \
+	--exclude-identity-headers "X-Debug-Header"`,
 	RunE: runServer,
 }
 
@@ -48,6 +52,7 @@ func init() {
 	runCmd.Flags().StringVarP(&port, "port", "p", "8080", "server port")
 	runCmd.Flags().StringVarP(&addr, "addr", "a", "127.0.0.1", "bind address (127.0.0.1 or 0.0.0.0)")
 	runCmd.Flags().StringVar(&auditLogPath, "audit-log", "", "path to audit log file (enables audit logging when set)")
+	runCmd.Flags().StringArrayVar(&excludeIdentityHeaders, "exclude-identity-headers", nil, "exclude headers appearing in the audit log")
 }
 
 func runServer(cmd *cobra.Command, args []string) error {
@@ -64,5 +69,5 @@ func runServer(cmd *cobra.Command, args []string) error {
 		}
 		defer auditLogger.Close()
 	}
-	return server.Server(config, &port, &addr, auditLogger)
+	return server.Server(config, &port, &addr, auditLogger, excludeIdentityHeaders)
 }

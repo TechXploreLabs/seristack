@@ -37,7 +37,7 @@ type ErrorResponse struct {
 	RequestID    string `json:"request_id,omitempty"`
 }
 
-func Server(config *conf.Config, port *string, addr *string, auditLogger *audit.Logger) error {
+func Server(config *conf.Config, port *string, addr *string, auditLogger *audit.Logger, excludeidentityheaders []string) error {
 	sourceDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
@@ -55,7 +55,7 @@ func Server(config *conf.Config, port *string, addr *string, auditLogger *audit.
 			if registeredPatterns[pattern] {
 				return fmt.Errorf("duplicate route registration: pattern %q is already registered or urlPath already resgistered", stack.Name)
 			}
-			RegisterHandler(mux, stack, stackMap, sourceDir, auditLogger)
+			RegisterHandler(mux, stack, stackMap, sourceDir, auditLogger, excludeidentityheaders)
 			hasRoutes = true
 			registeredPatterns[pattern] = true
 		}
@@ -165,20 +165,17 @@ func splitHeader(val string) []string {
 	return out
 }
 
-func extractIdentity(r *http.Request, identityHeaders []conf.AccessRule) map[string]string {
-	if len(identityHeaders) == 0 {
-		return nil
-	}
+func extractIdentity(r *http.Request, excludeidentityheaders []string) map[string]string {
 	identity := make(map[string]string)
-	for _, header := range identityHeaders {
-		if val := r.Header.Get(header.HeaderName); val != "" {
-			identity[header.HeaderName] = val
+	for key, values := range r.Header {
+		if !slices.Contains(excludeidentityheaders, key) && len(values) > 0 {
+			identity[key] = strings.Join(values, ",")
 		}
 	}
 	return identity
 }
 
-func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*conf.Stack, sourceDir string, auditLogger *audit.Logger) {
+func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*conf.Stack, sourceDir string, auditLogger *audit.Logger, excludeidentityheaders []string) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		output := "json"
@@ -197,6 +194,20 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 			if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
 				slog.Error("Method not found", "error", err)
 			}
+			if auditLogger != nil {
+				if err := auditLogger.Write(audit.Entry{
+					RequestID:  requestID,
+					Stack:      stack.Name,
+					Path:       r.URL.Path,
+					Method:     r.Method,
+					SourceIP:   r.RemoteAddr,
+					Identity:   extractIdentity(r, excludeidentityheaders),
+					DurationMs: time.Since(start).Milliseconds(),
+					Error:      errorResponse.ErrorMessage,
+				}); err != nil {
+					slog.Error("failed to write audit log entry", "error", err)
+				}
+			}
 			slog.Error("request failed",
 				"requestID", requestID,
 				"method", r.Method,
@@ -208,7 +219,7 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 		if !checkAccess(r, stack.Access, stack.MatchAccess) {
 			errorResponse := ErrorResponse{
 				ErrorCode:    apperrors.FORBIDDEN.String(),
-				ErrorMessage: fmt.Sprintf("access denied: insufficient permissions to execute this stack %s", stack.Method),
+				ErrorMessage: fmt.Sprintf("access denied: insufficient permissions to execute this stack %s", stack.Name),
 				Timestamp:    time.Now().Format(time.RFC3339),
 				RequestID:    requestID,
 			}
@@ -216,6 +227,20 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 			w.WriteHeader(http.StatusForbidden)
 			if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
 				slog.Error("access denied: insufficient permissions to execute this stack", "error", err)
+			}
+			if auditLogger != nil {
+				if err := auditLogger.Write(audit.Entry{
+					RequestID:  requestID,
+					Stack:      stack.Name,
+					Path:       r.URL.Path,
+					Method:     r.Method,
+					SourceIP:   r.RemoteAddr,
+					Identity:   extractIdentity(r, excludeidentityheaders),
+					DurationMs: time.Since(start).Milliseconds(),
+					Error:      errorResponse.ErrorMessage,
+				}); err != nil {
+					slog.Error("failed to write audit log entry", "error", err)
+				}
 			}
 			slog.Error("request failed",
 				"requestID", requestID,
@@ -238,6 +263,20 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 			if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
 				slog.Error("failed to write json error response", "error", err)
 			}
+			if auditLogger != nil {
+				if err := auditLogger.Write(audit.Entry{
+					RequestID:  requestID,
+					Stack:      stack.Name,
+					Path:       r.URL.Path,
+					Method:     r.Method,
+					SourceIP:   r.RemoteAddr,
+					Identity:   extractIdentity(r, excludeidentityheaders),
+					DurationMs: time.Since(start).Milliseconds(),
+					Error:      errorResponse.ErrorMessage,
+				}); err != nil {
+					slog.Error("failed to write audit log entry", "error", err)
+				}
+			}
 			slog.Error("request failed",
 				"requestID", requestID, "method", r.Method, "path", r.URL.Path, "errorMessage", errorResponse.ErrorMessage)
 			return
@@ -259,9 +298,10 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 				Path:       r.URL.Path,
 				Method:     r.Method,
 				SourceIP:   r.RemoteAddr,
-				Identity:   extractIdentity(r, stack.Access),
+				Identity:   extractIdentity(r, excludeidentityheaders),
 				Vars:       vars,
 				Success:    result.Success,
+				Output:     result.Output,
 				DurationMs: time.Since(start).Milliseconds(),
 				Error:      result.Error,
 			}); err != nil {
@@ -307,11 +347,6 @@ func substituteVars(r *http.Request) map[string]string {
 					vars[k] = fmt.Sprintf("%v", v)
 				}
 			}
-		}
-	}
-	for key, values := range r.Header {
-		if strings.HasPrefix(key, "X-") && len(values) > 0 {
-			vars[key] = values[0]
 		}
 	}
 	return vars
