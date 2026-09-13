@@ -23,14 +23,14 @@ type contextKey string
 
 const mcpIdentityKey contextKey = "seristack.mcp.identity"
 
-func McpServer(config *conf.Config, transport string, port string, addr string, auditLogger *audit.Logger) error {
+func McpServer(config *conf.Config, transport string, port string, addr string, auditLogger *audit.Logger, excludeidentityheaders []string) error {
 	sourceDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
 	}
 	s := server.NewMCPServer(
 		"seristack",
-		"0.4.2",
+		"0.4.4",
 		server.WithToolCapabilities(true),
 	)
 	hasRoutes := false
@@ -41,7 +41,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 			if registeredPatterns[stack.Name] {
 				return fmt.Errorf("duplicate tool registration:  %q ", stack.Name)
 			}
-			registerStackTool(s, stack, stackMap, sourceDir, auditLogger)
+			registerStackTool(s, stack, stackMap, sourceDir, auditLogger, excludeidentityheaders)
 			hasRoutes = true
 			registeredPatterns[stack.Name] = true
 		}
@@ -84,10 +84,10 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 
 func mcpIdentityMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		identity := make(map[string]string)
+		identity := make(map[string][]string)
 		for key, values := range r.Header {
-			if strings.HasPrefix(key, "X-") && len(values) > 0 {
-				identity[key] = values[0]
+			if len(values) > 0 {
+				identity[key] = values
 			}
 		}
 		ctx := context.WithValue(r.Context(), mcpIdentityKey, identity)
@@ -95,19 +95,38 @@ func mcpIdentityMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func getHeaderValues(
+	identity map[string][]string,
+	headerName string,
+) []string {
+	var result []string
+
+	for _, value := range identity[headerName] {
+		for _, item := range strings.Split(value, ",") {
+			item = strings.TrimSpace(item)
+
+			if item != "" {
+				result = append(result, item)
+			}
+		}
+	}
+
+	return result
+}
+
 func checkMCPAccess(ctx context.Context, rules []conf.AccessRule, matchAccess string) bool {
 	if len(rules) == 0 {
 		return true
 	}
 
-	identity, ok := ctx.Value(mcpIdentityKey).(map[string]string)
+	identity, ok := ctx.Value(mcpIdentityKey).(map[string][]string)
 	if !ok || len(identity) == 0 {
 		return false
 	}
 
 	if strings.ToUpper(matchAccess) == "ALL" {
 		for _, rule := range rules {
-			userValues := splitHeader(identity[rule.HeaderName])
+			userValues := getHeaderValues(identity, rule.HeaderName)
 			matched := false
 			for _, allowed := range rule.HeaderValue {
 				if slices.Contains(userValues, allowed) {
@@ -123,7 +142,7 @@ func checkMCPAccess(ctx context.Context, rules []conf.AccessRule, matchAccess st
 	}
 
 	for _, rule := range rules {
-		userValues := splitHeader(identity[rule.HeaderName])
+		userValues := getHeaderValues(identity, rule.HeaderName)
 		for _, allowed := range rule.HeaderValue {
 			if slices.Contains(userValues, allowed) {
 				return true
@@ -133,25 +152,29 @@ func checkMCPAccess(ctx context.Context, rules []conf.AccessRule, matchAccess st
 	return false
 }
 
-func splitHeader(val string) []string {
-	var out []string
-	for _, s := range strings.Split(val, ",") {
-		if s = strings.TrimSpace(s); s != "" {
-			out = append(out, s)
-		}
-	}
-	return out
-}
-
-func identityFromContext(ctx context.Context) map[string]string {
-	identity, ok := ctx.Value(mcpIdentityKey).(map[string]string)
+func identityFromContext(ctx context.Context) map[string][]string {
+	identity, ok := ctx.Value(mcpIdentityKey).(map[string][]string)
 	if !ok || len(identity) == 0 {
 		return nil
 	}
 	return identity
 }
 
-func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[string]*conf.Stack, sourceDir string, auditLogger *audit.Logger) {
+func flattenIdentity(identity map[string][]string, excludeidentityheaders []string) map[string]string {
+	if len(identity) == 0 {
+		return nil
+	}
+	result := make(map[string]string)
+	for k, v := range identity {
+		if slices.Contains(excludeidentityheaders, k) {
+			continue
+		}
+		result[k] = strings.Join(v, ",")
+	}
+	return result
+}
+
+func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[string]*conf.Stack, sourceDir string, auditLogger *audit.Logger, excludeidentityheaders []string) {
 	options := []mcp.ToolOption{
 		mcp.WithDescription(stack.Description),
 	}
@@ -187,7 +210,7 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 			if auditLogger != nil {
 				if err := auditLogger.Write(audit.Entry{
 					Stack:      stack.Name,
-					Identity:   identityFromContext(ctx),
+					Identity:   flattenIdentity(identityFromContext(ctx), excludeidentityheaders),
 					Success:    false,
 					DurationMs: time.Since(start).Milliseconds(),
 					Error:      "access denied: insufficient permissions to call this tool",
@@ -217,9 +240,10 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 		if auditLogger != nil {
 			if err := auditLogger.Write(audit.Entry{
 				Stack:      stack.Name,
-				Identity:   identityFromContext(ctx),
+				Identity:   flattenIdentity(identityFromContext(ctx), excludeidentityheaders),
 				Vars:       vars,
 				Success:    result.Success,
+				Output:     result.Output,
 				DurationMs: time.Since(start).Milliseconds(),
 				Error:      result.Error,
 			}); err != nil {
