@@ -31,7 +31,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 	stackMap := executehandler.Stackmap(config.Stacks)
 	s := server.NewMCPServer(
 		"seristack",
-		"0.4.4",
+		"0.4.6",
 		server.WithToolCapabilities(true),
 		server.WithToolFilter(mcpToolFilter(stackMap)),
 	)
@@ -69,6 +69,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 	case "streamableHTTP":
 		httpServer := server.NewStreamableHTTPServer(s,
 			server.WithSessionIdleTTL(30*time.Minute),
+			server.WithDisableLocalhostProtection(true),
 		)
 		handler := mcpIdentityMiddleware(httpServer)
 		fmt.Printf("MCP Streamable HTTP server starting on http://%s:%s/mcp\n", addr, port)
