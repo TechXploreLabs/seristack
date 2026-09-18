@@ -28,14 +28,15 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
 	}
+	stackMap := executehandler.Stackmap(config.Stacks)
 	s := server.NewMCPServer(
 		"seristack",
 		"0.4.4",
 		server.WithToolCapabilities(true),
+		server.WithToolFilter(mcpToolFilter(stackMap)),
 	)
 	hasRoutes := false
 	var registeredPatterns = make(map[string]bool)
-	stackMap := executehandler.Stackmap(config.Stacks)
 	for _, stack := range config.Stacks {
 		if stack.Description != "" {
 			if registeredPatterns[stack.Name] {
@@ -66,7 +67,9 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 		return srv.ListenAndServe()
 
 	case "streamableHTTP":
-		httpServer := server.NewStreamableHTTPServer(s)
+		httpServer := server.NewStreamableHTTPServer(s,
+			server.WithSessionIdleTTL(30*time.Minute),
+		)
 		handler := mcpIdentityMiddleware(httpServer)
 		fmt.Printf("MCP Streamable HTTP server starting on http://%s:%s/mcp\n", addr, port)
 		srv := &http.Server{
@@ -79,6 +82,27 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 
 	default:
 		return fmt.Errorf("unsupported transport %q — use stdio, sse, or streamableHTTP", transport)
+	}
+}
+
+func mcpToolFilter(
+	stackMap map[string]*conf.Stack,
+) server.ToolFilterFunc {
+	return func(ctx context.Context, tools []mcp.Tool) []mcp.Tool {
+		filtered := make([]mcp.Tool, 0, len(tools))
+
+		for _, tool := range tools {
+			stack, ok := stackMap[tool.Name]
+			if !ok {
+				continue
+			}
+
+			if checkMCPAccess(ctx, stack.Access, stack.MatchAccess) {
+				filtered = append(filtered, tool)
+			}
+		}
+
+		return filtered
 	}
 }
 

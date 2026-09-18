@@ -1,10 +1,10 @@
 module github.com/TechXploreLabs/seristack
 
-go 1.25.14
+go 1.25.5
 
 require (
 	github.com/fatih/color v1.19.0
-	github.com/mark3labs/mcp-go v0.54.0
+	github.com/mark3labs/mcp-go v1.1.0
 	github.com/spf13/cobra v1.10.2
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.13.1
