@@ -80,8 +80,6 @@ func TestExecuteShellCommandTimeout(t *testing.T) {
 		Name:          "timeout-stack",
 		Count:         1,
 		ExecutionMode: "SEQUENTIAL",
-		Shell:         "/bin/sh",
-		ShellArg:      "-c",
 		Cmds:          []string{"sleep 2"},
 		Timeouts:      "100ms",
 	})

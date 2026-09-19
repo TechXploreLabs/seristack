@@ -1,658 +1,1645 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seristack Config Reference</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --border: #334155;
-            --text: #f1f5f9;
-            --muted: #94a3b8;
-            --green: #10b981;
-            --green-soft: rgba(16, 185, 129, 0.12);
-            --blue-soft: rgba(59, 130, 246, 0.10);
-            --code: #111827;
-        }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        html { scroll-behavior: smooth; }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-        body {
-            font-family: "Outfit", sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.7;
-        }
+<style>
+    :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --border: #334155;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --green: #10b981;
+        --green-soft: rgba(16, 185, 129, 0.12);
+        --blue-soft: rgba(59, 130, 246, 0.10);
+        --code: #111827;
+        --warning: #fbbf24;
+    }
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.10), transparent 35%),
-                radial-gradient(circle at 90% 20%, rgba(59, 130, 246, 0.10), transparent 35%);
-            pointer-events: none;
-            z-index: 0;
-        }
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
 
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: rgba(15, 23, 42, 0.92);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(12px);
-        }
+    html {
+        scroll-behavior: smooth;
+    }
 
-        .nav,
-        .layout,
-        .hero {
-            width: min(1180px, calc(100% - 2rem));
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
+    body {
+        font-family: "Outfit", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+    }
 
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.25rem 0;
-            gap: 1rem;
-        }
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+            radial-gradient(
+                circle at 10% 10%,
+                rgba(16, 185, 129, 0.10),
+                transparent 35%
+            ),
+            radial-gradient(
+                circle at 90% 20%,
+                rgba(59, 130, 246, 0.10),
+                transparent 35%
+            );
+        pointer-events: none;
+        z-index: 0;
+    }
 
-        .logo {
-            color: var(--green);
-            font-family: "JetBrains Mono", monospace;
-            font-weight: 800;
-            font-size: 1.25rem;
-            text-decoration: none;
-        }
+    header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(15, 23, 42, 0.92);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(12px);
+    }
 
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+    .nav,
+    .layout,
+    .hero {
+        width: min(1180px, calc(100% - 2rem));
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
 
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-weight: 600;
-        }
+    .nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 0;
+        gap: 1rem;
+    }
 
-        .nav-links a:hover { color: var(--green); }
+    .logo {
+        color: var(--green);
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 800;
+        font-size: 1.25rem;
+        text-decoration: none;
+    }
 
-        .hero {
-            padding: 4rem 0 2rem;
-        }
+    .nav-links {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
 
-        .eyebrow {
-            color: var(--green);
-            font-family: "JetBrains Mono", monospace;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-        }
+    .nav-links a {
+        color: var(--muted);
+        text-decoration: none;
+        font-weight: 600;
+    }
 
-        h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            line-height: 1.05;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #34d399, #10b981);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    .nav-links a:hover {
+        color: var(--green);
+    }
 
-        .lead {
-            max-width: 780px;
-            color: var(--muted);
-            font-size: 1.15rem;
-        }
+    .hero {
+        padding: 4rem 0 2rem;
+    }
 
+    .eyebrow {
+        color: var(--green);
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    h1 {
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        line-height: 1.05;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #34d399, #10b981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .lead {
+        max-width: 820px;
+        color: var(--muted);
+        font-size: 1.15rem;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 270px 1fr;
+        gap: 2rem;
+        padding: 2rem 0 5rem;
+    }
+
+    aside {
+        position: sticky;
+        top: 6rem;
+        height: fit-content;
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.25rem;
+    }
+
+    aside h2 {
+        font-size: 1rem;
+        color: var(--text);
+        margin-bottom: 0.75rem;
+    }
+
+    aside a {
+        display: block;
+        color: var(--muted);
+        text-decoration: none;
+        padding: 0.35rem 0;
+        font-size: 0.95rem;
+    }
+
+    aside a:hover {
+        color: var(--green);
+    }
+
+    main {
+        min-width: 0;
+    }
+
+    section {
+        background: rgba(30, 41, 59, 0.78);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    h2 {
+        color: var(--green);
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    h3 {
+        color: var(--text);
+        margin: 1.5rem 0 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    p,
+    li {
+        color: var(--muted);
+    }
+
+    ul {
+        margin-left: 1.3rem;
+    }
+
+    li {
+        margin-bottom: 0.3rem;
+    }
+
+    code {
+        font-family: "JetBrains Mono", monospace;
+        background: rgba(15, 23, 42, 0.85);
+        color: #d1fae5;
+        padding: 0.12rem 0.35rem;
+        border-radius: 6px;
+        font-size: 0.92em;
+    }
+
+    pre {
+        background: var(--code);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+
+    pre code {
+        background: transparent;
+        padding: 0;
+        color: var(--text);
+        white-space: pre;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+
+    th,
+    td {
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    th {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--text);
+    }
+
+    td {
+        color: var(--muted);
+    }
+
+    .note {
+        background: linear-gradient(
+            135deg,
+            var(--green-soft),
+            var(--blue-soft)
+        );
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .note p {
+        color: var(--text);
+    }
+
+    .warning {
+        background: rgba(251, 191, 36, 0.08);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .warning p {
+        color: #fde68a;
+    }
+
+    .danger {
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .danger p {
+        color: #fecaca;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(220px, 1fr)
+        );
+        gap: 1rem;
+    }
+
+    .mini-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.5);
+    }
+
+    .mini-card code {
+        display: inline-block;
+        margin-bottom: 0.4rem;
+    }
+
+    .badge {
+        display: inline-block;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--green);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        margin-left: 0.5rem;
+        vertical-align: middle;
+    }
+
+    .status {
+        display: inline-block;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.72rem;
+        padding: 0.12rem 0.45rem;
+        border-radius: 5px;
+        margin-left: 0.35rem;
+    }
+
+    .status-http {
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+    }
+
+    .status-mcp {
+        color: #c4b5fd;
+        background: rgba(139, 92, 246, 0.12);
+        border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+
+    footer {
+        border-top: 1px solid var(--border);
+        padding: 2rem 0;
+        text-align: center;
+        color: var(--muted);
+        position: relative;
+        z-index: 1;
+    }
+
+    footer a {
+        color: var(--green);
+        text-decoration: none;
+    }
+
+    @media (max-width: 900px) {
         .layout {
-            display: grid;
-            grid-template-columns: 270px 1fr;
-            gap: 2rem;
-            padding: 2rem 0 5rem;
+            grid-template-columns: 1fr;
         }
 
         aside {
-            position: sticky;
-            top: 6rem;
-            height: fit-content;
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1.25rem;
+            position: static;
         }
+    }
 
-        aside h2 {
-            font-size: 1rem;
-            color: var(--text);
-            margin-bottom: 0.75rem;
-        }
-
-        aside a {
-            display: block;
-            color: var(--muted);
-            text-decoration: none;
-            padding: 0.35rem 0;
-            font-size: 0.95rem;
-        }
-
-        aside a:hover { color: var(--green); }
-
-        main {
-            min-width: 0;
-        }
-
+    @media (max-width: 600px) {
         section {
-            background: rgba(30, 41, 59, 0.78);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        h2 {
-            color: var(--green);
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        h3 {
-            color: var(--text);
-            margin: 1.25rem 0 0.5rem;
-            font-size: 1.2rem;
-        }
-
-        p, li { color: var(--muted); }
-
-        ul { margin-left: 1.3rem; }
-
-        code {
-            font-family: "JetBrains Mono", monospace;
-            background: rgba(15, 23, 42, 0.85);
-            color: #d1fae5;
-            padding: 0.12rem 0.35rem;
-            border-radius: 6px;
-            font-size: 0.92em;
-        }
-
-        pre {
-            background: var(--code);
-            border: 1px solid var(--border);
-            border-radius: 12px;
             padding: 1.25rem;
-            overflow-x: auto;
-            margin: 1rem 0;
         }
 
-        pre code {
-            background: transparent;
-            padding: 0;
-            color: var(--text);
-            white-space: pre;
+        th,
+        td {
+            padding: 0.55rem;
+            font-size: 0.9rem;
         }
+    }
+</style>
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-            overflow: hidden;
-            border-radius: 10px;
-        }
 
-        th, td {
-            border: 1px solid var(--border);
-            padding: 0.75rem;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        th {
-            background: rgba(16, 185, 129, 0.12);
-            color: var(--text);
-        }
-
-        td { color: var(--muted); }
-
-        .note {
-            background: linear-gradient(135deg, var(--green-soft), var(--blue-soft));
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        .note p { color: var(--text); }
-
-        .warning {
-            background: rgba(251, 191, 36, 0.08);
-            border: 1px solid rgba(251, 191, 36, 0.35);
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-
-        .warning p { color: #fde68a; }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-        }
-
-        .mini-card {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1rem;
-            background: rgba(15, 23, 42, 0.5);
-        }
-
-        .badge {
-            display: inline-block;
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 0.15rem 0.5rem;
-            border-radius: 6px;
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--green);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            margin-left: 0.5rem;
-            vertical-align: middle;
-        }
-
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 2rem 0;
-            text-align: center;
-            color: var(--muted);
-            position: relative;
-            z-index: 1;
-        }
-
-        footer a { color: var(--green); text-decoration: none; }
-
-        @media (max-width: 900px) {
-            .layout { grid-template-columns: 1fr; }
-            aside { position: static; }
-        }
-    </style>
 </head>
-<body>
-    <header>
-        <nav class="nav">
-            <a class="logo" href="../index.html">seristack</a>
-            <div class="nav-links">
-                <a href="../index.html">Home</a>
-                <a href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub →</a>
-            </div>
-        </nav>
-    </header>
 
-    <div class="hero">
-        <p class="eyebrow">Documentation</p>
-        <h1>Config Reference</h1>
-        <p class="lead">
-            A complete guide to every Seristack YAML attribute: stack definitions, variables,
-            validation rules, execution modes, timeouts, HTTP endpoints, per-stack authorization,
-            audit logging, MCP tools, and output handling.
-        </p>
+<body>
+
+<header>
+    <nav class="nav">
+        <a class="logo" href="../index.html">seristack</a>
+
+
+    <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a
+            href="https://github.com/TechXploreLabs/seristack"
+            target="_blank"
+            rel="noreferrer"
+        >
+            GitHub →
+        </a>
+    </div>
+</nav>
+
+
+</header>
+
+<div class="hero">
+    <p class="eyebrow">Documentation</p>
+
+
+<h1>Config Reference</h1>
+
+<p class="lead">
+    Reference for the Seristack YAML configuration format, including
+    stacks, commands, dependencies, variables, validation, execution
+    modes, timeouts, HTTP endpoints, authorization, audit logging,
+    and MCP integration.
+</p>
+
+
+</div>
+
+<div class="layout">
+
+<aside>
+    <h2>On this page</h2>
+
+
+<a href="#root">Root object</a>
+<a href="#stack-attributes">Stack attributes</a>
+<a href="#variables">Variables</a>
+<a href="#dependencies">Dependencies</a>
+<a href="#execution-modes">Execution modes</a>
+<a href="#timeouts">Timeouts</a>
+<a href="#shell">Shell</a>
+<a href="#commands-output">Commands &amp; output</a>
+<a href="#http">HTTP behavior</a>
+<a href="#authorization">Authorization</a>
+<a href="#audit">Audit logging</a>
+<a href="#mcp">MCP behavior</a>
+<a href="#security">Security</a>
+<a href="#testing">Testing</a>
+<a href="#complete-example">Complete example</a>
+
+
+</aside>
+
+<main>
+
+<section id="root">
+
+
+<h2>Root object</h2>
+
+<p>
+    A Seristack configuration is a YAML document containing a
+    <code>stacks</code> list.
+</p>
+
+<pre><code>stacks:
+- name: system-health
+  count: 1
+  cmds:
+  - echo "system-health is good"</code></pre>
+
+  <table>
+      <thead>
+          <tr>
+              <th>Attribute</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+          </tr>
+      </thead>
+
+  
+  <tbody>
+      <tr>
+          <td><code>stacks</code></td>
+          <td>list</td>
+          <td>yes</td>
+          <td>
+              List of stack definitions.
+          </td>
+      </tr>
+  </tbody>
+  
+
+  </table>
+
+</section>
+
+<section id="stack-attributes">
+
+
+<h2>Stack attributes</h2>
+
+<p>
+    Each item under <code>stacks</code> represents an executable
+    Seristack stack.
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Attribute</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        <tr>
+            <td><code>name</code></td>
+            <td>string</td>
+            <td>yes</td>
+            <td>
+                Unique name of the stack. Used by CLI selection,
+                dependencies, HTTP routing, MCP registration,
+                and execution results.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>description</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Human-readable description of the stack.
+                Used when exposing stacks through MCP.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>method</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                HTTP method associated with the stack,
+                such as <code>GET</code> or <code>POST</code>.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>urlPath</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                HTTP URL path associated with the stack.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>workDir</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Working directory used when executing the stack.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>continueOnError</code></td>
+            <td>boolean</td>
+            <td>no</td>
+            <td>
+                Controls whether execution continues after a command
+                failure.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>dependsOn</code></td>
+            <td>list[string]</td>
+            <td>no</td>
+            <td>
+                Names of stacks that must be resolved before this stack.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>vars</code></td>
+            <td>list</td>
+            <td>no</td>
+            <td>
+                Variable definitions and validation rules.
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <code>matchAccess</code>
+                <span class="status status-http">HTTP</span>
+            </td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Controls how multiple access rules are evaluated:
+                <code>ANY</code> or <code>ALL</code>.
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <code>access</code>
+                <span class="status status-http">HTTP</span>
+            </td>
+            <td>list</td>
+            <td>no</td>
+            <td>
+                Identity-header authorization rules for the stack.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>executionMode</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Controls how repeated executions and commands
+                are scheduled.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>count</code></td>
+            <td>integer</td>
+            <td>no</td>
+            <td>
+                Number of execution iterations.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>shell</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Shell implementation used for command execution.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>shellArg</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Argument passed to an external shell.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>cmds</code></td>
+            <td>list[string]</td>
+            <td>no</td>
+            <td>
+                Commands or scripts executed by the stack.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>timeouts</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Execution timeout represented as a Go duration string.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>output</code></td>
+            <td>string</td>
+            <td>no</td>
+            <td>
+                Optional output-processing command.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>discardOutput</code></td>
+            <td>list[string]</td>
+            <td>no</td>
+            <td>
+                Output/result keys to discard from the registry.
+            </td>
+        </tr>
+
+    </tbody>
+</table>
+
+
+</section>
+
+<section id="variables">
+
+
+<h2>Variables</h2>
+
+<p>
+    Variables are declared with the <code>vars</code> list.
+    They can be referenced by stack commands through the Seristack
+    variable template syntax.
+</p>
+
+<pre><code>vars:
+- name: env
+  value: staging
+  required: true
+  allowed_value:
+  - staging
+  - production</code></pre>
+
+  <table>
+      <thead>
+          <tr>
+              <th>Attribute</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+          </tr>
+      </thead>
+
+  
+  <tbody>
+
+      <tr>
+          <td><code>name</code></td>
+          <td>string</td>
+          <td>yes</td>
+          <td>
+              Name of the variable.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>value</code></td>
+          <td>string</td>
+          <td>no</td>
+          <td>
+              Default value.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>allowed_value</code></td>
+          <td>list[string]</td>
+          <td>no</td>
+          <td>
+              Restricts the value to the specified values.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>denied_value</code></td>
+          <td>list[string]</td>
+          <td>no</td>
+          <td>
+              Rejects specified values.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>allowed_regex</code></td>
+          <td>string</td>
+          <td>no</td>
+          <td>
+              Restricts the value using a regular expression rule.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>denied_regex</code></td>
+          <td>string</td>
+          <td>no</td>
+          <td>
+              Rejects values matching a regular expression rule.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>required</code></td>
+          <td>boolean</td>
+          <td>no</td>
+          <td>
+              Requires the variable to have a valid value.
+          </td>
+      </tr>
+
+  </tbody>
+  
+
+  </table>
+
+  <h3>Example</h3>
+
+  <pre><code>vars:
+
+
+- name: environment
+  value: staging
+  required: true
+  allowed_value:
+  - staging
+  - production
+
+- name: version
+  required: true
+  allowed_regex: regex("^[a-zA-Z0-9._-]+$")
+
+- name: command
+  denied_regex: regex("(?i)rm|delete|drop")</code></pre>
+
+  <div class="note">
+      <p>
+          Variables are normalized when the configuration is loaded.
+          Validation rules are then applied when values are resolved
+          for execution.
+      </p>
+  </div>
+
+  <div class="warning">
+      <p>
+          Do not place passwords, API tokens, private keys, or other
+          secrets in stack variables when audit logging is enabled.
+          Prefer environment variables or a secrets manager.
+      </p>
+  </div>
+
+</section>
+
+<section id="dependencies">
+
+
+<h2>Dependencies</h2>
+
+<p>
+    A stack can depend on one or more other stacks using
+    <code>dependsOn</code>.
+</p>
+
+<pre><code>stacks:
+- name: build
+  cmds:
+  - ./build.sh
+
+- name: test
+  dependsOn:
+  - build
+  cmds:
+  - ./test.sh
+
+- name: deploy
+  dependsOn:
+  - test
+  cmds:
+  - ./deploy.sh</code></pre>
+
+  <p>
+      Seristack resolves the dependency graph before execution.
+      Dependencies allow larger workflows to be composed from
+      smaller stacks.
+  </p>
+
+</section>
+
+<section id="execution-modes">
+
+
+<h2>Execution modes</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Mode</th>
+            <th>Purpose</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td><code>PARALLEL</code></td>
+            <td>
+                Execute independent work concurrently.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>STAGE</code></td>
+            <td>
+                Execute iterations concurrently while preserving
+                command ordering within an iteration.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>PIPELINE</code></td>
+            <td>
+                Execute iterations sequentially while allowing
+                command-level concurrency.
+            </td>
+        </tr>
+
+        <tr>
+            <td><code>SEQUENTIAL</code></td>
+            <td>
+                Execute work sequentially.
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="note">
+    <p>
+        Choose the execution mode based on whether command ordering,
+        iteration ordering, or concurrency is important to the workflow.
+    </p>
+</div>
+
+
+</section>
+
+<section id="timeouts">
+
+
+<h2>Timeouts</h2>
+
+<p>
+    The <code>timeouts</code> field controls the maximum duration
+    allowed for command execution.
+</p>
+
+<pre><code>timeouts: 30s</code></pre>
+
+<div class="grid">
+
+    <div class="mini-card">
+        <code>500ms</code>
+        <p>500 milliseconds</p>
     </div>
 
-    <div class="layout">
-        <aside>
-            <h2>On this page</h2>
-            <a href="#root">Root object</a>
-            <a href="#stack-attributes">Stack attributes</a>
-            <a href="#variables">Variables</a>
-            <a href="#execution-modes">Execution modes</a>
-            <a href="#timeouts">Timeouts</a>
-            <a href="#shell">Shell</a>
-            <a href="#commands-output">Commands &amp; output</a>
-            <a href="#http">HTTP behavior</a>
-            <a href="#authorization">Authorization (HTTP)</a>
-            <a href="#mcp">MCP behavior</a>
-            <a href="#complete-example">Complete example</a>
-        </aside>
+    <div class="mini-card">
+        <code>30s</code>
+        <p>30 seconds</p>
+    </div>
 
-        <main>
-            <section id="root">
-                <h2>Root object</h2>
-                <p>Seristack configs are YAML files with a root <code>stacks</code> list.</p>
-                <pre><code>stacks:
-  - name: example
-    cmds:
-      - echo "hello from seristack"</code></pre>
-                <table>
-                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-                    <tbody><tr><td><code>stacks</code></td><td>list</td><td>yes</td><td>List of stack/workflow definitions.</td></tr></tbody>
-                </table>
-            </section>
+    <div class="mini-card">
+        <code>5m</code>
+        <p>5 minutes</p>
+    </div>
 
-            <section id="stack-attributes">
-                <h2>Stack attributes</h2>
-                <table>
-                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>name</code></td><td>string</td><td>yes</td><td>none</td><td>Unique stack name. Used by CLI selection, HTTP routes, MCP tools, dependencies, and registry output keys.</td></tr>
-                        <tr><td><code>description</code></td><td>string</td><td>no</td><td>empty</td><td>Human-readable description. Required for exposing a stack as an MCP tool.</td></tr>
-                        <tr><td><code>method</code></td><td>string</td><td>no</td><td>empty</td><td>HTTP method such as <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, or <code>DELETE</code>. Required for HTTP endpoint exposure.</td></tr>
-                        <tr><td><code>urlPath</code></td><td>string</td><td>no</td><td><code>/&lt;name&gt;</code></td><td>Custom HTTP route path.</td></tr>
-                        <tr><td><code>matchAccess</code></td><td>string</td><td>no</td><td><code>ANY</code></td><td>How multiple <code>access</code> rules are evaluated. <code>ANY</code> grants access if one rule matches. <code>ALL</code> requires every rule to match. HTTP only.</td></tr>
-                        <tr><td><code>access</code></td><td>list</td><td>no</td><td>empty</td><td>Per-stack HTTP authorization rules. Each rule checks an identity header forwarded by nginx or Caddy against allowed values. HTTP only.</td></tr>
-                        <tr><td><code>workDir</code></td><td>string</td><td>no</td><td>config directory</td><td>Working directory for command execution.</td></tr>
-                        <tr><td><code>continueOnError</code></td><td>boolean</td><td>no</td><td><code>false</code></td><td>Continue command execution after failures and record errors.</td></tr>
-                        <tr><td><code>dependsOn</code></td><td>list</td><td>no</td><td><code>[]</code></td><td>Stacks that must run before this stack.</td></tr>
-                        <tr><td><code>vars</code></td><td>list</td><td>no</td><td>empty</td><td>Variable definitions and validation rules.</td></tr>
-                        <tr><td><code>executionMode</code></td><td>string</td><td>no</td><td><code>PARALLEL</code></td><td>Concurrency strategy for count iterations and commands.</td></tr>
-                        <tr><td><code>count</code></td><td>integer</td><td>no</td><td><code>0</code></td><td>Number of times to run commands. <code>0</code> skips execution.</td></tr>
-                        <tr><td><code>timeouts</code></td><td>string</td><td>no</td><td><code>1h</code></td><td>Per-command timeout using Go duration syntax.</td></tr>
-                        <tr><td><code>shell</code></td><td>string</td><td>no</td><td>mvdan shell</td><td>External shell executable such as <code>bash</code>, <code>sh</code>, or <code>powershell</code>.</td></tr>
-                        <tr><td><code>shellArg</code></td><td>string</td><td>no</td><td><code>-c</code></td><td>Argument passed to the external shell before the script.</td></tr>
-                        <tr><td><code>cmds</code></td><td>list</td><td>no</td><td>empty</td><td>Commands/scripts executed by the stack.</td></tr>
-                        <tr><td><code>output</code></td><td>string</td><td>no</td><td>empty</td><td>Optional post-processing command using <code>{{.Self.result}}</code>.</td></tr>
-                        <tr><td><code>discardOutput</code></td><td>list</td><td>no</td><td>empty</td><td>Registry output keys to remove after the current stack completes.</td></tr>
-                    </tbody>
-                </table>
-            </section>
+    <div class="mini-card">
+        <code>1h</code>
+        <p>1 hour</p>
+    </div>
 
-            <section id="variables">
-                <h2>Variables and validation</h2>
-                <p>Variables can be used in commands with <code>{{.Vars.variable_name}}</code>.</p>
-                <pre><code>vars:
-  - name: env
-    value: dev
-    required: true
-    allowed_value: [dev, stage, prod]</code></pre>
-                <table>
-                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>name</code></td><td>string</td><td>yes</td><td>Variable name. Must be unique within the stack.</td></tr>
-                        <tr><td><code>value</code></td><td>string</td><td>no</td><td>Default variable value.</td></tr>
-                        <tr><td><code>required</code></td><td>boolean</td><td>no</td><td>Final value must not be empty.</td></tr>
-                        <tr><td><code>allowed_value</code></td><td>list</td><td>no</td><td>Allows only listed values.</td></tr>
-                        <tr><td><code>denied_value</code></td><td>list</td><td>no</td><td>Rejects listed values.</td></tr>
-                        <tr><td><code>allowed_regex</code></td><td>string</td><td>no</td><td>Allows only values matching <code>regex(...)</code>.</td></tr>
-                        <tr><td><code>denied_regex</code></td><td>string</td><td>no</td><td>Rejects values matching <code>regex(...)</code>.</td></tr>
-                    </tbody>
-                </table>
-                <div class="note">
-                    <p>Only one of <code>allowed_value</code>, <code>denied_value</code>, <code>allowed_regex</code>, or <code>denied_regex</code> can be used per variable. <code>required</code> can be combined with one of them.</p>
-                </div>
-                <div class="warning">
-                    <p>Do not pass secrets as stack vars. They will appear in the audit log and in slog output. Secrets should come from environment variables or a secrets manager inside the shell script.</p>
-                </div>
-                <p>Runtime values can come from CLI flags, HTTP query/form/JSON body, HTTP <code>X-*</code> headers, and MCP tool arguments.</p>
-            </section>
+    <div class="mini-card">
+        <code>1h30m</code>
+        <p>1 hour 30 minutes</p>
+    </div>
 
-            <section id="execution-modes">
-                <h2>Execution modes</h2>
-                <table>
-                    <thead><tr><th>Mode</th><th>Count iterations</th><th>Commands inside each iteration</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>PARALLEL</code></td><td>concurrent</td><td>concurrent</td></tr>
-                        <tr><td><code>STAGE</code></td><td>concurrent</td><td>sequential</td></tr>
-                        <tr><td><code>PIPELINE</code></td><td>sequential</td><td>concurrent</td></tr>
-                        <tr><td><code>SEQUENTIAL</code></td><td>sequential</td><td>sequential</td></tr>
-                    </tbody>
-                </table>
-                <p>Use <code>SEQUENTIAL</code> when ordering matters. Use <code>PARALLEL</code> when maximum concurrency is desired.</p>
-            </section>
+    <div class="mini-card">
+        <code>2.5h</code>
+        <p>2 hours 30 minutes</p>
+    </div>
 
-            <section id="timeouts">
-                <h2>Timeouts</h2>
-                <p><code>timeouts</code> controls the maximum duration for each command execution. Default: <code>1h</code>.</p>
-                <div class="grid">
-                    <div class="mini-card"><code>500ms</code><p>500 milliseconds</p></div>
-                    <div class="mini-card"><code>30s</code><p>30 seconds</p></div>
-                    <div class="mini-card"><code>5m</code><p>5 minutes</p></div>
-                    <div class="mini-card"><code>1h</code><p>1 hour</p></div>
-                    <div class="mini-card"><code>1h30m</code><p>1 hour 30 minutes</p></div>
-                    <div class="mini-card"><code>2.5h</code><p>2 hours 30 minutes</p></div>
-                </div>
-                <div class="note"><p>Supported units: <code>ns</code>, <code>us</code>/<code>µs</code>, <code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>. Use <code>24h</code> instead of <code>1d</code>.</p></div>
-            </section>
+</div>
 
-            <section id="shell">
-                <h2>Shell settings</h2>
-                <p>If <code>shell</code> is omitted, Seristack uses the built-in mvdan shell interpreter. External shells can be configured with <code>shell</code> and <code>shellArg</code>.</p>
-                <pre><code>shell: bash
+<p>
+    Go duration units include
+    <code>ns</code>, <code>us</code>, <code>µs</code>,
+    <code>ms</code>, <code>s</code>, <code>m</code>, and <code>h</code>.
+</p>
+
+
+</section>
+
+<section id="shell">
+
+
+<h2>Shell settings</h2>
+
+<p>
+    Seristack can execute commands using its supported shell execution
+    mechanisms. The <code>shell</code> and <code>shellArg</code> fields
+    allow an external shell to be selected where supported.
+</p>
+
+<h3>Example: Bash</h3>
+
+<pre><code>shell: bash
+
+
 shellArg: -c</code></pre>
-            </section>
 
-            <section id="commands-output">
-                <h2>Commands, output, and registry cleanup</h2>
-                <h3><code>cmds</code></h3>
-                <pre><code>cmds:
-  - |
-    echo "starting"
-    echo "finished"</code></pre>
-                <h3><code>output</code></h3>
-                <p>Post-process accumulated stack output through <code>{{.Self.result}}</code>.</p>
-                <pre><code>output: |
-  echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'</code></pre>
-                <h3><code>discardOutput</code></h3>
-                <pre><code>discardOutput: [build, test]</code></pre>
-            </section>
 
-            <section id="http">
-                <h2>HTTP endpoint behavior</h2>
-                <p>A stack becomes an HTTP endpoint when <code>method</code> is set.</p>
-                <pre><code>name: deploy
-method: POST
-urlPath: /deploy</code></pre>
-                <p>HTTP variables can come from query parameters, form values, JSON request body, and headers beginning with <code>X-</code>.</p>
-                <pre><code># query param
+<h3>Example: PowerShell</h3>
+
+<pre><code>shell: powershell
+
+
+shellArg: -Command</code></pre>
+
+
+<div class="warning">
+    <p>
+        Shell commands execute with the permissions of the Seristack
+        process. Run Seristack with the minimum operating-system
+        privileges required by the configured workflows.
+    </p>
+</div>
+
+
+</section>
+
+<section id="commands-output">
+
+
+<h2>Commands, output, and registry</h2>
+
+<h3><code>cmds</code></h3>
+
+<p>
+    The <code>cmds</code> field contains the commands executed by
+    the stack.
+</p>
+
+<pre><code>cmds:
+- |
+  echo "starting"
+  ./script.sh
+  echo "finished"</code></pre>
+
+  <h3><code>output</code></h3>
+
+  <p>
+      The <code>output</code> field can be used to process accumulated
+      stack output.
+  </p>
+
+  <pre><code>output: |
+
+echo '{{.Self.result}}' |
+grep "^{" |
+jq -s '{records: ., total: length}'</code></pre>
+
+
+<h3><code>discardOutput</code></h3>
+
+<p>
+    Use <code>discardOutput</code> to remove selected output/result
+    entries from the registry after execution.
+</p>
+
+<pre><code>discardOutput:
+
+- build
+- test</code></pre>
+
+</section>
+
+<section id="http">
+
+
+<h2>HTTP behavior</h2>
+
+<p>
+    A stack can be associated with an HTTP endpoint using
+    <code>method</code> and <code>urlPath</code>.
+</p>
+
+<pre><code>stacks:
+
+- name: deploy
+  method: POST
+  urlPath: /deploy
+  cmds:
+
+  - ./deploy.sh</code></pre>
+
+  <h3>Request variables</h3>
+
+  <p>
+      HTTP requests can provide declared variables through supported
+      request inputs such as query parameters, request bodies, and
+      headers.
+  </p>
+
+  <pre><code># Query parameter
+
 curl "http://127.0.0.1:8080/deploy?env=staging"
 
 # JSON body
-curl -X POST http://127.0.0.1:8080/deploy \
-  -H "Content-Type: application/json" \
-  -d '{"env": "staging", "version": "v1.2.3"}'</code></pre>
-            </section>
 
-            <section id="authorization">
-                <h2>Authorization (HTTP)</h2>
-                <p>
-                    The <code>access</code> block restricts which users or groups can execute an HTTP stack endpoint.
-                    Seristack reads identity headers forwarded by nginx or Caddy after they validate the user against your IdP.
-                </p>
-                <div class="note">
-                    <p><strong>HTTP only.</strong> The <code>access</code> and <code>matchAccess</code> fields apply to HTTP endpoints only. MCP tool calls bypass this check. Secure MCP at the transport level using nginx, Caddy, or network policy.</p>
-                </div>
+curl -X POST http://127.0.0.1:8080/deploy 
+-H "Content-Type: application/json" 
+-d '{"env":"staging","version":"v1.2.3"}'</code></pre>
 
-                <h3>Basic usage</h3>
-                <pre><code>stacks:
-  - name: deploy
-    method: POST
-    urlPath: /deploy
-    matchAccess: ANY
-    access:
-      - headerName: "X-Auth-Request-Groups"
-        headerValue: ["sre", "platform"]
-      - headerName: "X-Auth-Request-Roles"
-        headerValue: ["admin"]
-    cmds:
-      - ./deploy.sh</code></pre>
 
-                <h3><code>access</code> rule attributes</h3>
-                <table>
-                    <thead><tr><th>Attribute</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>headerName</code></td><td>string</td><td>yes</td><td>The exact HTTP header name to read. Must match what nginx or Caddy forwards.</td></tr>
-                        <tr><td><code>headerValue</code></td><td>list</td><td>yes</td><td>Allowed values. Access granted if the header contains any of these values. Comma-separated header values are split automatically.</td></tr>
-                    </tbody>
-                </table>
+<div class="note">
+    <p>
+        Only variables declared in the stack's <code>vars</code>
+        configuration should be treated as supported external inputs.
+    </p>
+</div>
 
-                <h3><code>matchAccess</code> values</h3>
-                <table>
-                    <thead><tr><th>Value</th><th>Behaviour</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>ANY</code></td><td>Access granted if <strong>any one</strong> rule matches. Default.</td></tr>
-                        <tr><td><code>ALL</code></td><td>Access granted only if <strong>every</strong> rule matches.</td></tr>
-                    </tbody>
-                </table>
 
-                <h3>Examples</h3>
-                <pre><code># Any member of sre or platform can run
+</section>
+
+<section id="authorization">
+
+
+<h2>Per-stack authorization <span class="status status-http">HTTP</span></h2>
+
+<p>
+    A stack can define access rules based on identity headers supplied
+    by a trusted authentication proxy.
+</p>
+
+<pre><code>stacks:
+
+
+- name: deploy-production
+  method: POST
+  urlPath: /deploy/production
+
+  matchAccess: ANY
+
+  access:
+
+  - headerName: X-Auth-Request-Groups
+    headerValue:
+
+    - sre
+    - platform
+
+  - headerName: X-Auth-Request-Roles
+    headerValue:
+
+    - admin
+
+  cmds:
+
+  - ./deploy.sh</code></pre>
+
+  <h3><code>access</code></h3>
+
+  <table>
+      <thead>
+          <tr>
+              <th>Attribute</th>
+              <th>Type</th>
+              <th>Description</th>
+          </tr>
+      </thead>
+
+  
+  <tbody>
+      <tr>
+          <td><code>headerName</code></td>
+          <td>string</td>
+          <td>
+              HTTP identity header that Seristack should evaluate.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>headerValue</code></td>
+          <td>list[string]</td>
+          <td>
+              Values accepted for the specified identity header.
+          </td>
+      </tr>
+  </tbody>
+  
+
+  </table>
+
+  <h3><code>matchAccess</code></h3>
+
+  <table>
+      <thead>
+          <tr>
+              <th>Value</th>
+              <th>Meaning</th>
+          </tr>
+      </thead>
+
+  
+  <tbody>
+      <tr>
+          <td><code>ANY</code></td>
+          <td>
+              Access is granted when any configured rule matches.
+          </td>
+      </tr>
+
+      <tr>
+          <td><code>ALL</code></td>
+          <td>
+              Access is granted only when all configured rules match.
+          </td>
+      </tr>
+  </tbody>
+  
+
+  </table>
+
+  <h3>Examples</h3>
+
+  <pre><code># Group-based access
+
 access:
-  - headerName: "X-Auth-Request-Groups"
-    headerValue: ["sre", "platform"]
 
-# Must be in devops AND have admin role
+- headerName: X-Auth-Request-Groups
+  headerValue:
+
+  - sre
+  - platform</code></pre>
+
+  <pre><code># Group AND role must match
+
 matchAccess: ALL
+
 access:
-  - headerName: "X-Auth-Request-Groups"
-    headerValue: ["devops"]
-  - headerName: "X-Auth-Request-Roles"
-    headerValue: ["admin"]
 
-# Specific user only
+- headerName: X-Auth-Request-Groups
+  headerValue:
+
+  - devops
+
+- headerName: X-Auth-Request-Roles
+  headerValue:
+
+  - admin</code></pre>
+
+  <pre><code># Specific user
+
 access:
-  - headerName: "X-Auth-Request-Email"
-    headerValue: ["oncall@company.com"]</code></pre>
 
-                <h3>Identity header names by IdP</h3>
-                <table>
-                    <thead><tr><th>IdP</th><th>Proxy</th><th>Group header</th><th>Role header</th><th>Email header</th></tr></thead>
-                    <tbody>
-                        <tr><td>Entra ID / Azure AD</td><td>oauth2-proxy</td><td><code>X-Auth-Request-Groups</code></td><td><code>X-Auth-Request-Roles</code></td><td><code>X-Auth-Request-Email</code></td></tr>
-                        <tr><td>GCP IAM</td><td>IAP</td><td>—</td><td>—</td><td><code>X-Goog-Authenticated-User-Email</code></td></tr>
-                        <tr><td>AWS Cognito</td><td>ALB</td><td><code>X-Amzn-Oidc-Data</code></td><td>—</td><td>—</td></tr>
-                        <tr><td>OCI IAM</td><td>nginx + oauth2-proxy</td><td><code>X-Auth-Request-Groups</code></td><td>—</td><td><code>X-Auth-Request-Email</code></td></tr>
-                        <tr><td>Okta / Auth0</td><td>oauth2-proxy</td><td><code>X-Auth-Request-Groups</code></td><td><code>X-Auth-Request-Roles</code></td><td><code>X-Auth-Request-Email</code></td></tr>
-                    </tbody>
-                </table>
+- headerName: X-Auth-Request-Email
+  headerValue:
 
-                <h3>Testing without nginx (local development)</h3>
-                <p>Pass identity headers directly in curl while developing locally:</p>
-                <pre><code># Granted — group matches
-curl -X POST http://127.0.0.1:8080/deploy \
-  -H "X-Auth-Request-Groups: sre" \
-  -H "Content-Type: application/json" \
-  -d '{"env": "staging"}'
+  - [oncall@company.com](mailto:oncall@company.com)</code></pre>
 
-# Denied — group not in access block
-curl -X POST http://127.0.0.1:8080/deploy \
-  -H "X-Auth-Request-Groups: intern" \
-  -H "Content-Type: application/json" \
-  -d '{"env": "staging"}'</code></pre>
+  <div class="danger">
+      <p>
+          Identity headers must only be trusted when they are supplied
+          by a trusted authentication layer. Do not expose a protected
+          Seristack endpoint directly to untrusted clients and allow
+          them to freely construct authorization headers.
+      </p>
+  </div>
 
-                <h3>Audit log</h3>
-                <p>Enable a structured JSON audit trail for every HTTP stack execution via CLI flags:</p>
-                <pre><code>seristack run \
-  --audit-log /var/log/seristack/audit.log</code></pre>
-                <p>Every execution writes one JSON line:</p>
-                <pre><code>{
-  "timestamp": "2024-01-15T10:30:00Z",
-  "event": "stack_executed",
-  "stack": "deploy",
-  "path": "/deploy",
-  "method": "POST",
-  "source_ip": "127.0.0.1:54231",
-  "identity": {
-    "user": "alice@company.com",
-    "groups": "sre,platform"
-  },
-  "vars": {"env": "staging", "version": "v1.2.3"},
-  "success": true,
-  "duration_ms": 1423
+</section>
+
+<section id="audit">
+
+
+<h2>Audit logging</h2>
+
+<p>
+    Structured JSON audit logging can be enabled from the command line.
+</p>
+
+<pre><code>seristack run \
+
+
+--config config.yaml 
+--audit-log /var/log/seristack/audit.log</code></pre>
+
+
+<p>
+    Audit entries can contain information such as:
+</p>
+
+<ul>
+    <li>Timestamp</li>
+    <li>Event type</li>
+    <li>Stack name</li>
+    <li>HTTP path and method</li>
+    <li>Source IP when available</li>
+    <li>Identity information</li>
+    <li>Variables</li>
+    <li>Success or failure</li>
+    <li>Execution duration</li>
+    <li>Output and error information</li>
+</ul>
+
+<pre><code>{
+
+
+"timestamp": "2026-09-19T10:00:00Z",
+"event": "stack_executed",
+"stack": "system-health",
+"path": "/health",
+"method": "GET",
+"success": true,
+"duration_ms": 42,
+"output": "system-health is good"
 }</code></pre>
-                <p>Query with <code>jq</code>:</p>
-                <pre><code># All failures
-jq 'select(.success == false)' /var/log/seristack/audit.log
 
-# Everything a specific user ran
-jq 'select(.identity.user == "alice@company.com")' /var/log/seristack/audit.log
 
-# Slow executions over 30s
-jq 'select(.duration_ms > 30000)' /var/log/seristack/audit.log</code></pre>
-            </section>
+<h3>Querying logs</h3>
 
-            <section id="mcp">
-                <h2>MCP tool behavior</h2>
-                <p>A stack becomes an MCP tool when <code>description</code> is set. Variables declared in <code>vars</code> become MCP tool arguments.</p>
-                <div class="note">
-                    <p>The <code>access</code> block does not apply to MCP tool calls. MCP access is controlled at the transport level — put nginx or Caddy in front of the MCP server port and restrict by network, token, or IP.</p>
-                </div>
-            </section>
+<pre><code># Failed executions
 
-            <section id="complete-example">
-                <h2>Complete example</h2>
-                <pre><code>stacks:
-  - name: deploy
-    description: Deploy the application to a target environment
-    method: POST
-    urlPath: /deploy
-    matchAccess: ANY
-    access:
-      - headerName: "X-Auth-Request-Groups"
-        headerValue: ["sre", "platform"]
-      - headerName: "X-Auth-Request-Roles"
-        headerValue: ["admin"]
-    count: 1
-    timeouts: 10m
-    executionMode: SEQUENTIAL
-    vars:
-      - name: env
-        value: staging
-        required: true
-        allowed_value: [staging, production]
-      - name: version
-        required: true
-        allowed_regex: regex("^[a-zA-Z0-9._-]+$")
-    cmds:
-      - |
-        echo "Deploying {{.Vars.version}} to {{.Vars.env}}"
-        kubectl set image deployment/app app={{.Vars.version}}
 
-  - name: collect-metadata
-    description: Produces JSON metadata for aggregation
-    dependsOn: [deploy]
-    count: 2
-    timeouts: 5m
-    executionMode: SEQUENTIAL
-    vars:
-      - name: env
-        value: staging
-    cmds:
-      - |
-        echo "{\"index\": {{.Count.index}}, \"env\": \"{{.Vars.env}}\", \"status\": \"ok\"}"
-    output: |
-      echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'
+jq 'select(.success == false)' 
+/var/log/seristack/audit.log
 
-  - name: cleanup
-    dependsOn: [collect-metadata]
-    discardOutput: [deploy]
-    count: 1
-    timeouts: 10s
-    cmds:
-      - echo "discarded deploy output from memory"</code></pre>
+# Slow executions
 
-                <p>Start the server with audit logging enabled:</p>
-                <pre><code>seristack run \
-  --config config.yaml \
-  --addr 127.0.0.1 \
-  --port 8080 \
-  --audit-log /var/log/seristack/audit.log</code></pre>
-            </section>
-        </main>
-    </div>
+jq 'select(.duration_ms > 30000)' 
+/var/log/seristack/audit.log
 
-    <footer>
-        Apache License | <a href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub</a>
-    </footer>
+# Executions for a specific stack
+
+jq 'select(.stack == "system-health")' 
+/var/log/seristack/audit.log</code></pre>
+
+
+<div class="warning">
+    <p>
+        Do not put secrets into stack variables when audit logging
+        is enabled. Variables and execution information may be
+        recorded in the audit trail.
+    </p>
+</div>
+
+
+</section>
+
+<section id="mcp">
+
+
+<h2>MCP behavior</h2>
+
+<p>
+    Seristack can expose configured stacks through the Model Context
+    Protocol (MCP).
+</p>
+
+<pre><code>seristack mcp \
+
+
+-t streamableHTTP 
+--addr 127.0.0.1 
+--port 8081</code></pre>
+
+
+<p>
+    Stacks with a <code>description</code> can be registered as
+    MCP tools. Declared variables can be provided as tool arguments.
+</p>
+
+<div class="note">
+    <p>
+        For remote MCP deployments, place the MCP server behind a
+        trusted HTTPS and authentication layer such as nginx,
+        oauth2-proxy, or another gateway.
+    </p>
+</div>
+
+<h3>Recommended deployment</h3>
+
+<pre><code>MCP client / IDE
+   │
+   ▼
+ HTTPS
+   │
+   ▼
+
+
+nginx / authentication proxy
+│
+├── TLS
+├── Authentication
+└── Identity propagation
+│
+▼
+Seristack MCP
+127.0.0.1:8081
+│
+▼
+Stack execution</code></pre>
+
+</section>
+
+<section id="security">
+
+
+<h2>Security considerations</h2>
+
+<p>
+    Seristack executes shell commands on the machine where it runs.
+    Treat the configuration as executable operational code.
+</p>
+
+<ul>
+    <li>
+        Bind Seristack to localhost or a private network when possible.
+    </li>
+
+    <li>
+        Put an authenticated reverse proxy or gateway in front of
+        remotely accessible HTTP and MCP endpoints.
+    </li>
+
+    <li>
+        Use HTTPS/TLS for remote access.
+    </li>
+
+    <li>
+        Do not trust identity headers directly from public clients.
+    </li>
+
+    <li>
+        Apply per-stack authorization to sensitive workflows.
+    </li>
+
+    <li>
+        Run the process with the minimum operating-system privileges
+        required.
+    </li>
+
+    <li>
+        Avoid putting credentials or secrets in YAML variables.
+    </li>
+
+    <li>
+        Review shell commands before exposing them through HTTP or MCP.
+    </li>
+
+    <li>
+        Protect and rotate audit logs.
+    </li>
+</ul>
+
+
+</section>
+
+<section id="testing">
+
+
+<h2>Testing</h2>
+
+<p>
+    Run the complete Go test suite with:
+</p>
+
+<pre><code>go test ./...</code></pre>
+
+<p>
+    To force all tests to execute instead of using Go's test cache:
+</p>
+
+<pre><code>go test -count=1 ./...</code></pre>
+
+<p>
+    For verbose output and individual test execution times:
+</p>
+
+<pre><code>go test -count=1 -v ./...</code></pre>
+
+<p>
+    Run tests for a specific package:
+</p>
+
+<pre><code>go test -count=1 -v ./pkg/opsy</code></pre>
+
+<p>
+    Run the race detector:
+</p>
+
+<pre><code>CGO_ENABLED=1 go test -race ./...</code></pre>
+
+<div class="note">
+    <p>
+        The <code>-count=1</code> flag disables reuse of cached test
+        results for that invocation, making the reported package
+        duration the result of the current test execution.
+    </p>
+</div>
+
+
+</section>
+
+<section id="complete-example">
+
+
+<h2>Complete example</h2>
+
+<pre><code>stacks:
+
+
+- name: build
+  description: Build the application
+
+  count: 1
+  executionMode: SEQUENTIAL
+  timeouts: 10m
+
+  cmds:
+
+  - ./build.sh
+
+- name: test
+  description: Run application tests
+
+  dependsOn:
+
+  - build
+
+  count: 1
+  executionMode: SEQUENTIAL
+  timeouts: 10m
+
+  cmds:
+
+  - ./test.sh
+
+- name: deploy-production
+  description: Deploy the application to production
+
+  method: POST
+  urlPath: /deploy/production
+
+  dependsOn:
+
+  - test
+
+  matchAccess: ALL
+
+  access:
+
+  - headerName: X-Auth-Request-Groups
+    headerValue:
+
+    - platform
+    - sre
+
+  - headerName: X-Auth-Request-Roles
+    headerValue:
+
+    - admin
+
+  count: 1
+  executionMode: SEQUENTIAL
+  timeouts: 10m
+
+  vars:
+
+  - name: version
+    required: true
+    allowed_regex: regex("^[a-zA-Z0-9._-]+$")
+
+  - name: environment
+    value: production
+    required: true
+    allowed_value:
+
+    - staging
+    - production
+
+  cmds:
+
+  - |
+    echo "Deploying {{.Vars.version}}"
+    echo "Environment: {{.Vars.environment}}"
+    ./deploy.sh "{{.Vars.version}}" "{{.Vars.environment}}"
+
+  output: |
+  echo '{{.Self.result}}'
+
+- name: cleanup
+  description: Cleanup temporary resources
+
+  dependsOn:
+
+  - deploy-production
+
+  count: 1
+  executionMode: SEQUENTIAL
+  timeouts: 30s
+
+  cmds:
+
+  - ./cleanup.sh
+
+  discardOutput:
+
+  - deploy-production</code></pre>
+
+  <h3>Start the HTTP server</h3>
+
+  <pre><code>seristack run \
+
+--config config.yaml 
+--addr 127.0.0.1 
+--port 8080 
+--audit-log /var/log/seristack/audit.log</code></pre>
+
+
+<h3>Start the MCP server</h3>
+
+<pre><code>seristack mcp \
+
+
+-t streamableHTTP 
+--addr 127.0.0.1 
+--port 8081</code></pre>
+
+</section>
+
+</main>
+</div>
+
+<footer>
+    Apache License 2.0 |
+    <a
+        href="https://github.com/TechXploreLabs/seristack"
+        target="_blank"
+        rel="noreferrer"
+    >
+        GitHub
+    </a>
+</footer>
+
 </body>
 </html>

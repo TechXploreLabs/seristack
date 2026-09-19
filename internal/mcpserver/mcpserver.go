@@ -31,7 +31,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 	stackMap := executehandler.Stackmap(config.Stacks)
 	s := server.NewMCPServer(
 		"seristack",
-		"0.4.6",
+		"0.4.7",
 		server.WithToolCapabilities(true),
 		server.WithToolFilter(mcpToolFilter(stackMap)),
 	)
