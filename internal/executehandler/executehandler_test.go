@@ -1,8 +1,6 @@
-// Unit tests for executehandler.go
 package executehandler
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
@@ -13,165 +11,454 @@ func TestStackmap(t *testing.T) {
 	stacks := []config.Stack{
 		{Name: "stack1"},
 		{Name: "stack2"},
+		{Name: "stack3"},
 	}
 
 	got := Stackmap(stacks)
-	if len(got) != 2 {
-		t.Errorf("expected map of 2, got %d", len(got))
-	}
-	if got["stack1"] == nil || got["stack1"].Name != "stack1" {
-		t.Errorf("missing or incorrect entry for 'stack1'")
-	}
-	if got["stack2"] == nil || got["stack2"].Name != "stack2" {
-		t.Errorf("missing or incorrect entry for 'stack2'")
+
+	if len(got) != len(stacks) {
+		t.Fatalf("Stackmap() returned %d stacks, want %d", len(got), len(stacks))
 	}
 
-	// Edge case: empty input
-	stacks = []config.Stack{}
-	got = Stackmap(stacks)
-	if !reflect.DeepEqual(got, map[string]*config.Stack{}) {
-		t.Errorf("expected empty map, got %v", got)
+	for _, stack := range stacks {
+		gotStack, ok := got[stack.Name]
+		if !ok {
+			t.Fatalf("Stackmap() missing stack %q", stack.Name)
+		}
+
+		if gotStack.Name != stack.Name {
+			t.Errorf("Stackmap()[%q].Name = %q, want %q",
+				stack.Name, gotStack.Name, stack.Name)
+		}
 	}
 }
 
-func TestValidateStackVars(t *testing.T) {
+func TestStackmapEmpty(t *testing.T) {
+	got := Stackmap(nil)
+
+	if len(got) != 0 {
+		t.Fatalf("Stackmap(nil) returned %d entries, want 0", len(got))
+	}
+}
+
+func TestMergeMaps(t *testing.T) {
+	base := map[string]string{
+		"name":    "alice",
+		"command": "test",
+		"env":     "prod",
+	}
+
+	override := map[string]string{
+		"name":    "bob",
+		"command": "build",
+		"unknown": "should-not-be-added",
+	}
+
+	got := MergeMaps(base, override)
+
+	if got["name"] != "bob" {
+		t.Errorf("name = %q, want bob", got["name"])
+	}
+
+	if got["command"] != "build" {
+		t.Errorf("command = %q, want build", got["command"])
+	}
+
+	if got["env"] != "prod" {
+		t.Errorf("env = %q, want prod", got["env"])
+	}
+
+	if _, ok := got["unknown"]; ok {
+		t.Error("MergeMaps should not add keys that do not exist in base")
+	}
+
+	// Make sure the original map wasn't modified.
+	if base["name"] != "alice" {
+		t.Error("MergeMaps modified the base map")
+	}
+}
+
+func TestMergeMapsNilBase(t *testing.T) {
+	base := map[string]string(nil)
+
+	override := map[string]string{
+		"name": "alice",
+	}
+
+	got := MergeMaps(base, override)
+
+	if len(got) != 0 {
+		t.Fatalf(
+			"MergeMaps(nil, override) returned %#v, want empty map",
+			got,
+		)
+	}
+}
+
+func TestValidateStackVarsNoRules(t *testing.T) {
+	stack := &config.Stack{
+		Name: "stack1",
+	}
+
+	if err := ValidateStackVars(stack); err != nil {
+		t.Fatalf("ValidateStackVars() error = %v, want nil", err)
+	}
+}
+
+func TestValidateStackVarsNilStack(t *testing.T) {
+	if err := ValidateStackVars(nil); err != nil {
+		t.Fatalf("ValidateStackVars(nil) error = %v, want nil", err)
+	}
+}
+
+func TestValidateStackVarsRequired(t *testing.T) {
+	stack := &config.Stack{
+		Name: "stack1",
+		VarRules: map[string]config.VariableRuleSet{
+			"environment": {
+				Required: true,
+			},
+		},
+		Vars: map[string]string{},
+	}
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("ValidateStackVars() error = nil, want required-variable error")
+	}
+
+	if !strings.Contains(err.Error(), "environment") {
+		t.Fatalf(
+			"error = %q, want environment in error",
+			err.Error(),
+		)
+	}
+}
+
+func TestValidateStackVarsRequiredEmpty(t *testing.T) {
+	stack := &config.Stack{
+		Name: "stack1",
+		VarRules: map[string]config.VariableRuleSet{
+			"environment": {
+				Required: true,
+			},
+		},
+		Vars: map[string]string{
+			"environment": "   ",
+		},
+	}
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("ValidateStackVars() error = nil, want required-value error")
+	}
+
+	if !strings.Contains(err.Error(), "environment") {
+		t.Fatalf(
+			"error = %q, want environment in error",
+			err.Error(),
+		)
+	}
+}
+
+func TestValidateStackVarsAllowedValues(t *testing.T) {
+	stack := &config.Stack{
+		Name: "deploy",
+		VarRules: map[string]config.VariableRuleSet{
+			"environment": {
+				AllowedValue: []string{
+					"dev",
+					"staging",
+					"prod",
+				},
+			},
+		},
+		Vars: map[string]string{
+			"environment": "prod",
+		},
+	}
+
+	if err := ValidateStackVars(stack); err != nil {
+		t.Fatalf("valid value rejected: %v", err)
+	}
+
+	stack.Vars["environment"] = "test"
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("invalid allowed value was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "must be one of") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateStackVarsDeniedValues(t *testing.T) {
+	stack := &config.Stack{
+		Name: "deploy",
+		VarRules: map[string]config.VariableRuleSet{
+			"environment": {
+				DeniedValue: []string{"production"},
+			},
+		},
+		Vars: map[string]string{
+			"environment": "staging",
+		},
+	}
+
+	if err := ValidateStackVars(stack); err != nil {
+		t.Fatalf("valid value rejected: %v", err)
+	}
+
+	stack.Vars["environment"] = "production"
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("denied value was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "is denied") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateStackVarsAllowedRegex(t *testing.T) {
+	stack := &config.Stack{
+		Name: "deploy",
+		VarRules: map[string]config.VariableRuleSet{
+			"version": {
+				AllowedRegex: `regex(^v[0-9]+\.[0-9]+\.[0-9]+$)`,
+			},
+		},
+		Vars: map[string]string{
+			"version": "v1.2.3",
+		},
+	}
+
+	if err := ValidateStackVars(stack); err != nil {
+		t.Fatalf("valid regex value rejected: %v", err)
+	}
+
+	stack.Vars["version"] = "latest"
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("invalid regex value was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "does not match") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateStackVarsDeniedRegex(t *testing.T) {
+	stack := &config.Stack{
+		Name: "deploy",
+		VarRules: map[string]config.VariableRuleSet{
+			"branch": {
+				DeniedRegex: `regex(^production$)`,
+			},
+		},
+		Vars: map[string]string{
+			"branch": "staging",
+		},
+	}
+
+	if err := ValidateStackVars(stack); err != nil {
+		t.Fatalf("valid value rejected: %v", err)
+	}
+
+	stack.Vars["branch"] = "production"
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("denied regex value was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "matches denied_regex") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateStackVarsInvalidRegexRule(t *testing.T) {
+	stack := &config.Stack{
+		Name: "stack1",
+		VarRules: map[string]config.VariableRuleSet{
+			"value": {
+				AllowedRegex: "not-a-regex-rule",
+			},
+		},
+		Vars: map[string]string{
+			"value": "hello",
+		},
+	}
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("invalid regex rule was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "expected regex(...) format") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateStackVarsEmptyRegexRule(t *testing.T) {
+	stack := &config.Stack{
+		Name: "stack1",
+		VarRules: map[string]config.VariableRuleSet{
+			"value": {
+				AllowedRegex: `regex("")`,
+			},
+		},
+		Vars: map[string]string{
+			"value": "hello",
+		},
+	}
+
+	err := ValidateStackVars(stack)
+
+	if err == nil {
+		t.Fatal("empty regex pattern was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "empty pattern") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestExtractRegexPattern(t *testing.T) {
 	tests := []struct {
-		name        string
-		stack       *config.Stack
-		expectError bool
-		errContains string
+		name string
+		rule string
+		want string
 	}{
 		{
-			name: "regex validation success",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{
-					{
-						Name:         "invite",
-						Value:        "hello engineers",
-						AllowedRegex: "regex(\"^[a-z]{5,}.*$\")",
-					},
-				},
-				Vars: map[string]string{
-					"invite": "hello engineers",
-				},
-				VarRules: map[string]config.VariableRuleSet{
-					"invite": {AllowedRegex: "regex(\"^[a-z]{5,}.*$\")"},
-				},
-			},
-			expectError: false,
+			name: "plain pattern",
+			rule: `regex(^hello$)`,
+			want: `^hello$`,
 		},
 		{
-			name: "enum validation success",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{
-					{
-						Name:         "samplekey",
-						Value:        "samplevalue",
-						AllowedValue: []string{"samplevalue", "devvalue"},
-					},
-				},
-				Vars: map[string]string{
-					"samplekey": "samplevalue",
-				},
-				VarRules: map[string]config.VariableRuleSet{
-					"samplekey": {AllowedValue: []string{"samplevalue", "devvalue"}},
-				},
-			},
-			expectError: false,
+			name: "quoted pattern",
+			rule: `regex("^hello$")`,
+			want: `^hello$`,
 		},
 		{
-			name: "regex validation failure",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{
-					{
-						Name:         "invite",
-						Value:        "HELLO",
-						AllowedRegex: "regex(\"^[a-z]{5,}.*$\")",
-					},
-				},
-				Vars: map[string]string{
-					"invite": "HELLO",
-				},
-				VarRules: map[string]config.VariableRuleSet{
-					"invite": {AllowedRegex: "regex(\"^[a-z]{5,}.*$\")"},
-				},
-			},
-			expectError: true,
-			errContains: "does not match allowed_regex",
-		},
-		{
-			name: "enum validation failure",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{
-					{
-						Name:         "samplekey",
-						Value:        "prodvalue",
-						AllowedValue: []string{"samplevalue", "devvalue"},
-					},
-				},
-				Vars: map[string]string{
-					"samplekey": "prodvalue",
-				},
-				VarRules: map[string]config.VariableRuleSet{
-					"samplekey": {AllowedValue: []string{"samplevalue", "devvalue"}},
-				},
-			},
-			expectError: true,
-			errContains: "must be one of",
-		},
-		{
-			name: "denied value validation failure",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{{Name: "samplekey", Value: "prodvalue", DeniedValue: []string{"prodvalue"}}},
-				Vars:      map[string]string{"samplekey": "prodvalue"},
-				VarRules:  map[string]config.VariableRuleSet{"samplekey": {DeniedValue: []string{"prodvalue"}}},
-			},
-			expectError: true,
-			errContains: "is denied",
-		},
-		{
-			name: "denied regex validation failure",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{{Name: "invite", Value: "admin-user", DeniedRegex: "regex(\"^admin.*$\")"}},
-				Vars:      map[string]string{"invite": "admin-user"},
-				VarRules:  map[string]config.VariableRuleSet{"invite": {DeniedRegex: "regex(\"^admin.*$\")"}},
-			},
-			expectError: true,
-			errContains: "matches denied_regex",
-		},
-		{
-			name: "required variable validation failure when value is blank",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{{Name: "token", Value: "   ", Required: true}},
-				Vars:      map[string]string{"token": "   "},
-				VarRules:  map[string]config.VariableRuleSet{"token": {Required: true}},
-			},
-			expectError: true,
-			errContains: "value for variable 'token' is required",
-		},
-		{
-			name: "required variable validation success when value is present",
-			stack: &config.Stack{
-				Variables: []config.VariableDef{{Name: "token", Value: "abc", Required: true}},
-				Vars:      map[string]string{"token": "abc"},
-				VarRules:  map[string]config.VariableRuleSet{"token": {Required: true}},
-			},
-			expectError: false,
+			name: "single quoted pattern",
+			rule: `regex('^hello$')`,
+			want: `^hello$`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateStackVars(tt.stack)
-			if tt.expectError && err == nil {
-				t.Fatalf("expected validation error, got nil")
+			got, err := extractRegexPattern(tt.rule)
+			if err != nil {
+				t.Fatalf("extractRegexPattern() error = %v", err)
 			}
-			if !tt.expectError && err != nil {
-				t.Fatalf("expected no error, got %v", err)
-			}
-			if tt.expectError && tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
-				t.Fatalf("expected error to contain %q, got %q", tt.errContains, err.Error())
+
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestExtractRegexPatternInvalid(t *testing.T) {
+	tests := []string{
+		"",
+		"hello",
+		"regex",
+		"regex(",
+		"regex)",
+		`regex("")`,
+		`regex('')`,
+	}
+
+	for _, rule := range tests {
+		t.Run(rule, func(t *testing.T) {
+			_, err := extractRegexPattern(rule)
+			if err == nil {
+				t.Fatalf(
+					"extractRegexPattern(%q) error = nil, want error",
+					rule,
+				)
+			}
+		})
+	}
+}
+
+func TestExecuteStackValidationFailure(t *testing.T) {
+	stack := &config.Stack{
+		Name: "stack1",
+		VarRules: map[string]config.VariableRuleSet{
+			"required": {
+				Required: true,
+			},
+		},
+		Vars: map[string]string{},
+	}
+
+	output := "json"
+
+	// Validation happens before shell execution, so an executor with no
+	// configuration is sufficient for this test.
+	executor := &config.Executor{}
+
+	result := ExecuteStack(executor, stack, &output)
+
+	if result == nil {
+		t.Fatal("ExecuteStack() returned nil")
+	}
+
+	if result.Success {
+		t.Fatal("validation failure returned Success=true")
+	}
+
+	if result.Name != "stack1" {
+		t.Errorf("Name = %q, want stack1", result.Name)
+	}
+
+	if !strings.Contains(result.Error, "required") {
+		t.Errorf("Error = %q, want required-variable error", result.Error)
+	}
+
+	if result.ContinueOnError {
+		t.Error("validation failure should not continue on error")
+	}
+}
+
+func TestExecuteStackValidationFailureDoesNotExecuteShell(t *testing.T) {
+	stack := &config.Stack{
+		Name: "stack1",
+		VarRules: map[string]config.VariableRuleSet{
+			"required": {
+				Required: true,
+			},
+		},
+	}
+
+	output := "json"
+	executor := &config.Executor{}
+
+	result := ExecuteStack(executor, stack, &output)
+
+	if result == nil {
+		t.Fatal("ExecuteStack() returned nil")
+	}
+
+	// The validation error proves that execution stopped before
+	// shellexecutor.ExecuteShell(), because there is no executable
+	// configuration in the test executor.
+	if !strings.Contains(result.Error, "variable 'required' is required") {
+		t.Fatalf("unexpected error: %q", result.Error)
 	}
 }
