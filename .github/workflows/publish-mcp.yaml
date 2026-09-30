@@ -1,0 +1,92 @@
+name: Publish MCP bundle
+
+on:
+  push:
+    tags: ["mcp-v*"]
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  NAME: io.github.TechXploreLabs/seristack
+  BIN_VER: "0.4.6"   # update when you want to bundle a newer seristack release
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build .mcpb bundles
+        run: |
+          set -euo pipefail
+          BUNDLE_VER="${GITHUB_REF_NAME#mcp-v}"
+          mkdir -p out
+          for T in linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64; do
+            OS=${T%_*}; EXE=seristack; [ "$OS" = windows ] && EXE=seristack.exe
+            D=build/$T; mkdir -p $D/server
+            curl -fsSL "https://github.com/TechXploreLabs/seristack/releases/download/v${BIN_VER}/seristack_${BIN_VER}_${T}.tar.gz" | tar -xz -C $D/server "$EXE"
+            chmod +x $D/server/$EXE
+            MCPB_OS=$OS; [ "$OS" = windows ] && MCPB_OS=win32
+            cat > $D/manifest.json <<EOF
+          {
+            "manifest_version": "0.3",
+            "name": "seristack",
+            "display_name": "Seristack",
+            "version": "${BUNDLE_VER}",
+            "description": "Run YAML-defined command stacks as MCP tools",
+            "author": { "name": "TechXploreLabs", "url": "https://github.com/TechXploreLabs" },
+            "repository": { "type": "git", "url": "https://github.com/TechXploreLabs/seristack" },
+            "server": {
+              "type": "binary",
+              "entry_point": "server/${EXE}",
+              "mcp_config": {
+                "command": "\${__dirname}/server/${EXE}",
+                "args": ["mcp", "-t", "stdio", "-c", "\${user_config.config_path}"]
+              }
+            },
+            "user_config": {
+              "config_path": {
+                "type": "file",
+                "title": "Seristack config file (YAML)",
+                "description": "Path to your seristack config.yaml",
+                "required": true
+              }
+            },
+            "compatibility": { "platforms": ["${MCPB_OS}"] }
+          }
+          EOF
+            npx -y @anthropic-ai/mcpb pack $D out/seristack-${T}.mcpb
+          done
+
+      - name: Create release
+        run: gh release create "$GITHUB_REF_NAME" out/*.mcpb --title "$GITHUB_REF_NAME" --generate-notes --latest=false
+
+      - name: Build server.json
+        run: |
+          set -euo pipefail
+          VER="${GITHUB_REF_NAME#mcp-v}"
+          PKGS="[]"
+          for F in out/*.mcpb; do
+            SHA=$(sha256sum "$F" | cut -d' ' -f1)
+            URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/$(basename $F)"
+            PKGS=$(echo "$PKGS" | jq --arg u "$URL" --arg s "$SHA" \
+              '. + [{registryType:"mcpb",identifier:$u,fileSha256:$s,transport:{type:"stdio"}}]')
+          done
+          jq -n --arg n "$NAME" --arg v "$VER" --argjson p "$PKGS" '{
+            "$schema":"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+            name:$n,
+            description:"Run YAML-defined shell command stacks as MCP tools",
+            version:$v,
+            repository:{url:"https://github.com/TechXploreLabs/seristack",source:"github"},
+            packages:$p}' > server.json
+          cat server.json
+
+      - name: Publish to MCP Registry
+        run: |
+          curl -fsSL https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
