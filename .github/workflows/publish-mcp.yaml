@@ -10,7 +10,7 @@ permissions:
 
 env:
   NAME: io.github.TechXploreLabs/seristack
-  BIN_VER: "0.4.6"   # update when you want to bundle a newer seristack release
+  BIN_VER: "0.4.7"   # update when you want to bundle a newer seristack release
 
 jobs:
   publish:
