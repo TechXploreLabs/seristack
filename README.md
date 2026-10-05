@@ -1,5 +1,6 @@
 # Seristack
 
+[![AgentHub 已收录：seristack](https://myagenthub.cn/badge/io.github.TechXploreLabs/seristack)](https://myagenthub.cn/p/io.github.TechXploreLabs/seristack)
 [![Go Reference](https://pkg.go.dev/badge/github.com/TechXploreLabs/seristack.svg)](https://pkg.go.dev/github.com/TechXploreLabs/seristack)
 [![Go Version](https://img.shields.io/badge/go-1.26.6-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/github/license/TechXploreLabs/seristack)](LICENSE)
