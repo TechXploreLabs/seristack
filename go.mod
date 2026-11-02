@@ -1,6 +1,6 @@
 module github.com/TechXploreLabs/seristack
 
-go 1.26.6
+go 1.26.10
 
 require (
 	github.com/fatih/color v1.19.0

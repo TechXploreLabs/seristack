@@ -4,7 +4,7 @@ Give your team one MCP URL, browser sign-in, and access to a defined set of oper
 
 Users connect from Cline, Codex, or Claude. They authenticate with Auth0 and receive tools according to their permissions. They do not need the server's Auth0 client secret, a shared password, or a manually distributed access token.
 
-**Guide baseline:** Ubuntu 22.04/24.04 LTS, SeriStack **v0.4.6**, oauth2-proxy **v7.15.4**, and Streamable HTTP. Documentation checked on **23 September 2026**. The versions are pinned for reproducibility; evaluate newer releases separately. Complete the deployment checks below against your own tenant and VM before sharing the endpoint.
+**Guide baseline:** Ubuntu 22.04/24.04 LTS, SeriStack **v0.4.7**, oauth2-proxy **v7.15.4**, and Streamable HTTP. Documentation checked on **23 September 2026**. The versions are pinned for reproducibility; evaluate newer releases separately. Complete the deployment checks below against your own tenant and VM before sharing the endpoint.
 
 **Contents:** [Architecture](#1-architecture-and-authorization-model) · [Prerequisites](#2-prerequisites-and-values-to-replace) · [Auth0](#3-configure-auth0) · [Installation](#4-install-packages-and-pinned-binaries) · [Service users](#5-create-service-users-and-directories) · [oauth2-proxy](#6-configure-oauth2-proxy) · [SeriStack](#7-define-the-sample-tools-and-start-seristack) · [TLS](#8-obtain-a-certificate) · [Nginx](#9-configure-nginx-for-mcp-authentication-and-discovery) · [Verification](#10-verify-the-deployment) · [Clients](#11-connect-users-clients) · [Operations](#12-operate-the-service) · [Operational tools](#13-expand-into-operational-tools) · [Troubleshooting](#14-troubleshooting) · [Acceptance](#15-deployment-acceptance)
 
@@ -25,7 +25,7 @@ This guide deliberately enforces **user API permissions** through Auth0's `permi
 
 The execution VM is a trusted host. Binding SeriStack to loopback prevents direct remote access, but other local processes can still connect and supply identity headers. Use a dedicated VM without untrusted local users or workloads. All tool executions share the service user's operating-system access and the configured downstream identities; an Auth0 user does not automatically become a distinct cloud IAM principal.
 
-Tool filtering is present in the pinned release. Older v0.4.4 deployments checked calls but did not filter discovery. Hiding tools improves discovery; execution-time authorization remains the control that denies unauthorized calls. It does not make authorized tools immune to prompt injection. [SeriStack v0.4.6 implementation](https://github.com/TechXploreLabs/seristack/blob/v0.4.6/internal/mcpserver/mcpserver.go)
+Tool filtering is present in the pinned release. Older v0.4.4 deployments checked calls but did not filter discovery. Hiding tools improves discovery; execution-time authorization remains the control that denies unauthorized calls. It does not make authorized tools immune to prompt injection. [SeriStack v0.4.7 implementation](https://github.com/TechXploreLabs/seristack/blob/v0.4.7/internal/mcpserver/mcpserver.go)
 
 ## 2. Prerequisites and values to replace
 
@@ -155,14 +155,14 @@ sudo ufw allow 'Nginx Full'
 
 Do not enable or reset a firewall during SSH access without preserving its SSH rule.
 
-### 4.1 Install SeriStack v0.4.6
+### 4.1 Install SeriStack v0.4.7
 
 This downloads a pinned release, checks its archive against the release checksum file, and installs the binary:
 
 ```bash
 (
   set -euo pipefail
-  SERISTACK_VERSION='0.4.6'
+  SERISTACK_VERSION='0.4.7'
   SERISTACK_ARCH="$(dpkg --print-architecture)"
   case "$SERISTACK_ARCH" in
     amd64|arm64) ;;
@@ -184,7 +184,7 @@ This downloads a pinned release, checks its archive against the release checksum
 seristack -v
 ```
 
-Release: [SeriStack v0.4.6](https://github.com/TechXploreLabs/seristack/releases/tag/v0.4.6).
+Release: [SeriStack v0.4.7](https://github.com/TechXploreLabs/seristack/releases/tag/v0.4.7).
 
 ### 4.2 Install oauth2-proxy v7.15.4
 
@@ -945,7 +945,7 @@ Before giving the endpoint to the team, confirm:
 ## Reference links
 
 - [SeriStack source and documentation](https://github.com/TechXploreLabs/seristack)
-- [SeriStack v0.4.6 release](https://github.com/TechXploreLabs/seristack/releases/tag/v0.4.6)
+- [SeriStack v0.4.7 release](https://github.com/TechXploreLabs/seristack/releases/tag/v0.4.7)
 - [oauth2-proxy configuration](https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/)
 - [Auth0 authorization for MCP](https://auth0.com/ai/docs/mcp/get-started/authorization-for-your-mcp-server)
 - [MCP authorization specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
