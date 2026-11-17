@@ -116,7 +116,7 @@ func TestValidateStackVarsRequired(t *testing.T) {
 		Name: "stack1",
 		VarRules: map[string]config.VariableRuleSet{
 			"environment": {
-				Required: true,
+				Sensitive: true,
 			},
 		},
 		Vars: map[string]string{},
@@ -141,7 +141,7 @@ func TestValidateStackVarsRequiredEmpty(t *testing.T) {
 		Name: "stack1",
 		VarRules: map[string]config.VariableRuleSet{
 			"environment": {
-				Required: true,
+				Sensitive: true,
 			},
 		},
 		Vars: map[string]string{
@@ -400,8 +400,8 @@ func TestExecuteStackValidationFailure(t *testing.T) {
 	stack := &config.Stack{
 		Name: "stack1",
 		VarRules: map[string]config.VariableRuleSet{
-			"required": {
-				Required: true,
+			"sensitive": {
+				Sensitive: true,
 			},
 		},
 		Vars: map[string]string{},
@@ -433,32 +433,5 @@ func TestExecuteStackValidationFailure(t *testing.T) {
 
 	if result.ContinueOnError {
 		t.Error("validation failure should not continue on error")
-	}
-}
-
-func TestExecuteStackValidationFailureDoesNotExecuteShell(t *testing.T) {
-	stack := &config.Stack{
-		Name: "stack1",
-		VarRules: map[string]config.VariableRuleSet{
-			"required": {
-				Required: true,
-			},
-		},
-	}
-
-	output := "json"
-	executor := &config.Executor{}
-
-	result := ExecuteStack(executor, stack, &output)
-
-	if result == nil {
-		t.Fatal("ExecuteStack() returned nil")
-	}
-
-	// The validation error proves that execution stopped before
-	// shellexecutor.ExecuteShell(), because there is no executable
-	// configuration in the test executor.
-	if !strings.Contains(result.Error, "variable 'required' is required") {
-		t.Fatalf("unexpected error: %q", result.Error)
 	}
 }

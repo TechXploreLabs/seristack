@@ -12,16 +12,16 @@ func TestSingleStackCheck_ExistingStack(t *testing.T) {
 	config := &conf.Config{
 		Stacks: []conf.Stack{
 			{
-				Name:      "system-health",
-				DependsOn: []string{"base-stack"},
+				Name:      "systemhealth",
+				DependsOn: []string{"basestack"},
 			},
 			{
-				Name: "inspect-runtime",
+				Name: "inspectruntime",
 			},
 		},
 	}
 
-	stack := "system-health"
+	stack := "systemhealth"
 
 	got, err := SingleStackCheck(config, &stack)
 	if err != nil {
@@ -36,10 +36,10 @@ func TestSingleStackCheck_ExistingStack(t *testing.T) {
 		t.Fatalf("expected 1 stack, got %d", len(got.Stacks))
 	}
 
-	if got.Stacks[0].Name != "system-health" {
+	if got.Stacks[0].Name != "systemhealth" {
 		t.Errorf(
 			"expected stack name %q, got %q",
-			"system-health",
+			"systemhealth",
 			got.Stacks[0].Name,
 		)
 	}
@@ -56,7 +56,7 @@ func TestSingleStackCheck_NonExistingStack(t *testing.T) {
 	config := &conf.Config{
 		Stacks: []conf.Stack{
 			{
-				Name: "system-health",
+				Name: "systemhealth",
 			},
 		},
 	}
@@ -87,7 +87,7 @@ func TestSingleStackCheck_EmptyStackName(t *testing.T) {
 	config := &conf.Config{
 		Stacks: []conf.Stack{
 			{
-				Name: "system-health",
+				Name: "systemhealth",
 			},
 		},
 	}
@@ -109,12 +109,12 @@ func TestRunTrigger_DependencyResolutionFailure(t *testing.T) {
 	config := &conf.Config{
 		Stacks: []conf.Stack{
 			{
-				Name:      "stack-a",
-				DependsOn: []string{"stack-b"},
+				Name:      "stacka",
+				DependsOn: []string{"stackb"},
 			},
 			{
-				Name:      "stack-b",
-				DependsOn: []string{"stack-a"},
+				Name:      "stackb",
+				DependsOn: []string{"stacka"},
 			},
 		},
 	}
@@ -132,7 +132,7 @@ func TestRunTrigger_DependencyResolutionFailure(t *testing.T) {
 		t.Errorf("expected nil result, got %#v", got)
 	}
 
-	expectedPrefix := "dependency resolution failed due to"
+	expectedPrefix := "failed due to cyclic dependency detected"
 	if len(err.Error()) < len(expectedPrefix) ||
 		err.Error()[:len(expectedPrefix)] != expectedPrefix {
 		t.Errorf(
@@ -147,7 +147,7 @@ func TestRunTrigger_ValidConfiguration(t *testing.T) {
 	config := &conf.Config{
 		Stacks: []conf.Stack{
 			{
-				Name: "system-health",
+				Name: "systemhealth",
 			},
 		},
 	}
@@ -204,7 +204,7 @@ func TestRunTrigger_UnsupportedOutput(t *testing.T) {
 	config := &conf.Config{
 		Stacks: []conf.Stack{
 			{
-				Name: "system-health",
+				Name: "systemhealth",
 			},
 		},
 	}

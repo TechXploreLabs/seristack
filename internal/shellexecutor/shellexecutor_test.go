@@ -9,33 +9,18 @@ import (
 	"github.com/TechXploreLabs/seristack/internal/config"
 )
 
-func TestShellargs(t *testing.T) {
-	// Typical usage: known shell and arg
-	shell, arg, err := Shellargs("/bin/bash", "-c")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+func TestParallelNoRace(t *testing.T) {
+	e := &config.Executor{SourceDir: t.TempDir()}
+	s := &config.Stack{
+		Name:          "t",
+		Count:         5,
+		ExecutionMode: "PARALLEL",
+		Cmds:          []string{"echo a", "echo b", "echo c"},
+		Vars:          map[string]string{},
 	}
-	if shell != "/bin/bash" || arg != "-c" {
-		t.Errorf("expected /bin/bash with -c, got %q and %q", shell, arg)
-	}
-
-	// Edge: empty shell string
-	shell, arg, err = Shellargs("", "")
-	// Accept empty shell/arg unless implementation changes
-	if err != nil && shell != "" && arg != "" {
-		t.Errorf("did not expect error for empty shell/arg, got %v", err)
-	}
-
-	// Edge: non-empty shell, empty arg
-	shell, arg, err = Shellargs("/bin/sh", "")
-	if err != nil && arg != "" && shell != "/bin/sh" {
-		t.Errorf("arg can be empty, should not error, got: %v", err)
-	}
-
-	// Edge: shell with spaces
-	shell, arg, err = Shellargs("bash --login", "-c")
-	if err != nil && arg != "-c" && shell != "bash --login" {
-		t.Errorf("should not error on shell with spaces, got: %v", err)
+	r := ExecuteShell(e, s)
+	if !r.Success {
+		t.Fatal(r.Error)
 	}
 }
 

@@ -292,6 +292,11 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
 
 		if auditLogger != nil {
+			for varName, rule := range stackCopy.VarRules {
+				if rule.Sensitive {
+					delete(stackCopy.Vars, varName)
+				}
+			}
 			if err := auditLogger.Write(audit.Entry{
 				RequestID:  requestID,
 				Stack:      stack.Name,
@@ -299,7 +304,7 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 				Method:     r.Method,
 				SourceIP:   r.RemoteAddr,
 				Identity:   extractIdentity(r, excludeidentityheaders),
-				Vars:       vars,
+				Vars:       stackCopy.Vars,
 				Success:    result.Success,
 				Output:     result.Output,
 				DurationMs: time.Since(start).Milliseconds(),
@@ -317,7 +322,7 @@ func RegisterHandler(mux *http.ServeMux, stack conf.Stack, stackMap map[string]*
 		}
 
 		slog.Info("request successful",
-			"requestID", requestID, "method", r.Method, "path", r.URL.Path, "query", r.URL.Query())
+			"requestID", requestID, "method", r.Method, "path", r.URL.Path)
 	}
 	if stack.UrlPath == "" {
 		mux.HandleFunc("/"+stack.Name, handler)

@@ -11,9 +11,9 @@ import (
 func TestNewConfigFromYAML_Valid(t *testing.T) {
 	data := []byte(`
 stacks:
-  - name: system-health
+  - name: systemhealth
     cmds:
-      - echo "system-health is good"
+      - echo "systemhealth is good"
 `)
 
 	got, err := NewConfigFromYAML(data)
@@ -37,11 +37,11 @@ stacks:
 
 	stack := got.Stacks[0]
 
-	if stack.Name != "system-health" {
+	if stack.Name != "systemhealth" {
 		t.Errorf(
 			"Name = %q, want %q",
 			stack.Name,
-			"system-health",
+			"systemhealth",
 		)
 	}
 
@@ -52,11 +52,11 @@ stacks:
 		)
 	}
 
-	if stack.Cmds[0] != `echo "system-health is good"` {
+	if stack.Cmds[0] != `echo "systemhealth is good"` {
 		t.Errorf(
 			"Cmds[0] = %q, want %q",
 			stack.Cmds[0],
-			`echo "system-health is good"`,
+			`echo "systemhealth is good"`,
 		)
 	}
 }
@@ -64,7 +64,7 @@ stacks:
 func TestNewConfigFromYAML_InvalidYAML(t *testing.T) {
 	data := []byte(`
 stacks:
-  - name: system-health
+  - name: systemhealth
     cmds: [invalid
 `)
 
@@ -124,15 +124,15 @@ func TestNewConfigFromYAML_EmptyDocument(t *testing.T) {
 func TestNewConfigFromYAML_MultipleStacks(t *testing.T) {
 	data := []byte(`
 stacks:
-  - name: system-health
+  - name: systemhealth
     cmds:
-      - echo "system-health is good"
+      - echo "systemhealth is good"
 
-  - name: inspect-runtime
+  - name: inspectruntime
     cmds:
       - echo "runtime is healthy"
 
-  - name: production-operation
+  - name: productionoperation
     cmds:
       - echo "production operation"
 `)
@@ -154,9 +154,9 @@ stacks:
 	}
 
 	expectedNames := []string{
-		"system-health",
-		"inspect-runtime",
-		"production-operation",
+		"systemhealth",
+		"inspectruntime",
+		"productionoperation",
 	}
 
 	for i, expected := range expectedNames {
@@ -182,14 +182,14 @@ stacks:
 func TestNewConfigFromYAML_StackFields(t *testing.T) {
 	data := []byte(`
 stacks:
-  - name: system-health
+  - name: systemhealth
     description: System health check
     method: POST
     urlPath: /health
     workDir: /tmp
     continueOnError: true
     dependsOn:
-      - base-stack
+      - basestack
     matchAccess: ALL
     access:
       - headerName: X-Auth-Request-Groups
@@ -226,7 +226,7 @@ stacks:
 
 	stack := got.Stacks[0]
 
-	if stack.Name != "system-health" {
+	if stack.Name != "systemhealth" {
 		t.Errorf("Name = %q", stack.Name)
 	}
 
@@ -251,7 +251,7 @@ stacks:
 	}
 
 	if len(stack.DependsOn) != 1 ||
-		stack.DependsOn[0] != "base-stack" {
+		stack.DependsOn[0] != "basestack" {
 		t.Errorf(
 			"DependsOn = %#v",
 			stack.DependsOn,
@@ -300,20 +300,6 @@ stacks:
 		)
 	}
 
-	if stack.Shell != "bash" {
-		t.Errorf(
-			"Shell = %q",
-			stack.Shell,
-		)
-	}
-
-	if stack.ShellArg != "-c" {
-		t.Errorf(
-			"ShellArg = %q",
-			stack.ShellArg,
-		)
-	}
-
 	if len(stack.Cmds) != 1 {
 		t.Fatalf(
 			"expected 1 command, got %d",
@@ -347,7 +333,7 @@ stacks:
 func TestNewConfigFromYAML_NormalizesVariables(t *testing.T) {
 	data := []byte(`
 stacks:
-  - name: system-health
+  - name: systemhealth
     cmds:
       - echo "${ENV}"
     vars:
@@ -412,7 +398,7 @@ stacks:
 func TestNewConfigFromYAML_NormalizesTimeout(t *testing.T) {
 	data := []byte(`
 stacks:
-  - name: system-health
+  - name: systemhealth
     cmds:
       - echo "ok"
     timeouts: 30s
@@ -448,7 +434,7 @@ func TestOpsySeristack_InvalidStack(t *testing.T) {
 		Config: &config.Config{
 			Stacks: []config.Stack{
 				{
-					Name: "system-health",
+					Name: "systemhealth",
 					Cmds: []string{
 						`echo "ok"`,
 					},
@@ -482,14 +468,14 @@ func TestOpsySeristack_ValidStack(t *testing.T) {
 		Config: &config.Config{
 			Stacks: []config.Stack{
 				{
-					Name: "system-health",
+					Name: "systemhealth",
 					Cmds: []string{
-						`echo "system-health is good"`,
+						`echo "systemhealth is good"`,
 					},
 				},
 			},
 		},
-		StackName: "system-health",
+		StackName: "systemhealth",
 		Vars:      map[string]string{},
 		Format:    "yaml",
 	}
@@ -503,11 +489,11 @@ func TestOpsySeristack_ValidStack(t *testing.T) {
 		)
 	}
 
-	if result.Name != "system-health" {
+	if result.Name != "systemhealth" {
 		t.Errorf(
 			"Name = %q, want %q",
 			result.Name,
-			"system-health",
+			"systemhealth",
 		)
 	}
 
@@ -530,7 +516,7 @@ func TestOpsySeristack_ValidStack(t *testing.T) {
 
 func TestResultFields(t *testing.T) {
 	result := Result{
-		Name:            "system-health",
+		Name:            "systemhealth",
 		Success:         true,
 		Output:          "ok",
 		Error:           "",
@@ -538,7 +524,7 @@ func TestResultFields(t *testing.T) {
 		ContinueOnError: false,
 	}
 
-	if result.Name != "system-health" {
+	if result.Name != "systemhealth" {
 		t.Errorf(
 			"unexpected Name: %q",
 			result.Name,

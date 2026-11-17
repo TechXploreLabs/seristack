@@ -10,7 +10,6 @@ stacks:
         headerValue: ["admin"]
   vars:
   - name: user_name
-    required: true
     allowed_regex : regex("^[a-z]+$")
   cmds:
   - |
@@ -31,7 +30,6 @@ stacks:
   dependsOn: ["stack2"]
   vars:
   - name: env_name
-    required: true
     allowed_value: [dev, stage, prod]
   cmds:
   - |

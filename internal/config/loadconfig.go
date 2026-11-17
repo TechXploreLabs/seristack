@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -56,7 +57,7 @@ func NormalizeStackTimeout(stack *Stack) error {
 }
 
 func (v VariableRuleSet) IsEmpty() bool {
-	return len(v.AllowedValue) == 0 && len(v.DeniedValue) == 0 && strings.TrimSpace(v.AllowedRegex) == "" && strings.TrimSpace(v.DeniedRegex) == "" && !v.Required
+	return len(v.AllowedValue) == 0 && len(v.DeniedValue) == 0 && strings.TrimSpace(v.AllowedRegex) == "" && strings.TrimSpace(v.DeniedRegex) == "" && !v.Sensitive
 }
 
 func NormalizeStackVariables(stack *Stack) error {
@@ -68,17 +69,25 @@ func NormalizeStackVariables(stack *Stack) error {
 		if name == "" {
 			return fmt.Errorf("invalid vars[%d]: name is required", idx)
 		}
+
+		if !regexp.MustCompile(`^[a-zA-Z_]+$`).MatchString(name) {
+			return fmt.Errorf("invalid variable name: %s, follow [a-zA-Z_]", name)
+		}
 		if _, exists := stack.Vars[name]; exists {
 			return fmt.Errorf("invalid vars[%d]: duplicate variable name '%s'", idx, name)
 		}
-
-		stack.Vars[name] = variable.Value
+		env_var := strings.TrimSpace(os.Getenv("SS_VAR_" + name))
+		if env_var != "" {
+			stack.Vars[name] = env_var
+		} else {
+			stack.Vars[name] = variable.Value
+		}
 		rule := VariableRuleSet{
 			AllowedValue: variable.AllowedValue,
 			DeniedValue:  variable.DeniedValue,
 			AllowedRegex: strings.TrimSpace(variable.AllowedRegex),
 			DeniedRegex:  strings.TrimSpace(variable.DeniedRegex),
-			Required:     variable.Required,
+			Sensitive:    variable.Sensitive,
 		}
 
 		ruleSetCount := 0
