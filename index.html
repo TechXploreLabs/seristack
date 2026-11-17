@@ -1,848 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seristack - Shell Workflows Made Simple</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --accent: #60a5fa;
-            --dark: #0f172a;
-            --dark-card: #1e293b;
-            --dark-border: #334155;
-            --text: #f1f5f9;
-            --text-dim: #94a3b8;
-            --code-bg: #1e293b;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--dark);
-            color: var(--text);
-            line-height: 1.7;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background:
-                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 85% 85%, rgba(96, 165, 250, 0.08) 0%, transparent 40%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        header {
-            padding: 2rem 0;
-            border-bottom: 1px solid var(--dark-border);
-            background: rgba(10, 14, 26, 0.9);
-            backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #10b981;
-            text-decoration: none;
-        }
-
-        .github-link {
-            padding: 0.75rem 1.5rem;
-            background: var(--dark-card);
-            color: var(--text);
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            border: 1px solid var(--dark-border);
-            transition: all 0.3s;
-        }
-
-        .github-link:hover {
-            border-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .secondary-link {
-            color: var(--text-dim);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .secondary-link:hover { color: #10b981; }
-
-        .hero {
-            padding: 5rem 0 4rem;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #10b981, #059669);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .tagline {
-            font-size: 1.5rem;
-            color: var(--text-dim);
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .description {
-            font-size: 1.125rem;
-            color: var(--text-dim);
-            max-width: 700px;
-            margin: 0 auto 3rem;
-        }
-
-        .hero-actions {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .cta-primary, .cta-secondary {
-            padding: 0.9rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .cta-primary {
-            background: #10b981;
-            color: #052e1c;
-        }
-
-        .cta-primary:hover {
-            background: #34d399;
-            transform: translateY(-2px);
-        }
-
-        .cta-secondary {
-            color: var(--text);
-            border: 1px solid var(--dark-border);
-            background: var(--dark-card);
-        }
-
-        .cta-secondary:hover {
-            border-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        section { padding: 4rem 0; }
-
-        h2 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            color: #10b981;
-        }
-
-        .features-list {
-            background: var(--dark-card);
-            padding: 2.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--dark-border);
-        }
-
-        .features-list ul {
-            list-style: none;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-
-        .features-list li {
-            padding: 0.75rem 0;
-            padding-left: 2rem;
-            position: relative;
-            color: var(--text);
-        }
-
-        .features-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #10b981;
-            font-weight: 700;
-            font-size: 1.25rem;
-        }
-
-        /* Video section */
-        .video-wrapper {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--dark-border);
-            box-shadow: 0 0 40px rgba(16, 185, 129, 0.12);
-        }
-
-        .video-wrapper iframe {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border: 0;
-        }
-
-        .video-caption {
-            text-align: center;
-            color: var(--text-dim);
-            margin-top: 1rem;
-            font-size: 0.95rem;
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.25rem;
-        }
-
-        .card {
-            background: var(--dark-card);
-            border: 1px solid var(--dark-border);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .card h3 {
-            color: #10b981;
-            margin-bottom: 0.75rem;
-            font-size: 1.25rem;
-        }
-
-        .card p, .card li { color: var(--text-dim); }
-        .card ul { margin-left: 1.25rem; }
-
-        .callout {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.1));
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-top: 1.5rem;
-        }
-
-        .callout p { color: var(--text-dim); margin-bottom: 1rem; }
-        .callout p:last-child { margin-bottom: 0; }
-
-        .install-grid { display: grid; gap: 3rem; }
-
-        .install-section {
-            background: var(--dark-card);
-            padding: 2.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--dark-border);
-        }
-
-        .install-section h3 {
-            font-size: 1.75rem;
-            margin-bottom: 1.5rem;
-            color: #10b981;
-        }
-
-        .install-steps { display: flex; flex-direction: column; gap: 1.5rem; }
-
-        .step { display: flex; flex-direction: column; gap: 0.75rem; }
-
-        .step-number {
-            font-weight: 700;
-            color: var(--accent);
-            font-size: 0.875rem;
-        }
-
-        .step-desc { color: var(--text-dim); }
-
-        .code-block {
-            background: var(--code-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            overflow-x: auto;
-            border: 1px solid var(--dark-border);
-            position: relative;
-            margin-top: 1rem;
-        }
-
-        .copy-btn {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background: var(--dark-card);
-            border: 1px solid var(--dark-border);
-            color: var(--text-dim);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-family: 'Outfit', sans-serif;
-            transition: all 0.3s;
-        }
-
-        .copy-btn:hover {
-            background: #10b981;
-            color: var(--dark);
-            border-color: #10b981;
-        }
-
-        .code-block code {
-            color: var(--text);
-            line-height: 1.6;
-            white-space: pre;
-            display: block;
-        }
-
-        .comment { color: #6a9955; }
-        .keyword { color: #569cd6; }
-        .string { color: #ce9178; }
-        .number { color: #b5cea8; }
-
-        .yaml-example {
-            margin-top: 2rem;
-            background: var(--dark-card);
-            padding: 2.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--dark-border);
-        }
-
-        .yaml-example h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: #10b981;
-        }
-
-        .usage-section {
-            background: var(--dark-card);
-            padding: 2.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--dark-border);
-            margin-top: 3rem;
-        }
-
-        .usage-section h3 {
-            font-size: 1.75rem;
-            margin-bottom: 1.5rem;
-            color: #10b981;
-        }
-
-        .usage-grid { display: grid; gap: 2rem; }
-
-        .usage-item h4 {
-            font-size: 1.125rem;
-            margin-bottom: 0.75rem;
-            color: var(--text);
-        }
-
-        .usage-item p {
-            color: var(--text-dim);
-            margin-bottom: 1rem;
-        }
-
-        .new-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 0.1rem 0.4rem;
-            border-radius: 4px;
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            margin-left: 0.4rem;
-            vertical-align: middle;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        footer {
-            padding: 3rem 0 2rem;
-            border-top: 1px solid var(--dark-border);
-            margin-top: 4rem;
-            text-align: center;
-            color: var(--text-dim);
-        }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .tagline { font-size: 1.25rem; }
-            .description { font-size: 1rem; }
-            .features-list ul { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seristack - Shell workflows in YAML</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8;--green:#10b981;--code:#111827}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:Outfit,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.c{width:min(1100px,calc(100% - 2rem));margin:0 auto}
+header{position:sticky;top:0;z-index:10;background:rgba(15,23,42,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+nav{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.1rem 0;flex-wrap:wrap}
+.logo{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.4rem;text-decoration:none}
+.links{display:flex;gap:1.1rem;flex-wrap:wrap;align-items:center}
+.links a{color:var(--muted);text-decoration:none;font-weight:600}.links a:hover{color:var(--green)}
+.btn{display:inline-block;padding:.8rem 1.4rem;border-radius:10px;font-weight:700;text-decoration:none;border:1px solid var(--border);background:var(--card);color:var(--text)}
+.btn:hover{border-color:var(--green)}.btn.p{background:var(--green);color:#052e1c;border-color:var(--green)}
+.hero{padding:4.5rem 0 3rem;text-align:center}
+h1{font-size:clamp(2.4rem,6vw,3.6rem);line-height:1.1;color:var(--green);margin-bottom:1rem}
+.tag{font-size:1.35rem;color:var(--muted);font-weight:600;margin-bottom:1rem}
+.desc{color:var(--muted);max-width:720px;margin:0 auto 2rem}
+.acts{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+section{padding:3rem 0}
+h2{font-size:2.1rem;color:var(--green);margin-bottom:1.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem}
+.card h3{color:var(--green);margin-bottom:.5rem}.card p{color:var(--muted)}
+.feat{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.4rem 1.5rem;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.8rem}
+.feat li{padding-left:1.7rem;position:relative}.feat li:before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:700}
+.video{position:relative;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cap{text-align:center;color:var(--muted);margin-top:.8rem}
+pre{position:relative;background:var(--code);border:1px solid var(--border);border-radius:10px;padding:1.2rem;overflow-x:auto;margin-top:.8rem;font-family:'JetBrains Mono',monospace;font-size:.86rem}
+pre code{font-family:inherit;white-space:pre}
+.copy{position:absolute;top:.5rem;right:.5rem;background:var(--card);border:1px solid var(--border);color:var(--muted);padding:.3rem .8rem;border-radius:6px;cursor:pointer;font-size:.75rem}
+.copy:hover{background:var(--green);color:#052e1c}
+.box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.6rem;margin-bottom:1.2rem}
+.box h3{color:var(--green);margin-bottom:.4rem}.box p{color:var(--muted)}
+.warn{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}.warn p{color:var(--text)}
+a.i{color:var(--green)}
+footer{border-top:1px solid var(--border);padding:2rem 0;margin-top:2rem;text-align:center;color:var(--muted)}
+footer a{color:var(--green);text-decoration:none}
+</style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <nav>
-                <a href="#" class="logo">seristack</a>
-                <div class="nav-links">
-                    <a href="docs/config-reference.html" class="secondary-link">Docs</a>
-                    <a href="#demo" class="secondary-link">Demo</a>
-                    <a href="#security" class="secondary-link">Security</a>
-                    <a href="#support" class="secondary-link">Support</a>
-                    <a href="https://github.com/TechXploreLabs/seristack" class="github-link" target="_blank">GitHub →</a>
-                </div>
-            </nav>
-        </div>
-    </header>
+<header><div class="c"><nav>
+<a class="logo" href="#">seristack</a>
+<div class="links">
+<a href="docs/guide.html">Guide</a>
+<a href="docs/config-reference.html">Config Reference</a>
+<a href="docs/examples.html">Examples</a>
+<a href="#demo">Demo</a>
+<a href="#security">Security</a>
+<a class="btn" href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub →</a>
+</div></nav></div></header>
 
-    <main>
-        <section class="hero">
-            <div class="container">
-                <h1>seristack</h1>
-                <p class="tagline">One YAML config. CLI command, HTTP endpoint, and MCP tool — all at once.</p>
-                <p class="description">
-                    Seristack is a lightweight YAML-driven automation engine for DevOps, Platform, SRE, and Cloud teams.
-                    Define stacks once — run them locally, expose them as HTTP endpoints with per-stack authorization,
-                    or publish them as MCP tools for AI agents and IDEs.
-                </p>
-                <div class="hero-actions">
-                    <a href="#demo" class="cta-primary">Watch Demo</a>
-                    <a href="#configuration" class="cta-secondary">See YAML Example</a>
-                    <a href="https://github.com/TechXploreLabs/seristack" class="cta-secondary" target="_blank">View on GitHub</a>
-                </div>
-            </div>
-        </section>
+<main>
+<section class="hero"><div class="c">
+<h1>seristack</h1>
+<p class="tag">Shell workflows in YAML. CLI, HTTP, and MCP from one config.</p>
+<p class="desc">Seristack is a CLI tool that runs shell workflows defined in YAML. The same workflows can be served over HTTP with per-stack authorization, or exposed as MCP tools for AI agents and IDEs.</p>
+<div class="acts">
+<a class="btn p" href="#demo">Watch the demo</a>
+<a class="btn" href="#quickstart">Quick start</a>
+<a class="btn" href="docs/examples.html">Examples</a>
+</div></div></section>
 
-        <section class="features">
-            <div class="container">
-                <h2>Features</h2>
-                <div class="features-list">
-                    <ul>
-                        <li>Run multiple command stacks from a single config</li>
-                        <li>Repeat stacks with serial or concurrent execution</li>
-                        <li>Define dependencies between stacks</li>
-                        <li>Variable substitution using templates</li>
-                        <li>Share output between stacks</li>
-                        <li>Expose stacks as HTTP endpoints</li>
-                        <li>Per-stack HTTP authorization via identity headers</li>
-                        <li>Structured audit log for every execution</li>
-                        <li>Run as an MCP server — stdio, SSE, streamableHTTP</li>
-                        <li>Per-tool MCP authorization for SSE and streamableHTTP</li>
-                        <li>Validate inputs with required, allowed, denied, and regex rules</li>
-                        <li>Per-command timeouts using Go duration syntax</li>
-                        <li>Works with mvdan shell (default), Bash, sh, and PowerShell</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+<section><div class="c"><h2>Features</h2>
+<ul class="feat">
+<li>Many command stacks in one YAML file</li>
+<li>Four execution modes, with repeat counts</li>
+<li>Dependencies between stacks</li>
+<li>Variables with validation rules</li>
+<li>Share output between stacks</li>
+<li>HTTP endpoints with per-stack access rules</li>
+<li>Structured JSON audit log</li>
+<li>MCP server: stdio, SSE, streamableHTTP</li>
+<li>Per-command timeouts that stop child processes too</li>
+<li>Built-in shell, or Bash, PowerShell, Python, and others</li>
+</ul></div></section>
 
-        <section>
-            <div class="container">
-                <h2>Why Seristack?</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>One stack, three interfaces</h3>
-                        <p>Use the same YAML stack as a local CLI command, an internal HTTP API, or an MCP tool for AI-enabled clients — all from the same config file.</p>
-                    </div>
-                    <div class="card">
-                        <h3>Script-to-API without a backend</h3>
-                        <p>Wrap existing shell scripts and runbooks without writing a Flask, FastAPI, Express, or Go service for each operation.</p>
-                    </div>
-                    <div class="card">
-                        <h3>MCP-native automation</h3>
-                        <p>Create AI-callable tools from YAML instead of hand-coding a custom MCP server. Supports stdio for Claude Desktop and Cursor, and streamableHTTP for remote clients.</p>
-                    </div>
-                    <div class="card">
-                        <h3>Production-ready AuthZ</h3>
-                        <p>Restrict which users or groups can run which stacks using identity headers forwarded by nginx or Caddy. Works with any IdP — Entra ID, OCI IAM, GCP, AWS Cognito, Okta.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+<section><div class="c"><h2>Why Seristack?</h2><div class="grid">
+<div class="card"><h3>One stack, three interfaces</h3><p>The same YAML stack runs as a CLI command, an internal HTTP API, or an MCP tool.</p></div>
+<div class="card"><h3>Scripts without a backend</h3><p>Wrap existing shell scripts and runbooks without writing a web service for each one.</p></div>
+<div class="card"><h3>MCP from YAML</h3><p>Give AI tools safe, named operations without hand-coding an MCP server.</p></div>
+<div class="card"><h3>Access rules per stack</h3><p>Restrict who can run what using identity headers set by your authenticating proxy.</p></div>
+</div></div></section>
 
-        <section id="demo">
-            <div class="container">
-                <h2>See it in action</h2>
-                <div class="video-wrapper">
-                    <iframe
-                        src="https://www.youtube.com/embed/pOzPoRpoS7k"
-                        title="Seristack Demo — CLI, HTTP API, and MCP with AI agent"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                <p class="video-caption">
-                    Demo: running stacks via CLI, HTTP API, and MCP server with a Gemini AI agent —
-                    all from the same YAML config.
-                </p>
-            </div>
-        </section>
+<section id="demo"><div class="c"><h2>See it in action</h2>
+<div class="video"><iframe src="https://www.youtube.com/embed/pOzPoRpoS7k" title="Seristack demo: CLI, HTTP API, and MCP with an AI agent" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+<p class="cap">Running stacks through the CLI, the HTTP API, and the MCP server with an AI agent.</p>
+</div></section>
 
-        <section>
-            <div class="container">
-                <h2>Installation</h2>
-                <div class="install-grid">
-                    <div class="install-section">
-                        <h3>Mac and Linux (Homebrew)</h3>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>brew install TechXploreLabs/tap/seristack</code>
-                        </div>
-                    </div>
+<section id="install"><div class="c"><h2>Install</h2>
+<div class="box"><h3>macOS and Linux (Homebrew)</h3>
+<pre><button class="copy">Copy</button><code>brew install TechXploreLabs/tap/seristack</code></pre></div>
+<div class="box"><h3>Linux</h3>
+<pre><button class="copy">Copy</button><code>curl -fsSL https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.sh | bash</code></pre></div>
+<div class="box"><h3>Windows (PowerShell)</h3>
+<pre><button class="copy">Copy</button><code>irm https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.ps1 | iex</code></pre></div>
+<p class="cap">Prefer a binary? Download one for Linux, macOS, or Windows from <a class="i" href="https://github.com/TechXploreLabs/seristack/releases" target="_blank" rel="noreferrer">GitHub Releases</a>, extract it, and put <code>seristack</code> on your PATH.</p>
+</div></section>
 
-                    <div class="install-section">
-                        <h3>Linux (Release Archive)</h3>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>curl -fsSL https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.sh | bash</code>
-                        </div>
-                        <div style="text-align: center; margin: 15px 0; color: var(--text-muted); font-size: 0.9rem; font-weight: bold;">OR</div>
-                        <div class="install-steps">
-                            <div class="step">
-                                <span class="step-number">STEP 1</span>
-                                <p class="step-desc">Download the latest release from GitHub:</p>
-                                <div class="code-block">
-                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                    <code>VERSION=vX.X.X
-ARCH=amd64   # amd64 | arm64
-
-curl -LO "https://github.com/TechXploreLabs/seristack/releases/download/${VERSION}/seristack_${VERSION#v}_linux_${ARCH}.tar.gz"</code>
-                                </div>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">STEP 2</span>
-                                <p class="step-desc">Extract the archive:</p>
-                                <div class="code-block">
-                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                    <code>tar -xzf seristack_VERSION_linux_ARCH.tar.gz</code>
-                                </div>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">STEP 3</span>
-                                <p class="step-desc">Move to your PATH and set permissions:</p>
-                                <div class="code-block">
-                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                    <code>sudo mv seristack /usr/local/bin/
-sudo chmod +x /usr/local/bin/seristack</code>
-                                </div>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">STEP 4</span>
-                                <p class="step-desc">Verify installation:</p>
-                                <div class="code-block">
-                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                    <code>seristack --help</code>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="install-section">
-                        <h3>Windows (Release Archive)</h3>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>irm https://raw.githubusercontent.com/TechXploreLabs/seristack/main/install.ps1 | iex</code>
-                        </div>
-                        <div style="text-align: center; margin: 15px 0; color: var(--text-muted); font-size: 0.9rem; font-weight: bold;">OR</div>
-                        <div class="install-steps">
-                            <div class="step">
-                                <span class="step-number">STEP 1</span>
-                                <p class="step-desc">Download from <a href="https://github.com/TechXploreLabs/seristack/releases" style="color:#10b981;">GitHub Releases</a> — look for seristack_VERSION_windows_ARCH.zip</p>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">STEP 2</span>
-                                <p class="step-desc">Extract the zip file (Right click → Extract all, or use 7-Zip)</p>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">STEP 3</span>
-                                <p class="step-desc">Move seristack.exe to a folder in your %PATH%</p>
-                            </div>
-                            <div class="step">
-                                <span class="step-number">STEP 4</span>
-                                <p class="step-desc">Verify in PowerShell:</p>
-                                <div class="code-block">
-                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                    <code>seristack --help</code>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="configuration">
-            <div class="container">
-                <h2>Configuration</h2>
-                <div class="yaml-example">
-                    <h3>Sample YAML Configuration</h3>
-                    <div class="code-block" style="margin-top: 0;">
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                        <code>stacks:
-  - name: deploy
-    description: Deploy the application to a target environment
-    method: POST
-    urlPath: /deploy
-    matchAccess: ANY
-    access:
-      - headerName: "X-Auth-Request-Groups"
-        headerValue: ["sre", "platform"]
+<section id="quickstart"><div class="c"><h2>Quick start</h2>
+<div class="box"><h3>1. Write a config</h3>
+<pre><button class="copy">Copy</button><code>stacks:
+  - name: build
     count: 1
-    timeouts: 10m
-    executionMode: SEQUENTIAL
-    vars:
-      - name: env
-        value: staging
-        required: true
-        allowed_value: [staging, production]
-      - name: version
-        required: true
-        allowed_regex: regex("^[a-zA-Z0-9._-]+$")
     cmds:
-      - |
-        echo "Deploying {{.Vars.version}} to {{.Vars.env}}"
-        kubectl set image deployment/app app={{.Vars.version}}
+      - echo "building..."
 
-  - name: collect-metadata
-    description: Produces JSON metadata for aggregation
-    dependsOn: [deploy]
-    count: 2
-    timeouts: 5m
-    executionMode: SEQUENTIAL
-    vars:
-      - name: env
-        value: staging
+  - name: test
+    count: 1
+    dependsOn: [build]
     cmds:
-      - |
-        echo "{\"index\": {{.Count.index}}, \"env\": \"{{.Vars.env}}\", \"status\": \"ok\"}"
-    output: |
-      echo '{{.Self.result}}' | grep "^{" | jq -s '{records: ., total: length}'</code>
-                    </div>
-                </div>
+      - echo "testing..."</code></pre>
+<p style="margin-top:.8rem">A stack with <code>count: 0</code> is skipped, so set <code>count: 1</code> to run once.</p></div>
+<div class="box"><h3>2. Run it three ways</h3>
+<pre><button class="copy">Copy</button><code>seristack trigger -c config.yaml                # CLI: run once
+seristack run -c config.yaml                    # HTTP: serve stacks as endpoints
+seristack mcp -t streamableHTTP                 # MCP: serve stacks as AI tools</code></pre>
+<p style="margin-top:.8rem">Add <code>method</code> and <code>urlPath</code> to serve a stack over HTTP. Add a <code>description</code> to expose it as an MCP tool.</p></div>
+<p class="cap">More in the <a class="i" href="docs/examples.html">examples</a> and the <a class="i" href="docs/config-reference.html">config reference</a>.</p>
+</div></section>
 
-                <div class="usage-section">
-                    <h3>Running Stacks</h3>
-                    <div class="usage-grid">
-                        <div class="usage-item">
-                            <h4>1. Trigger all stacks</h4>
-                            <p>Run all stacks defined in the config file</p>
-                            <div class="code-block">
-                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack trigger -c config.yaml</code>
-                            </div>
-                        </div>
+<section id="security"><div class="c"><h2>Security</h2>
+<div class="box warn"><p>Seristack runs shell commands with the permissions of the user who starts it, and it is not a sandbox. It serves plain HTTP with no built-in authentication or TLS. Keep it on <strong>127.0.0.1</strong> behind a reverse proxy such as nginx or Caddy, and never expose it directly to the internet.</p></div>
+<div class="grid">
+<div class="card"><h3>Proxy handles identity</h3><p>The proxy terminates TLS, authenticates users, removes client-supplied identity headers, and sets its own. Seristack authorizes each stack from those headers.</p></div>
+<div class="card"><h3>Stacks without rules are open</h3><p>A stack with no <code>access</code> block has no stack-level restriction. Add rules to every sensitive stack.</p></div>
+<div class="card"><h3>Validate every input</h3><p>Callers can only set declared variables. Use <code>allowed_value</code> and anchored <code>allowed_regex</code> rules, because values are substituted into commands.</p></div>
+<div class="card"><h3>Audit log</h3><p>Every execution can be logged as JSON. Mark secrets <code>sensitive: true</code> to keep them out of it, and prefer reading secrets from the environment in your scripts.</p></div>
+</div>
+<p class="cap">Read the <a class="i" href="docs/guide.html#security-considerations">full security notes</a> before deploying.</p>
+</div></section>
 
-                        <div class="usage-item">
-                            <h4>2. Trigger a specific stack</h4>
-                            <p>Execute only a particular stack by name</p>
-                            <div class="code-block">
-                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack trigger -c config.yaml -s deploy \
-  --vars env=staging \
-  --vars version=v1.2.3</code>
-                            </div>
-                        </div>
+<section id="support"><div class="c"><h2>Support the project</h2><div class="grid">
+<div class="card"><h3>Star and contribute</h3><p>If Seristack saves you from building one-off automation APIs, consider starring the repository or contributing examples, tests, and fixes.</p>
+<p style="margin-top:1rem"><a class="btn" href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">Star on GitHub</a></p></div>
+<div class="card"><h3>Issues and security reports</h3><p>Request features, ask questions, or report a problem.</p>
+<p style="margin-top:1rem"><a class="btn" href="https://github.com/TechXploreLabs/seristack/issues/new" target="_blank" rel="noreferrer">Open an issue</a></p></div>
+</div></div></section>
+</main>
 
-                        <div class="usage-item">
-                            <h4>3. Start HTTP API server</h4>
-                            <p>Expose stacks as HTTP endpoints with audit logging</p>
-                            <div class="code-block">
-                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack run -c config.yaml \
-  --addr 127.0.0.1 --port 8080 \
-  --audit-log /var/log/seristack/audit.log</code>
-                            </div>
-                        </div>
+<footer><div class="c">Apache License 2.0 | <a href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub</a> | <a href="docs/guide.html">Guide</a> | <a href="docs/config-reference.html">Config Reference</a> | <a href="docs/examples.html">Examples</a></div></footer>
 
-                        <div class="usage-item">
-                            <h4>4. MCP server — stdio (Claude Desktop, Cursor, VS Code)</h4>
-                            <p>AI client spawns seristack as a subprocess — no port needed</p>
-                            <div class="code-block">
-                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack mcp --type stdio -c config.yaml</code>
-                            </div>
-                        </div>
-
-                        <div class="usage-item">
-                            <h4>5. MCP server — streamableHTTP (remote clients, SDK apps)</h4>
-                            <p>Network-accessible MCP server with per-tool authorization and audit log</p>
-                            <div class="code-block">
-                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                <code>seristack mcp --type streamableHTTP \
-  --addr 127.0.0.1 --port 8081 \
-  --audit-log /var/log/seristack/mcp-audit.log</code>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="security">
-            <div class="container">
-                <h2>Production Security</h2>
-                <div class="callout">
-                    <p>
-                        Seristack executes shell commands — do not expose it directly to the public internet.
-                        Bind to <strong>127.0.0.1</strong> and place <strong>nginx</strong> or <strong>Caddy</strong> in front.
-                    </p>
-                    <p>
-                        The reverse proxy handles TLS, authentication (JWT, API token, OAuth2), and rate limiting.
-                        Seristack handles per-stack authorization using identity headers forwarded by the proxy.
-                    </p>
-                </div>
-                <div class="card-grid" style="margin-top: 1.5rem;">
-                    <div class="card">
-                        <h3>HTTP AuthZ</h3>
-                        <p>Restrict which groups or roles can execute each stack. Declare rules in YAML — works with any IdP through nginx or Caddy.</p>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>matchAccess: ANY
-access:
-  - headerName: "X-Auth-Request-Groups"
-    headerValue: ["sre", "platform"]</code>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Audit log</h3>
-                        <p>Every stack execution logged as JSON — who ran it, what vars, success or failure, duration. Query with jq.</p>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>jq 'select(.success == false)' audit.log
-jq 'select(.identity["X-Auth-Request-Email"] == "alice@company.com")' audit.log</code>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>MCP server</h3>
-                        <p>For stdio: OS-level access control — whoever can run the binary has full access. For streamableHTTP and SSE: same access block applies per tool.</p>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>seristack mcp --type streamableHTTP \
-  --addr 127.0.0.1 --port 8081</code>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Variable validation</h3>
-                        <p>All HTTP and MCP inputs validated before shell execution. Use allowlists — not denylists — for maximum protection.</p>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>vars:
-  - name: env
-    allowed_value: [staging, production]
-  - name: version
-    allowed_regex: regex("^[a-zA-Z0-9._-]+$")</code>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <div class="container">
-                <h2>Input Validation and Timeouts</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>Variable rules</h3>
-                        <p>Restrict incoming CLI, HTTP, and MCP inputs before commands run. Only vars declared in YAML can be overridden — undeclared keys are dropped.</p>
-                        <ul>
-                            <li><code>required</code></li>
-                            <li><code>allowed_value</code></li>
-                            <li><code>denied_value</code></li>
-                            <li><code>allowed_regex</code></li>
-                            <li><code>denied_regex</code></li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h3>Command timeouts</h3>
-                        <p>Each stack defines a per-command timeout using Go duration syntax. Default is <strong>1h</strong>.</p>
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>timeouts: 500ms
-timeouts: 30s
-timeouts: 5m
-timeouts: 1h
-timeouts: 1h30m
-timeouts: 2.5h</code>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="support">
-            <div class="container">
-                <h2>Support the Project</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>Star and contribute</h3>
-                        <p>
-                            If Seristack saves you from building custom internal automation APIs or MCP servers,
-                            consider starring the repository, opening issues, or contributing stacks and docs.
-                        </p>
-                        <div class="hero-actions" style="justify-content: flex-start; margin-top: 1rem;">
-                            <a href="https://github.com/TechXploreLabs/seristack" class="cta-secondary" target="_blank">Star on GitHub</a>
-                            <a href="https://github.com/TechXploreLabs/seristack/blob/main/CONTRIBUTING.md" class="cta-secondary" target="_blank">Contributing guide</a>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Issues</h3>
-                        <p>
-                            For new feature, discussion, vulnerabilties please report the issue.
-                        </p>
-                        <div class="hero-actions" style="justify-content: flex-start; margin-top: 1rem;">
-                            <a href="https://github.com/TechXploreLabs/seristack/issues/new" class="cta-secondary" target="_blank">Report Issue</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>Apache License | <a href="https://github.com/TechXploreLabs/seristack" style="color: #10b981; text-decoration: none;">GitHub</a> | <a href="docs/config-reference.html" style="color: #10b981; text-decoration: none;">Docs</a></p>
-        </div>
-    </footer>
-
-    <script>
-        function copyCode(button) {
-            const codeBlock = button.parentElement;
-            const code = codeBlock.querySelector('code').innerText;
-            navigator.clipboard.writeText(code).then(() => {
-                button.textContent = 'Copied!';
-                setTimeout(() => { button.textContent = 'Copy'; }, 2000);
-            });
-        }
-    </script>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=b.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(t).then(function(){b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},2000)});
+  });
+});
+</script>
 </body>
 </html>

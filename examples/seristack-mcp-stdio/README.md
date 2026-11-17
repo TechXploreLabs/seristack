@@ -15,7 +15,6 @@ stacks:
     - name: key
       value: "true"
       allowed_value: ["true", "false"]
-      required: true
     cmds:
       - echo "Production health check HEALTHY {{.Vars.key}}"
       - echo "Incident diagnostics collected"

@@ -18,11 +18,16 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
+// noScript is a sentinel meaning "run the executor with no script argument".
+const noScript = "nil"
+
 var (
 	semaphoreMu sync.RWMutex
 	semaphoreCh = make(chan struct{}, 10)
 )
 
+// SetConcurrencyLimit must only be called at startup, before any command runs.
+// Swapping the channel while commands are in flight would mismatch acquire/release.
 func SetConcurrencyLimit(limit int) {
 	if limit <= 0 {
 		limit = 1
@@ -32,18 +37,69 @@ func SetConcurrencyLimit(limit int) {
 	semaphoreMu.Unlock()
 }
 
-func acquire() {
+// acquire returns the channel it acquired from so release uses the same one.
+func acquire() chan struct{} {
 	semaphoreMu.RLock()
 	ch := semaphoreCh
 	semaphoreMu.RUnlock()
 	ch <- struct{}{}
+	return ch
 }
 
-func release() {
-	semaphoreMu.RLock()
-	ch := semaphoreCh
-	semaphoreMu.RUnlock()
+func release(ch chan struct{}) {
 	<-ch
+}
+
+// runState holds buffers shared by concurrent goroutines.
+// All access goes through the mutex.
+type runState struct {
+	mu     sync.Mutex
+	output bytes.Buffer
+	errors bytes.Buffer
+}
+
+func (s *runState) appendOutput(b []byte) {
+	if len(b) == 0 {
+		return
+	}
+	s.mu.Lock()
+	s.output.Write(b)
+	s.mu.Unlock()
+}
+
+func (s *runState) replaceOutput(b []byte) {
+	s.mu.Lock()
+	s.output.Reset()
+	s.output.Write(b)
+	s.mu.Unlock()
+}
+
+func (s *runState) appendError(err error) {
+	s.mu.Lock()
+	if s.errors.Len() > 0 {
+		s.errors.WriteByte('\n')
+	}
+	s.errors.WriteString(err.Error())
+	s.mu.Unlock()
+}
+
+func (s *runState) outputString() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.output.String()
+}
+
+func (s *runState) errorString() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.errors.String()
+}
+
+func replaceVars(e *config.Executor, stack *config.Stack, s string) (string, error) {
+	if e.Registry != nil {
+		return function.ReplaceVariables(stack.Vars, e, s)
+	}
+	return function.ReplaceVariables(stack.Vars, nil, s)
 }
 
 func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
@@ -51,188 +107,179 @@ func ExecuteShell(e *config.Executor, stack *config.Stack) *config.Result {
 		Name:    stack.Name,
 		Success: true,
 	}
-	shell, shellArg, err := Shellargs(stack.Shell, stack.ShellArg)
-	if err != nil {
+
+	executor := stack.Executor
+	if len(executor) == 0 {
+		executor = []string{"__mvdan__"}
+	}
+
+	// Local copy so we never write to the shared stack.
+	mode := stack.ExecutionMode
+	if mode == "" {
+		mode = "PARALLEL"
+	}
+	if !slices.Contains([]string{"PARALLEL", "PIPELINE", "STAGE", "SEQUENTIAL"}, mode) {
+		result.Error = fmt.Sprintf("invalid executionMode: %s", mode)
 		result.Success = false
-		result.Error = err.Error()
 		return result
 	}
-	if stack.ExecutionMode == "" {
-		stack.ExecutionMode = "PARALLEL"
-	}
-	ExecutionMode := []string{"PARALLEL", "PIPELINE", "STAGE", "SEQUENTIAL"}
-	if !slices.Contains(ExecutionMode, stack.ExecutionMode) {
-		result.Error = fmt.Sprintf("invalid executionMode: %s", stack.ExecutionMode)
-		result.Success = false
-		return result
-	}
+
 	commandTimeout, err := commandTimeoutDuration(stack.Timeouts)
 	if err != nil {
 		result.Error = err.Error()
 		result.Success = false
 		return result
 	}
+	timeoutStr := commandTimeout.String()
 	workDir := filepath.Join(e.SourceDir, stack.WorkDir)
-	var wg sync.WaitGroup
-	var outputMu sync.Mutex
-	var allOutput bytes.Buffer
-	var errorMsg bytes.Buffer
-	countConcurrent := stack.ExecutionMode == "PARALLEL" || stack.ExecutionMode == "STAGE"
-	commandsConcurrent := stack.ExecutionMode == "PARALLEL" || stack.ExecutionMode == "PIPELINE"
-	for index := range stack.Count {
-		executeIteration := func(idx int) error {
-			if commandsConcurrent {
-				var cmdWg sync.WaitGroup
-				var iterationErrors []error
-				var errorMu sync.Mutex
-				for cmdIndex, cmd := range stack.Cmds {
-					cmdWg.Add(1)
-					go func(cIdx int, command string) {
-						defer cmdWg.Done()
-						indexStr := strconv.Itoa(idx)
-						modifiedCmd := strings.ReplaceAll(command, "{{.Count.index}}", indexStr)
-						modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
-						var replaceErr error
-						if e.Registry != nil {
-							modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
-						} else {
-							modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, nil, modifiedCmd)
-						}
-						if replaceErr != nil {
-							cmdErr := fmt.Errorf("variable template error : %w", replaceErr)
-							errorMu.Lock()
-							errorMsg.Write([]byte(cmdErr.Error()))
-							iterationErrors = append(iterationErrors, cmdErr)
-							errorMu.Unlock()
-							return
-						}
-						output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd, commandTimeout.String())
-						outputMu.Lock()
-						if len(output) > 0 {
-							allOutput.Write(output)
-						}
-						outputMu.Unlock()
-						if execErr != nil {
-							cmdErr := fmt.Errorf("command failed : %w\n%s", execErr, output)
-							errorMu.Lock()
-							errorMsg.Write([]byte(cmdErr.Error()))
-							errorMu.Unlock()
-							if !stack.ContinueOnError {
-								errorMu.Lock()
-								iterationErrors = append(iterationErrors, cmdErr)
-								errorMu.Unlock()
-							}
-						}
-					}(cmdIndex, cmd)
-				}
-				cmdWg.Wait()
-				if len(iterationErrors) > 0 && !stack.ContinueOnError {
-					return iterationErrors[0]
-				}
-			} else {
-				for _, cmd := range stack.Cmds {
-					indexStr := strconv.Itoa(idx)
-					modifiedCmd := strings.ReplaceAll(cmd, "{{.Count.index}}", indexStr)
-					modifiedCmd = strings.ReplaceAll(modifiedCmd, "{{.Self.result}}", allOutput.String())
-					var replaceErr error
-					if e.Registry != nil {
-						modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
-					} else {
-						modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, nil, modifiedCmd)
-					}
-					if replaceErr != nil {
-						cmdErr := fmt.Errorf("variable template error : %w", replaceErr)
-						errorMsg.Write([]byte(cmdErr.Error()))
-						return cmdErr
-					}
-					output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd, commandTimeout.String())
-					outputMu.Lock()
-					if len(output) > 0 {
-						allOutput.Write(output)
-					}
-					outputMu.Unlock()
-					if execErr != nil {
-						cmdErr := fmt.Errorf("command failed : %w\n%s", execErr, output)
-						errorMsg.Write([]byte(cmdErr.Error()))
-						if !stack.ContinueOnError {
-							return cmdErr
-						}
-					}
+
+	state := &runState{}
+	countConcurrent := mode == "PARALLEL" || mode == "STAGE"
+	commandsConcurrent := mode == "PARALLEL" || mode == "PIPELINE"
+
+	// run executes one command and records its output/error. Safe for concurrent use.
+	run := func(idx int, command string) error {
+		script := command
+		if command != noScript {
+			cmd := strings.ReplaceAll(command, "{{.Count.index}}", strconv.Itoa(idx))
+			cmd = strings.ReplaceAll(cmd, "{{.Self.result}}", state.outputString())
+			var replaceErr error
+			script, replaceErr = replaceVars(e, stack, cmd)
+			if replaceErr != nil {
+				cmdErr := fmt.Errorf("variable template error : %w", replaceErr)
+				state.appendError(cmdErr)
+				return cmdErr
+			}
+		}
+		output, execErr := ShellExec(workDir, executor, script, timeoutStr)
+		state.appendOutput(output)
+		if execErr != nil {
+			cmdErr := fmt.Errorf("command failed : %w\n%s", execErr, output)
+			state.appendError(cmdErr)
+			return cmdErr
+		}
+		return nil
+	}
+
+	runIteration := func(idx int) error {
+		// No cmds: run the executor itself once.
+		if len(stack.Cmds) == 0 {
+			if err := run(idx, noScript); err != nil && !stack.ContinueOnError {
+				return err
+			}
+			return nil
+		}
+
+		// SEQUENTIAL / STAGE: commands one after another.
+		if !commandsConcurrent {
+			for _, cmd := range stack.Cmds {
+				if err := run(idx, cmd); err != nil && !stack.ContinueOnError {
+					return err
 				}
 			}
 			return nil
 		}
+
+		// PARALLEL / PIPELINE: commands concurrently within the iteration.
+		var cmdWg sync.WaitGroup
+		errs := make(chan error, len(stack.Cmds))
+		for _, cmd := range stack.Cmds {
+			cmdWg.Add(1)
+			go func(command string) {
+				defer cmdWg.Done()
+				if err := run(idx, command); err != nil {
+					errs <- err
+				}
+			}(cmd)
+		}
+		cmdWg.Wait()
+		close(errs)
+		if !stack.ContinueOnError {
+			if err, ok := <-errs; ok {
+				return err
+			}
+		}
+		return nil
+	}
+
+	var wg sync.WaitGroup
+	for index := range stack.Count {
 		if countConcurrent {
 			wg.Add(1)
 			go func(idx int) {
 				defer wg.Done()
-				if err := executeIteration(idx); err != nil {
-					_ = err
-				}
+				_ = runIteration(idx) // errors are already recorded in state
 			}(index)
-		} else {
-			if err := executeIteration(index); err != nil {
-				break
-			}
+		} else if err := runIteration(index); err != nil {
+			break
 		}
 	}
-	if countConcurrent {
-		wg.Wait()
-	}
+	wg.Wait()
+
 	if stack.Count == 0 {
 		result.Output = fmt.Sprintf("%s skipped", stack.Name)
-	} else {
-		if stack.Output != "" {
-			modifiedCmd := strings.ReplaceAll(stack.Output, "{{.Self.result}}", allOutput.String())
-			var replaceErr error
-			if e.Registry != nil {
-				modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, e, modifiedCmd)
-			} else {
-				modifiedCmd, replaceErr = function.ReplaceVariables(stack.Vars, nil, modifiedCmd)
-			}
-			if replaceErr != nil {
-				cmdErr := fmt.Errorf("variable template error : %w", replaceErr)
-				errorMsg.Write([]byte(cmdErr.Error()))
-			}
-			output, execErr := ShellExec(workDir, shell, shellArg, modifiedCmd, commandTimeout.String())
-			allOutput.Reset()
-			allOutput.Write(output)
+		return result
+	}
+
+	if stack.Output != "" {
+		tmpl := strings.ReplaceAll(stack.Output, "{{.Self.result}}", state.outputString())
+		script, replaceErr := replaceVars(e, stack, tmpl)
+		if replaceErr != nil {
+			// Don't run a half-rendered command.
+			state.appendError(fmt.Errorf("variable template error : %w", replaceErr))
+		} else {
+			output, execErr := ShellExec(workDir, executor, script, timeoutStr)
+			state.replaceOutput(output)
 			if execErr != nil {
-				cmdErr := fmt.Errorf("command failed : %w\n%s", execErr, output)
-				errorMsg.Write([]byte(cmdErr.Error()))
+				state.appendError(fmt.Errorf("command failed : %w\n%s", execErr, output))
 			}
 		}
-		result.Output = allOutput.String()
-		result.Error = errorMsg.String()
-		result.ContinueOnError = stack.ContinueOnError
-		if result.Error != "" {
-			result.Success = false
-		}
+	}
+
+	result.Output = state.outputString()
+	result.Error = state.errorString()
+	result.ContinueOnError = stack.ContinueOnError
+	if result.Error != "" {
+		result.Success = false
 	}
 	return result
 }
 
-func ShellExec(args ...string) ([]byte, error) {
-	acquire()
-	defer release()
+func ShellExec(workdir string, args []string, script string, timeoutVal string) ([]byte, error) {
 	timeout := config.DefaultCommandTimeout
-	if len(args) > 4 && strings.TrimSpace(args[4]) != "" {
-		parsedTimeout, err := time.ParseDuration(args[4])
+	if strings.TrimSpace(timeoutVal) != "" {
+		parsed, err := time.ParseDuration(timeoutVal)
 		if err != nil {
 			return nil, fmt.Errorf("invalid command timeout: %w", err)
 		}
-		if parsedTimeout <= 0 {
+		if parsed <= 0 {
 			return nil, fmt.Errorf("invalid command timeout: timeout must be greater than 0")
 		}
-		timeout = parsedTimeout
+		timeout = parsed
 	}
+	if len(args) == 0 {
+		return nil, fmt.Errorf("no executor configured")
+	}
+
+	ch := acquire()
+	defer release(ch)
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	if args[1] == "__mvdan__" {
-		return ShellExecMvdan(ctx, args[0], args[3], timeout)
+
+	if args[0] == "__mvdan__" {
+		if script == noScript {
+			return nil, fmt.Errorf("no commands to run")
+		}
+		return ShellExecMvdan(ctx, workdir, script, timeout)
 	}
-	execCmd := exec.CommandContext(ctx, args[1], args[2], args[3]) // #nosec G204 -- shell binary and args come from operator YAML config
-	execCmd.Dir = args[0]
+
+	if script != noScript {
+		args = append(slices.Clone(args), script)
+	}
+	execCmd := exec.CommandContext(ctx, args[0], args[1:]...) // #nosec G204 -- shell binary and args come from operator YAML config
+	execCmd.Dir = workdir
+	setupProcessGroup(execCmd)
 	output, err := execCmd.CombinedOutput()
 	if ctx.Err() == context.DeadlineExceeded {
 		return output, fmt.Errorf("command timed out after %s", timeout)
@@ -240,44 +287,44 @@ func ShellExec(args ...string) ([]byte, error) {
 	return output, err
 }
 
+// syncBuffer lets stdout and stderr share one ordered, goroutine-safe buffer.
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *syncBuffer) Bytes() []byte {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return slices.Clone(b.buf.Bytes())
+}
+
 func ShellExecMvdan(ctx context.Context, workDir string, script string, timeout time.Duration) ([]byte, error) {
-	parser := syntax.NewParser()
-	file, err := parser.Parse(strings.NewReader(script), "")
+	file, err := syntax.NewParser().Parse(strings.NewReader(script), "")
 	if err != nil {
 		return nil, err
 	}
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
+	var out syncBuffer
 	runner, err := interp.New(
 		interp.Dir(workDir),
-		interp.StdIO(nil, &stdout, &stderr),
+		interp.StdIO(nil, &out, &out),
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	err = runner.Run(ctx, file)
-	if stderr.Len() > 0 {
-		stdout.Write(stderr.Bytes())
-	}
 	if ctx.Err() == context.DeadlineExceeded {
-		return stdout.Bytes(), fmt.Errorf("command timed out after %s", timeout)
+		return out.Bytes(), fmt.Errorf("command timed out after %s", timeout)
 	}
-	if err != nil {
-		return stdout.Bytes(), err
-	}
-	return stdout.Bytes(), nil
-}
-
-func Shellargs(shell string, shellArg string) (string, string, error) {
-	if shell == "" {
-		return "__mvdan__", "", nil
-	}
-	if shellArg == "" {
-		shellArg = "-c"
-	}
-	return shell, shellArg, nil
+	return out.Bytes(), err
 }
 
 func commandTimeoutDuration(timeoutValue string) (time.Duration, error) {

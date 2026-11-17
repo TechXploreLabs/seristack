@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seristack Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#f1f5f9;--muted:#94a3b8;--green:#10b981;--code:#111827}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:Outfit,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+header{position:sticky;top:0;z-index:10;background:rgba(15,23,42,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.nav,.hero,.layout{width:min(1180px,calc(100% - 2rem));margin:0 auto}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.1rem 0;flex-wrap:wrap}
+.logo{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:800;font-size:1.25rem;text-decoration:none}
+.nav-links{display:flex;gap:1.1rem;flex-wrap:wrap}
+.nav-links a{color:var(--muted);text-decoration:none;font-weight:600}
+.nav-links a:hover,.nav-links a.on{color:var(--green)}
+.hero{padding:3rem 0 1rem}
+.eyebrow{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700}
+h1{font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:.3rem 0 .8rem;color:var(--green)}
+.lead{max-width:800px;color:var(--muted);font-size:1.1rem}
+.layout{display:grid;grid-template-columns:260px 1fr;gap:2rem;padding:2rem 0 4rem}
+aside{position:sticky;top:5.5rem;height:fit-content;max-height:calc(100vh - 7rem);overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem}
+aside h2{font-size:.95rem;margin-bottom:.5rem}
+aside a{display:block;color:var(--muted);text-decoration:none;padding:.25rem 0;font-size:.93rem}
+aside a:hover{color:var(--green)}
+article{min-width:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:2rem}
+article h2{color:var(--green);font-size:1.7rem;margin:2.2rem 0 .8rem;padding-top:.5rem;border-top:1px solid var(--border)}
+article h2:first-child{margin-top:0;border-top:0;padding-top:0}
+article h3{font-size:1.2rem;margin:1.4rem 0 .5rem}
+article p,article li{color:var(--muted);margin-bottom:.6rem}
+article ul,article ol{margin:0 0 1rem 1.4rem}
+article a{color:var(--green)}
+article strong{color:var(--text)}
+article blockquote{border-left:3px solid var(--green);padding:.4rem 1rem;margin:1rem 0;background:rgba(16,185,129,.08);border-radius:0 8px 8px 0}
+article hr{border:0;border-top:1px solid var(--border);margin:1.5rem 0}
+code{font-family:'JetBrains Mono',monospace;background:rgba(15,23,42,.9);color:#d1fae5;padding:.1rem .35rem;border-radius:5px;font-size:.9em}
+pre{background:var(--code);border:1px solid var(--border);border-radius:10px;padding:1.1rem;overflow-x:auto;margin:1rem 0}
+pre code{background:none;padding:0;color:var(--text);white-space:pre}
+.tw{overflow-x:auto;margin:1rem 0}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid var(--border);padding:.6rem .75rem;text-align:left;vertical-align:top}
+th{background:rgba(16,185,129,.12);color:var(--text)}
+td{color:var(--muted)}
+footer{border-top:1px solid var(--border);padding:2rem 0;text-align:center;color:var(--muted)}
+footer a{color:var(--green);text-decoration:none}
+@media(max-width:900px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none}article{padding:1.25rem}}
+</style>
+</head>
+<body>
+<header><nav class="nav">
+<a class="logo" href="../index.html">seristack</a>
+<div class="nav-links"><a href="../index.html">Home</a><a href="guide.html" class="on">Guide</a><a href="config-reference.html">Config Reference</a><a href="examples.html">Examples</a><a href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub →</a></div>
+</nav></header>
+<div class="hero"><p class="eyebrow">Documentation</p><h1>Guide</h1><p class="lead">Executors, execution modes, timeouts, variables, servers, deployment, and security.</p></div>
+<div class="layout">
+<aside><h2>On this page</h2><a href="#configuration">Configuration</a><a href="#running-stacks">Running stacks</a><a href="#executors">Executors</a><a href="#execution-modes">Execution modes</a><a href="#timeouts">Timeouts</a><a href="#variables">Variables</a><a href="#dependencies-and-sharing-output">Dependencies and sharing output</a><a href="#http-server">HTTP server</a><a href="#mcp-server">MCP server</a><a href="#production-deployment">Production deployment</a><a href="#per-stack-authorization">Per-stack authorization</a><a href="#audit-logging">Audit logging</a><a href="#seristack-run-flags">seristack run flags</a><a href="#security-considerations">Security considerations</a><a href="#testing">Testing</a></aside>
+<article>
+
+<p>Detailed behavior and security notes. For installation and a quick start, see the <a href="../index.html">README</a>. For every YAML field, see the <a href="config-reference.html">Configuration Reference</a>.</p>
+<h2 id="configuration">Configuration</h2>
+<p>Seristack uses YAML to define stacks. For every field, see the <a href="config-reference.html">Configuration Reference</a>.</p>
+<h3 id="example">Example</h3>
+<pre><code class="language-yaml">stacks:
+
+  - name: stack1
+    workDir: ./
+    description: Print welcome message
+    method: GET
+    urlPath: /show
+    continueOnError: false
+    count: 3
+    timeouts: 1h
+    executionMode: PARALLEL
+
+    vars:
+      - name: samplekey
+        value: samplevalue
+        allowed_value:
+          - samplevalue
+          - devvalue
+
+    cmds:
+      - |
+        export samplekey={{.Vars.samplekey}}
+        echo $samplekey
+        echo &quot;count={{.Count.index}}&quot;
+        echo &quot;Hey I'm Seristack!&quot;
+
+  - name: stack2
+    workDir: ./
+    continueOnError: false
+    count: 3
+    executionMode: SEQUENTIAL
+
+    vars:
+      - name: env
+        value: Dev
+
+    dependsOn:
+      - stack1
+
+    cmds:
+      - |
+        echo &quot;{\&quot;index\&quot;: {{.Count.index}}, \&quot;step\&quot;: \&quot;metadata\&quot;, \&quot;status\&quot;: \&quot;ok\&quot;}&quot;
+
+      - |
+        echo &quot;{\&quot;index\&quot;: {{.Count.index}}, \&quot;step\&quot;: \&quot;metrics\&quot;, \&quot;value\&quot;: $((RANDOM % 100))}&quot;
+
+    output: |
+      echo &quot;--- Aggregation Summary ---&quot;
+      echo '{{.Self.result}}' | grep &quot;^{&quot; | jq -s '{
+        total_records: length,
+        environment: &quot;{{.Vars.env}}&quot;,
+        results: .
+      }'
+</code></pre>
+<p>The <code>output</code> example needs <code>jq</code> installed, and the single quotes around <code>{{.Self.result}}</code> break if the output itself contains a single quote.</p>
+<h2 id="running-stacks">Running stacks</h2>
+<pre><code class="language-bash"># Run all stacks
+seristack trigger -c config.yaml
+
+# Run one stack
+seristack trigger -c config.yaml -s stack1
+
+# Start the HTTP server
+seristack run -c config.yaml
+
+# Start the MCP server
+seristack mcp -t streamableHTTP
+</code></pre>
+<h2 id="executors">Executors</h2>
+<p>By default, commands run in the <strong>built-in mvdan shell interpreter</strong>. It runs inside the Seristack process, so it behaves the same on every operating system and does not start a separate shell for builtins. Programs your script calls (<code>curl</code>, <code>git</code>, and so on) are still started as normal processes.</p>
+<p>To use another shell or runtime, set <code>executor</code>. Each entry in <code>cmds</code> is appended as the final argument:</p>
+<pre><code class="language-yaml">stacks:
+  - name: with-bash
+    count: 1
+    executor: [&quot;bash&quot;, &quot;-c&quot;]
+    cmds:
+      - echo &quot;runs in bash&quot;
+
+  - name: with-python
+    count: 1
+    executor: [&quot;python3&quot;, &quot;-c&quot;]
+    cmds:
+      - print(&quot;runs in python&quot;)
+</code></pre>
+<p>For a tool that takes no script argument, set <code>executor</code> to the full command and leave <code>cmds</code> empty:</p>
+<pre><code class="language-yaml">stacks:
+  - name: plan
+    count: 1
+    executor: [&quot;terraform&quot;, &quot;plan&quot;]
+</code></pre>
+<p>Each command with an external executor starts a new process, which usually costs a few milliseconds. For thousands of tiny commands, put them in one script instead.</p>
+<h2 id="execution-modes">Execution modes</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Repeats (<code>count</code>)</th>
+<th>Commands within one repeat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SEQUENTIAL</code></td>
+<td>one after another</td>
+<td>one after another</td>
+</tr>
+<tr>
+<td><code>PARALLEL</code> (default)</td>
+<td>concurrent</td>
+<td>concurrent</td>
+</tr>
+<tr>
+<td><code>STAGE</code></td>
+<td>concurrent</td>
+<td>one after another</td>
+</tr>
+<tr>
+<td><code>PIPELINE</code></td>
+<td>one after another</td>
+<td>concurrent</td>
+</tr>
+</tbody>
+</table></div>
+<p>Output order is only deterministic in <code>SEQUENTIAL</code> mode. In the other modes, output from concurrent commands is added as each command finishes.</p>
+<p>Concurrency is bounded: by default at most 10 commands run at the same time across the whole process.</p>
+<h2 id="timeouts">Timeouts</h2>
+<p><code>timeouts</code> (for example <code>30s</code>, <code>5m</code>, <code>1h</code>) limits <strong>each command</strong>, not the whole stack. A stack with ten sequential commands and <code>timeouts: 5m</code> can run for up to fifty minutes.</p>
+<p>When a command exceeds its timeout, Seristack kills it <strong>and everything it started</strong>:</p>
+<ul>
+<li>Linux and macOS: the whole process group is killed.</li>
+<li>Windows: the process tree is killed with <code>taskkill /T</code> (best effort).</li>
+</ul>
+<p>The kill is immediate. Tools such as Terraform get no chance to release state locks or finish writing state. For infrastructure-changing commands, set the timeout well above the longest expected runtime.</p>
+<p>Processes that deliberately detach themselves (daemons, <code>setsid</code>) may survive.</p>
+<h2 id="variables">Variables</h2>
+<p>Variables are declared in <code>vars</code> and used in commands as <code>{{.Vars.name}}</code>.</p>
+<pre><code class="language-yaml">vars:
+  - name: env
+    value: staging
+    required: true
+    allowed_value:
+      - staging
+      - production
+  - name: version
+    allowed_regex: regex(&quot;^[a-zA-Z0-9._-]+$&quot;)
+  - name: token
+    sensitive: true
+</code></pre>
+<p>Only variables declared in <code>vars</code> can be overridden by HTTP requests or MCP arguments. Undeclared values supplied by a caller are ignored.</p>
+<p>Available fields:</p>
+<ul>
+<li><code>value</code>: default value</li>
+<li><code>required</code>: reject empty values</li>
+<li><code>allowed_value</code> / <code>denied_value</code>: exact-match lists</li>
+<li><code>allowed_regex</code> / <code>denied_regex</code>: written as <code>regex("...")</code></li>
+<li><code>sensitive</code>: keep the value out of the audit log</li>
+</ul>
+<p>Prefer allow-lists (<code>allowed_value</code>, <code>allowed_regex</code>) over deny-lists. A deny-list like <code>(?i)rm|delete|drop</code> is easy to bypass and also blocks harmless words such as <code>form</code>. Anchor regex patterns with <code>^</code> and <code>$</code>.</p>
+<p>Values are substituted into command text before the command runs, so a value containing shell syntax can change what the command does. Always constrain variables that come from HTTP or MCP callers.</p>
+<h3 id="sensitive-variables">Sensitive variables</h3>
+<p><code>sensitive: true</code> removes the variable's value from the audit log. It does <strong>not</strong> scrub command output: if your script prints the value, it appears in the response and in the audit <code>output</code> field. Validation error messages can also include the rejected value.</p>
+<p>Where possible, have your script read secrets from its own environment instead of receiving them as variables, and never send secrets in URL query strings, because proxies log them.</p>
+<h2 id="dependencies-and-sharing-output">Dependencies and sharing output</h2>
+<p>Stacks can depend on other stacks:</p>
+<pre><code class="language-yaml">stacks:
+  - name: build
+    count: 1
+    cmds:
+      - ./build.sh
+
+  - name: test
+    count: 1
+    dependsOn:
+      - build
+    cmds:
+      - ./test.sh
+
+  - name: deploy
+    count: 1
+    dependsOn:
+      - test
+    cmds:
+      - ./deploy.sh
+</code></pre>
+<p>Seristack resolves the order before execution. Stacks with no dependency between them can run in the same batch, and a failed stack (without <code>continueOnError</code>) stops later batches.</p>
+<h3 id="template-values">Template values</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Template</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{{.Vars.name}}</code></td>
+<td>variable value</td>
+</tr>
+<tr>
+<td><code>{{.Count.index}}</code></td>
+<td>index of the current repeat (0-based)</td>
+</tr>
+<tr>
+<td><code>{{.Self.result}}</code></td>
+<td>output collected so far by this stack</td>
+</tr>
+<tr>
+<td><code>{{.Result.stack_name}}</code></td>
+<td>output of another stack that ran earlier</td>
+</tr>
+</tbody>
+</table></div>
+<p>A stack's output is the text its commands printed. <strong>stdout and stderr are combined</strong> into one string, so warnings written to stderr become part of the output. Redirect stderr (<code>2&gt;/dev/null</code>) if you need clean data.</p>
+<p>Stack names used in <code>{{.Result.name}}</code> should use letters, digits, and underscores. Names containing <code>-</code> are rejected by Go's template parser.</p>
+<p><code>discardOutput</code> lists stacks whose stored output should be released from memory once the current stack finishes.</p>
+<h3 id="limits-on-large-output">Limits on large output</h3>
+<p>Seristack keeps a command's full output and does not truncate it. But output substituted into another command becomes part of that command's command line, and operating systems limit its length: about 32,000 characters on Windows, and about 128 KB per argument on Linux. For large data, write it to a file in one stack and read the file in the next:</p>
+<pre><code class="language-yaml">- name: export
+  cmds:
+    - cat bigfile.txt &gt; /tmp/export.txt
+- name: process
+  dependsOn: [export]
+  cmds:
+    - wc -l /tmp/export.txt
+</code></pre>
+<h2 id="http-server">HTTP server</h2>
+<p>Stacks with a <code>method</code> are exposed as HTTP endpoints:</p>
+<pre><code class="language-yaml">stacks:
+  - name: system-health
+    count: 1
+    method: GET
+    urlPath: /health
+    cmds:
+      - echo &quot;system-health is good&quot;
+</code></pre>
+<pre><code class="language-bash">seristack run --config config.yaml --addr 127.0.0.1 --port 8080
+</code></pre>
+<p>Variables can be supplied as query parameters, form fields, or a JSON body. The response is a JSON object with the stack's name, success flag, output, error, and duration.</p>
+<p>Seristack serves plain HTTP. It has no TLS and no built-in authentication.</p>
+<h2 id="mcp-server">MCP server</h2>
+<p>Stacks with a <code>description</code> can be exposed as MCP tools:</p>
+<pre><code class="language-bash">seristack mcp -t streamableHTTP --addr 127.0.0.1 --port 8081
+</code></pre>
+<p>Supported transports: <code>stdio</code>, <code>sse</code>, and <code>streamableHTTP</code>. Each declared variable becomes a tool argument. A variable is required unless it has a default <code>value</code> or an environment variable named <code>SS_VAR_&lt;name&gt;</code>.</p>
+<p>Calling a tool runs that stack only; it does not run the stack's <code>dependsOn</code> stacks. Stacks with <code>access</code> rules are not visible over <code>stdio</code>, because there are no request headers to check.</p>
+<p>Treat MCP access with the same care as an HTTP API: any client that can call a tool can run its commands.</p>
+<h2 id="production-deployment">Production deployment</h2>
+<p>Seristack runs shell commands and must <strong>not be exposed directly to the public internet</strong>.</p>
+<pre><code class="language-text">Client
+  │
+  ▼
+nginx / Caddy / oauth2-proxy
+  ├── TLS termination
+  ├── Authentication
+  ├── Rate limiting
+  └── Sets identity headers
+  │
+  ▼
+Seristack (127.0.0.1)
+  ├── Per-stack authorization
+  └── Command execution
+</code></pre>
+<p>The same pattern applies to the MCP server. Notes for the proxy:</p>
+<ul>
+<li><strong>Bind to loopback.</strong> Run Seristack on <code>127.0.0.1</code> so the proxy cannot be bypassed.</li>
+<li><strong>Own the identity headers.</strong> The proxy must remove any identity headers sent by the client and set its own. Seristack trusts the headers it receives.</li>
+<li><strong>Raise read timeouts.</strong> Seristack imposes no write timeout, so long stacks keep running, but proxies often cut idle connections early (nginx defaults to 60 seconds, set <code>proxy_read_timeout</code> above your longest stack).</li>
+<li><strong>Disable response buffering for MCP</strong> (<code>proxy_buffering off;</code> in nginx), so streamed responses are delivered immediately.</li>
+</ul>
+<h2 id="per-stack-authorization">Per-stack authorization</h2>
+<p>Seristack can restrict individual stacks using identity headers forwarded by an authenticated proxy:</p>
+<pre><code class="language-yaml">stacks:
+  - name: deploy-production
+    method: POST
+    urlPath: /deploy/production
+
+    matchAccess: ANY
+
+    access:
+      - headerName: X-Auth-Request-Groups
+        headerValue:
+          - sre
+          - platform
+      - headerName: X-Auth-Request-Roles
+        headerValue:
+          - admin
+
+    count: 1
+    cmds:
+      - ./deploy.sh
+</code></pre>
+<p><code>matchAccess: ANY</code> grants access when at least one rule matches (OR). <code>matchAccess: ALL</code> requires every rule to match (AND).</p>
+<p>A stack with <strong>no <code>access</code> block has no stack-level restriction</strong>: anyone who can reach the port can run it. Protect the service itself with the proxy.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Identity provider</th>
+<th>Common proxy</th>
+<th>Example headers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Entra ID / Azure AD</td>
+<td>oauth2-proxy</td>
+<td><code>X-Auth-Request-Groups</code>, <code>X-Auth-Request-Roles</code>, <code>X-Auth-Request-Email</code></td>
+</tr>
+<tr>
+<td>GCP</td>
+<td>IAP</td>
+<td><code>X-Goog-Authenticated-User-Email</code></td>
+</tr>
+<tr>
+<td>AWS Cognito</td>
+<td>ALB</td>
+<td><code>X-Amzn-Oidc-Data</code></td>
+</tr>
+<tr>
+<td>OCI IAM</td>
+<td>nginx + oauth2-proxy</td>
+<td><code>X-Auth-Request-Groups</code>, <code>X-Auth-Request-Email</code></td>
+</tr>
+<tr>
+<td>Okta / Auth0</td>
+<td>oauth2-proxy</td>
+<td>headers configured in the proxy</td>
+</tr>
+</tbody>
+</table></div>
+<p>Only trust these headers when they come from your authenticated proxy. If clients can reach Seristack directly, they can send any header they like.</p>
+<h2 id="audit-logging">Audit logging</h2>
+<pre><code class="language-bash">seristack run --config config.yaml --audit-log /var/log/seristack/audit.log
+</code></pre>
+<p>Each entry is a JSON line. Fields include the request ID, stack name, HTTP path and method, source IP, identity headers, variables (without <code>sensitive</code> ones), success flag, duration, output, and error.</p>
+<p>Notes:</p>
+<ul>
+<li>Audit entries include the full command output, so logs can grow large. Rotate them with <code>logrotate</code> or your logging system.</li>
+<li>Request headers are recorded as identity unless excluded. Exclude headers that carry credentials (<code>Authorization</code>, <code>Cookie</code>, API keys) with <code>--identity-header</code>.</li>
+<li>Variables that are not marked <code>sensitive</code> are written to the log. Do not pass secrets through them.</li>
+</ul>
+<h2 id="seristack-run-flags"><code>seristack run</code> flags</h2>
+<pre><code class="language-text">seristack run [flags]
+
+  -c, --config string        config file (default &quot;config.yaml&quot;)
+  -a, --addr string          bind address (default &quot;127.0.0.1&quot;)
+  -p, --port string          server port (default &quot;8080&quot;)
+      --audit-log string     path to audit log file; enables audit logging when set
+      --identity-header strings
+                             identity header handling, repeatable
+</code></pre>
+<p>Run <code>seristack run --help</code> for the current list.</p>
+<h2 id="security-considerations">Security considerations</h2>
+<p>Seristack executes commands on the host where it runs, with the permissions and environment of the Seristack process.</p>
+<ol>
+<li>Keep Seristack bound to localhost or a private network.</li>
+<li>Put an authenticating reverse proxy in front of anything reachable from outside, with TLS.</li>
+<li>Do not trust identity headers that clients can set directly.</li>
+<li>Restrict sensitive stacks with <code>access</code> rules. Stacks without them are open.</li>
+<li>Constrain every variable that callers can set with allow-lists.</li>
+<li>Do not pass secrets as variables unless marked <code>sensitive</code>, and remember output is not scrubbed.</li>
+<li>Seristack is not a sandbox, and the mvdan interpreter is not either. A command can do anything the Seristack user can do, and child processes inherit its environment variables.</li>
+<li>Run Seristack as a user with the minimum privileges needed, ideally in a container.</li>
+<li>Review and rotate audit logs.</li>
+<li>Review every command before exposing it through HTTP or MCP.</li>
+</ol>
+<h2 id="testing">Testing</h2>
+<pre><code class="language-bash">go test ./...                     # run all tests
+go test -count=1 ./...            # skip the test cache
+go test -count=1 -v ./pkg/opsy    # one package, verbose
+CGO_ENABLED=1 go test -race ./... # race detector (needs a C compiler)
+</code></pre>
+<p>Check that every release platform compiles:</p>
+<pre><code class="language-bash">GOOS=linux go build ./... &amp;&amp; GOOS=darwin go build ./... &amp;&amp; GOOS=windows go build ./...
+</code></pre>
+</article>
+</div>
+<footer>Apache License 2.0 | <a href="https://github.com/TechXploreLabs/seristack" target="_blank" rel="noreferrer">GitHub</a></footer>
+</body>
+</html>

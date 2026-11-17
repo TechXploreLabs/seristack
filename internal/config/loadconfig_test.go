@@ -106,14 +106,13 @@ stacks:
 			wantErr: true,
 		},
 		{
-			name: "Required-only rule is preserved in VarRules",
+			name: "Required-only variable does not create VarRules entry",
 			yamlData: `
 stacks:
   - name: "stack_required"
     vars:
       - name: "token"
-        value: ""
-        required: true
+        value: "xyz"
 `,
 			wantConfig: &Config{
 				Stacks: []Stack{
@@ -121,15 +120,12 @@ stacks:
 						Name: "stack_required",
 						Variables: []VariableDef{
 							{
-								Name:     "token",
-								Value:    "",
-								Required: true,
+								Name:  "token",
+								Value: "xyz",
 							},
 						},
-						Vars: map[string]string{"token": ""},
-						VarRules: map[string]VariableRuleSet{
-							"token": {Required: true},
-						},
+						Vars:     map[string]string{"token": "xyz"},
+						VarRules: map[string]VariableRuleSet{},
 						Timeouts: DefaultCommandTimeout.String(),
 					},
 				},

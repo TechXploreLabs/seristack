@@ -31,7 +31,7 @@ func McpServer(config *conf.Config, transport string, port string, addr string, 
 	stackMap := executehandler.Stackmap(config.Stacks)
 	s := server.NewMCPServer(
 		"seristack",
-		"0.4.7",
+		"0.4.8",
 		server.WithToolCapabilities(true),
 		server.WithToolFilter(mcpToolFilter(stackMap)),
 	)
@@ -221,7 +221,7 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 		stringOpts := []mcp.PropertyOption{
 			mcp.Description(desc),
 		}
-		if varName.Required {
+		if strings.TrimSpace(os.Getenv("SS_VAR_"+varName.Name)) == "" && strings.TrimSpace(varName.Value) == "" {
 			stringOpts = append(stringOpts, mcp.Required())
 		}
 		options = append(options, mcp.WithString(varName.Name, stringOpts...))
@@ -230,7 +230,6 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		start := time.Now()
 		vars := make(map[string]string)
-		log.Printf("Tool called: tool: %s, args: %v", stack.Name, req.Params.Arguments)
 		if !checkMCPAccess(ctx, stack.Access, stack.MatchAccess) {
 			if auditLogger != nil {
 				if err := auditLogger.Write(audit.Entry{
@@ -243,7 +242,6 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 					log.Printf("audit log write failed: %v", err)
 				}
 			}
-			log.Printf("MCP access denied: tool: %s", stack.Name)
 			return mcp.NewToolResultError("access denied: insufficient permissions to call this tool"), nil
 		}
 		output := "json"
@@ -263,10 +261,15 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 		result := executehandler.ExecuteStack(executor, &stackCopy, &output)
 		jsondata, _ := json.Marshal(result)
 		if auditLogger != nil {
+			for varName, rule := range stackCopy.VarRules {
+				if rule.Sensitive {
+					delete(stackCopy.Vars, varName)
+				}
+			}
 			if err := auditLogger.Write(audit.Entry{
 				Stack:      stack.Name,
 				Identity:   flattenIdentity(identityFromContext(ctx), excludeidentityheaders),
-				Vars:       vars,
+				Vars:       stackCopy.Vars,
 				Success:    result.Success,
 				Output:     result.Output,
 				DurationMs: time.Since(start).Milliseconds(),
@@ -275,7 +278,6 @@ func registerStackTool(s *server.MCPServer, stack conf.Stack, stackMap map[strin
 				log.Printf("audit log write failed: %v", err)
 			}
 		}
-		log.Printf("Tool execution completed: tool: %s", stack.Name)
 		return mcp.NewToolResultText(string(jsondata)), nil
 	})
 }

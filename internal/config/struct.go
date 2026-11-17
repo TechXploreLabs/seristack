@@ -22,8 +22,7 @@ type Stack struct {
 	Access          []AccessRule               `yaml:"access,omitempty"`
 	ExecutionMode   string                     `yaml:"executionMode,omitempty"`
 	Count           int                        `yaml:"count,omitempty"`
-	Shell           string                     `yaml:"shell,omitempty"`
-	ShellArg        string                     `yaml:"shellArg,omitempty"`
+	Executor        []string                   `yaml:"executor,omitempty"`
 	Cmds            []string                   `yaml:"cmds,omitempty"`
 	Timeouts        string                     `yaml:"timeouts,omitempty"`
 	Output          string                     `yaml:"output,omitempty"`
@@ -42,7 +41,7 @@ type VariableDef struct {
 	DeniedValue  []string `yaml:"denied_value,omitempty"`
 	AllowedRegex string   `yaml:"allowed_regex,omitempty"`
 	DeniedRegex  string   `yaml:"denied_regex,omitempty"`
-	Required     bool     `yaml:"required,omitempty"`
+	Sensitive    bool     `yaml:"sensitive,omitempty"`
 }
 
 type VariableRuleSet struct {
@@ -50,7 +49,7 @@ type VariableRuleSet struct {
 	DeniedValue  []string
 	AllowedRegex string
 	DeniedRegex  string
-	Required     bool
+	Sensitive    bool
 }
 
 // Root configuration

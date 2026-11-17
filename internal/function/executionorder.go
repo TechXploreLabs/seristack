@@ -2,6 +2,7 @@ package function
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/TechXploreLabs/seristack/internal/config"
 )
@@ -13,6 +14,9 @@ func ExecutionOrder(stacks []config.Stack) ([][]string, error) {
 	for _, s := range stacks {
 		if _, exists := inDegree[s.Name]; exists {
 			return nil, fmt.Errorf("duplicate stack name '%s'", s.Name)
+		}
+		if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(s.Name) {
+			return nil, fmt.Errorf("invalid stack name: %s, follow [a-zA-Z0-9_]", s.Name)
 		}
 		inDegree[s.Name] = 0
 	}

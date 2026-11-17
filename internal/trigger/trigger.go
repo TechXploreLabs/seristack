@@ -26,7 +26,7 @@ func SingleStackCheck(config *conf.Config, stack *string) (*conf.Config, error) 
 func RunTrigger(config *conf.Config, output *string, varsMap *map[string]string) ([]*conf.Result, error) {
 	order, err := function.ExecutionOrder(config.Stacks)
 	if err != nil {
-		return nil, fmt.Errorf("dependency resolution failed due to %v", err)
+		return nil, fmt.Errorf("failed due to %v", err)
 
 	}
 	sourceDir, err := os.Getwd()
