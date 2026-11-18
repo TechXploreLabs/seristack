@@ -143,10 +143,8 @@ Dependencies are resolved before execution. Stacks with no dependency between th
 vars:
   - name: env
     value: staging
-    required: true
     allowed_value: [staging, production]
   - name: version
-    required: true
     allowed_regex: regex("^[a-zA-Z0-9._-]+$")
   - name: token
     sensitive: true
@@ -353,10 +351,8 @@ stacks:
     vars:
       - name: env
         value: staging
-        required: true
         allowed_value: [staging, production]
       - name: version
-        required: true
         allowed_regex: regex("^[a-zA-Z0-9._-]+$")
     cmds:
       - |
