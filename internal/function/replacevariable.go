@@ -16,7 +16,7 @@ var (
 func ReplaceVariables(vars map[string]string, result *config.Executor, input string) (string, error) {
 	if result == nil || result.Registry == nil {
 		data := map[string]any{"Vars": vars}
-		tmpl, err := template.New("shellScript1").Parse(input)
+		tmpl, err := template.New("shellScript1").Option("missingkey=error").Parse(input)
 		if err != nil {
 			return "Error: Variable Template", err
 		}
@@ -38,7 +38,7 @@ func ReplaceVariables(vars map[string]string, result *config.Executor, input str
 		Vars:   vars,
 		Result: resultVars,
 	}
-	tmpl, err := template.New("shellScript1").Parse(input)
+	tmpl, err := template.New("shellScript1").Option("missingkey=error").Parse(input)
 	if err != nil {
 		return "Error: Variable Template", err
 	}

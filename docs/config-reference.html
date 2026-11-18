@@ -268,10 +268,8 @@ access:
 <pre><code class="language-yaml">vars:
   - name: env
     value: staging
-    required: true
     allowed_value: [staging, production]
   - name: version
-    required: true
     allowed_regex: regex(&quot;^[a-zA-Z0-9._-]+$&quot;)
   - name: token
     sensitive: true
@@ -535,10 +533,8 @@ cmds:
     vars:
       - name: env
         value: staging
-        required: true
         allowed_value: [staging, production]
       - name: version
-        required: true
         allowed_regex: regex(&quot;^[a-zA-Z0-9._-]+$&quot;)
     cmds:
       - |

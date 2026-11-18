@@ -148,7 +148,6 @@ Variables are declared in `vars` and used in commands as `{{.Vars.name}}`.
 vars:
   - name: env
     value: staging
-    required: true
     allowed_value:
       - staging
       - production

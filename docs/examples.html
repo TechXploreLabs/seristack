@@ -105,10 +105,8 @@ curl 'http://127.0.0.1:8080/greet?name=alice'
     count: 1
     vars:
       - name: env
-        required: true
         allowed_value: [dev, stage, prod]
       - name: service
-        required: true
         allowed_regex: regex(&quot;^[a-zA-Z0-9_-]+$&quot;)
     cmds:
       - echo &quot;Deploying {{.Vars.service}} to {{.Vars.env}}&quot;
