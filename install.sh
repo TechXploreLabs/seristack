@@ -1,76 +1,74 @@
 #!/usr/bin/env bash
+# seristack installer for Linux and macOS.
+#
+# Environment overrides:
+#   SERISTACK_VERSION  exact release tag to install, e.g. v0.4.2 (default: latest)
+#   INSTALL_DIR        target directory (default: /usr/local/bin)
 set -euo pipefail
 
 REPO="TechXploreLabs/seristack"
 BINARY_NAME="seristack"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+
+die()  { echo "Error: $*" >&2; exit 1; }
+warn() { echo "Warning: $*" >&2; }
+need() { command -v "$1" >/dev/null 2>&1 || die "'$1' is required but not installed."; }
+
+need curl
+need tar
+need uname
+need mktemp
+
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" | awk '{print $1}'
+  else
+    return 1
+  fi
+}
 
 # ------------------------------------------------------------
-# Detect OS
+# Detect OS and architecture
 # ------------------------------------------------------------
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-
 case "$OS" in
-  linux*)
-    OS="linux"
-    ;;
-  darwin*)
-    OS="darwin"
-    ;;
-  *)
-    echo "Error: Unsupported OS: $OS"
-    exit 1
-    ;;
+  linux*)  OS="linux" ;;
+  darwin*) OS="darwin" ;;
+  mingw*|msys*|cygwin*)
+    die "Windows detected. Use the PowerShell installer instead." ;;
+  *) die "Unsupported OS: $OS" ;;
 esac
 
-# ------------------------------------------------------------
-# Detect Architecture
-# ------------------------------------------------------------
 ARCH="$(uname -m)"
-
 case "$ARCH" in
-  x86_64|amd64)
-    ARCH="amd64"
-    ;;
-  aarch64|arm64)
-    ARCH="arm64"
-    ;;
-  *)
-    echo "Error: Unsupported architecture: $ARCH"
-    exit 1
-    ;;
+  x86_64|amd64)  ARCH="amd64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *) die "Unsupported architecture: $ARCH" ;;
 esac
 
 # ------------------------------------------------------------
-# Get latest release
+# Resolve the release tag (no GitHub API, so no API rate limit)
 # ------------------------------------------------------------
-echo "Checking latest seristack release..."
-
-LATEST_TAG="$(
-  curl -fsSL \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/$REPO/releases/latest" |
-  grep '"tag_name":' |
-  head -1 |
-  sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/'
-)"
-
-if [[ -z "$LATEST_TAG" ]]; then
-  echo "Error: Could not determine latest release."
-  exit 1
+if [[ -n "${SERISTACK_VERSION:-}" ]]; then
+  TAG="${SERISTACK_VERSION}"
+else
+  echo "Checking latest $BINARY_NAME release..."
+  FINAL_URL="$(curl -fsSIL -o /dev/null -w '%{url_effective}' \
+    "https://github.com/$REPO/releases/latest")" \
+    || die "Could not reach GitHub to find the latest release."
+  TAG="${FINAL_URL##*/}"
 fi
 
-VERSION="${LATEST_TAG#v}"
+[[ "$TAG" =~ ^v?[0-9]+\.[0-9]+ ]] || die "Could not determine the release version (got '$TAG')."
+VERSION="${TAG#v}"
 
-# ------------------------------------------------------------
-# Build archive name
-# ------------------------------------------------------------
 ARCHIVE_NAME="${BINARY_NAME}_${VERSION}_${OS}_${ARCH}.tar.gz"
-
-DOWNLOAD_URL="https://github.com/$REPO/releases/download/${LATEST_TAG}/${ARCHIVE_NAME}"
+BASE_URL="https://github.com/$REPO/releases/download/${TAG}"
 
 echo ""
-echo "seristack release : $LATEST_TAG"
+echo "seristack release : $TAG"
 echo "OS                : $OS"
 echo "Architecture      : $ARCH"
 echo "Archive           : $ARCHIVE_NAME"
@@ -80,12 +78,7 @@ echo ""
 # Temporary directory
 # ------------------------------------------------------------
 TMP_DIR="$(mktemp -d)"
-
-cleanup() {
-  rm -rf "$TMP_DIR"
-}
-
-trap cleanup EXIT
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 ARCHIVE_PATH="$TMP_DIR/$ARCHIVE_NAME"
 
@@ -93,51 +86,81 @@ ARCHIVE_PATH="$TMP_DIR/$ARCHIVE_NAME"
 # Download
 # ------------------------------------------------------------
 echo "Downloading..."
+curl -fL --retry 3 --retry-delay 2 "$BASE_URL/$ARCHIVE_NAME" -o "$ARCHIVE_PATH" \
+  || die "Download failed: $BASE_URL/$ARCHIVE_NAME"
 
-curl -fL \
-  --retry 3 \
-  --retry-delay 2 \
-  "$DOWNLOAD_URL" \
-  -o "$ARCHIVE_PATH"
+# ------------------------------------------------------------
+# Verify checksum (when the release publishes a checksums file)
+# ------------------------------------------------------------
+SUMS_PATH="$TMP_DIR/checksums.txt"
+SUMS_FOUND=""
+for name in "${BINARY_NAME}_${VERSION}_checksums.txt" "checksums.txt"; do
+  if curl -fsSL "$BASE_URL/$name" -o "$SUMS_PATH" 2>/dev/null; then
+    SUMS_FOUND="$name"
+    break
+  fi
+done
+
+if [[ -n "$SUMS_FOUND" ]]; then
+  EXPECTED="$(awk -v f="$ARCHIVE_NAME" '$2 == f || $2 == "*" f {print $1; exit}' "$SUMS_PATH")"
+  [[ -n "$EXPECTED" ]] || die "No checksum entry for $ARCHIVE_NAME in $SUMS_FOUND."
+  ACTUAL="$(sha256_of "$ARCHIVE_PATH")" \
+    || die "Neither sha256sum nor shasum is available to verify the download."
+  [[ "$EXPECTED" == "$ACTUAL" ]] \
+    || die "Checksum mismatch for $ARCHIVE_NAME (expected $EXPECTED, got $ACTUAL)."
+  echo "Checksum verified."
+else
+  warn "this release has no checksums file; the download could not be verified."
+fi
 
 # ------------------------------------------------------------
 # Extract
 # ------------------------------------------------------------
 echo "Extracting..."
+tar -xzf "$ARCHIVE_PATH" -C "$TMP_DIR" || die "Failed to extract the archive."
 
-tar -xzf "$ARCHIVE_PATH" -C "$TMP_DIR"
-
-BINARY_PATH="$TMP_DIR/$BINARY_NAME"
-
-if [[ ! -f "$BINARY_PATH" ]]; then
-  echo "Error: $BINARY_NAME was not found in the release archive."
-  echo ""
-  echo "Archive contents:"
-  tar -tzf "$ARCHIVE_PATH"
-  exit 1
+BINARY_PATH="$(find "$TMP_DIR" -type f -name "$BINARY_NAME" | head -n 1)"
+if [[ -z "$BINARY_PATH" ]]; then
+  echo "Archive contents:" >&2
+  tar -tzf "$ARCHIVE_PATH" >&2
+  die "$BINARY_NAME was not found in the release archive."
 fi
-
 chmod +x "$BINARY_PATH"
 
 # ------------------------------------------------------------
-# Install
+# Install: no sudo unless it is needed
 # ------------------------------------------------------------
 echo "Installing $BINARY_NAME to $INSTALL_DIR..."
 
-sudo install -m 0755 "$BINARY_PATH" "$INSTALL_DIR/$BINARY_NAME"
-
-# ------------------------------------------------------------
-# Verify
-# ------------------------------------------------------------
-echo ""
-echo "Installation complete!"
-echo ""
-
-if command -v "$BINARY_NAME" >/dev/null 2>&1; then
-  "$BINARY_NAME" --help
+if [[ -w "$INSTALL_DIR" ]] || { [[ ! -e "$INSTALL_DIR" ]] && mkdir -p "$INSTALL_DIR" 2>/dev/null; }; then
+  install -m 0755 "$BINARY_PATH" "$INSTALL_DIR/$BINARY_NAME"
+elif command -v sudo >/dev/null 2>&1; then
+  echo "Using sudo to write to $INSTALL_DIR."
+  sudo install -m 0755 "$BINARY_PATH" "$INSTALL_DIR/$BINARY_NAME"
 else
-  echo "Installed successfully:"
-  echo "  $INSTALL_DIR/$BINARY_NAME"
-  echo ""
-  echo "$INSTALL_DIR is not currently in your PATH."
+  INSTALL_DIR="$HOME/.local/bin"
+  warn "cannot write to the target directory and sudo is not available; using $INSTALL_DIR."
+  mkdir -p "$INSTALL_DIR"
+  install -m 0755 "$BINARY_PATH" "$INSTALL_DIR/$BINARY_NAME"
+fi
+
+# ------------------------------------------------------------
+# Verify the file that was just installed (not whatever is first in PATH)
+# ------------------------------------------------------------
+echo ""
+if "$INSTALL_DIR/$BINARY_NAME" --help >/dev/null 2>&1; then
+  echo "Installation complete: $INSTALL_DIR/$BINARY_NAME ($TAG)"
+else
+  warn "installed to $INSTALL_DIR/$BINARY_NAME, but running it with --help failed."
+fi
+
+case ":$PATH:" in
+  *":$INSTALL_DIR:"*) ;;
+  *) echo ""; echo "$INSTALL_DIR is not in your PATH. Add it, for example:"
+     echo "  export PATH=\"$INSTALL_DIR:\$PATH\"" ;;
+esac
+
+FOUND="$(command -v "$BINARY_NAME" 2>/dev/null || true)"
+if [[ -n "$FOUND" && "$FOUND" != "$INSTALL_DIR/$BINARY_NAME" ]]; then
+  warn "another $BINARY_NAME comes first in PATH: $FOUND"
 fi
