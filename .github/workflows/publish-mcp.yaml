@@ -62,9 +62,23 @@ jobs:
             npx -y @anthropic-ai/mcpb pack $D out/seristack-${T}.mcpb
           done
 
-      - name: Create release
-        run: gh release create "$GITHUB_REF_NAME" out/*.mcpb --title "$GITHUB_REF_NAME" --generate-notes --latest=false
+      - name: Create or update release
+        run: |
+          set -euo pipefail
 
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release already exists. Updating MCP bundles..."
+
+            gh release upload "$GITHUB_REF_NAME" out/*.mcpb --clobber
+          else
+            echo "Creating new MCP release..."
+
+            gh release create "$GITHUB_REF_NAME" out/*.mcpb \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes \
+              --latest=false
+          fi
+          
       - name: Build server.json
         run: |
           set -euo pipefail
