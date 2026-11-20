@@ -40,8 +40,8 @@ try {
     if ($env:GITHUB_TOKEN) { $Headers["Authorization"] = "Bearer $($env:GITHUB_TOKEN)" }
 
     try {
-        $ReleaseInfo = Invoke-RestMethod -Headers $Headers `
-            -Uri "https://api.github.com/repos/$Repo/releases/latest"
+        $Releases = Invoke-RestMethod -Headers $Headers `
+            -Uri "https://api.github.com/repos/$Repo/releases?per_page=100"
     }
     catch {
         $Status = $null
@@ -49,41 +49,44 @@ try {
         if ($Status -eq 403 -or $Status -eq 429) {
             throw "GitHub API rate limit reached. Wait a while, or set the GITHUB_TOKEN environment variable and retry."
         }
-        throw "Could not read the latest release from GitHub: $($_.Exception.Message)"
+        throw "Could not read the releases from GitHub: $($_.Exception.Message)"
+    }
+
+    # Newest first. Keep published, non-pre-release versions whose tag starts
+    # with 'v' and a digit (skips any other kind of release in the repo), and
+    # use the first one that really has a build for this architecture.
+    $Candidates = @($Releases | Where-Object {
+        -not $_.draft -and -not $_.prerelease -and $_.tag_name -match '^v\d'
+    })
+
+    $ReleaseInfo = $null
+    $Asset = $null
+    $ArchiveName = $null
+
+    foreach ($Release in $Candidates) {
+        $Name = "${BinaryName}_$($Release.tag_name -replace '^v', '')_windows_${Arch}.tar.gz"
+        $Found = $Release.assets | Where-Object { $_.name -eq $Name } | Select-Object -First 1
+        if ($Found) {
+            $ReleaseInfo = $Release
+            $Asset = $Found
+            $ArchiveName = $Name
+            break
+        }
+    }
+
+    if (-not $Asset) {
+        $Checked = ($Candidates | Select-Object -First 10 | ForEach-Object { $_.tag_name }) -join ", "
+        Write-Host ""
+        Write-Host "ERROR: no release with a tag starting with 'v' has a Windows $Arch build." -ForegroundColor Red
+        Write-Host "Releases checked: $Checked"
+        throw "Windows release asset is unavailable."
     }
 
     $Tag = $ReleaseInfo.tag_name
 
-    if ([string]::IsNullOrWhiteSpace($Tag)) {
-        throw "Unable to determine the latest release version."
-    }
-
-    $Version = $Tag -replace '^v', ''
-
     # ------------------------------------------------------------
-    # Locate release assets
+    # Locate checksums asset
     # ------------------------------------------------------------
-
-    $ArchiveName = "${BinaryName}_${Version}_windows_${Arch}.tar.gz"
-
-    $Asset = $ReleaseInfo.assets |
-        Where-Object { $_.name -eq $ArchiveName } |
-        Select-Object -First 1
-
-    if (-not $Asset) {
-
-        Write-Host ""
-        Write-Host "ERROR: Release asset not found." -ForegroundColor Red
-        Write-Host "Expected: $ArchiveName"
-        Write-Host ""
-        Write-Host "Available assets:"
-
-        foreach ($ReleaseAsset in $ReleaseInfo.assets) {
-            Write-Host "  $($ReleaseAsset.name)"
-        }
-
-        throw "Windows release asset is unavailable."
-    }
 
     $SumsAsset = $ReleaseInfo.assets |
         Where-Object { $_.name -match 'checksums\.txt$' } |
