@@ -51,20 +51,40 @@ esac
 # ------------------------------------------------------------
 # Resolve the release tag (no GitHub API, so no API rate limit)
 # ------------------------------------------------------------
+archive_name_for() { echo "${BINARY_NAME}_${1#v}_${OS}_${ARCH}.tar.gz"; }
+
 if [[ -n "${SERISTACK_VERSION:-}" ]]; then
   TAG="${SERISTACK_VERSION}"
 else
-  echo "Checking latest $BINARY_NAME release..."
-  FINAL_URL="$(curl -fsSIL -o /dev/null -w '%{url_effective}' \
-    "https://github.com/$REPO/releases/latest")" \
-    || die "Could not reach GitHub to find the latest release."
-  TAG="${FINAL_URL##*/}"
+  echo "Checking latest $BINARY_NAME release (tags starting with 'v')..."
+
+  # The releases feed lists published releases, newest first. It needs no API
+  # token and has no API rate limit. Keep tags like v1.2.3 (a digit after the
+  # 'v'); skip other releases in the repo and pre-releases such as v1.2.3-rc1.
+  FEED="$(curl -fsSL "https://github.com/$REPO/releases.atom")" \
+    || die "Could not reach GitHub to list releases."
+  CANDIDATES="$(printf '%s\n' "$FEED" \
+    | grep -oE '/releases/tag/v[0-9][^"<]*' \
+    | sed 's#.*/releases/tag/##' \
+    | grep -v -- '-' || true)"
+
+  # Use the newest one that really has a build for this OS and architecture.
+  TAG=""
+  for t in $CANDIDATES; do
+    if curl -fsSL -r 0-0 -o /dev/null \
+         "https://github.com/$REPO/releases/download/$t/$(archive_name_for "$t")" 2>/dev/null; then
+      TAG="$t"
+      break
+    fi
+  done
+
+  [[ -n "$TAG" ]] || die "No recent release with a tag starting with 'v' has a ${OS}/${ARCH} build. Set SERISTACK_VERSION=<tag> to install a specific one."
 fi
 
-[[ "$TAG" =~ ^v?[0-9]+\.[0-9]+ ]] || die "Could not determine the release version (got '$TAG')."
+[[ "$TAG" =~ ^v[0-9]+\.[0-9]+ ]] || die "Release tag must start with 'v' and a version number (got '$TAG')."
 VERSION="${TAG#v}"
 
-ARCHIVE_NAME="${BINARY_NAME}_${VERSION}_${OS}_${ARCH}.tar.gz"
+ARCHIVE_NAME="$(archive_name_for "$TAG")"
 BASE_URL="https://github.com/$REPO/releases/download/${TAG}"
 
 echo ""
