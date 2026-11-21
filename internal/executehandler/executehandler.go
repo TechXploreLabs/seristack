@@ -154,7 +154,7 @@ func ValidateStackVars(stack *config.Stack) error {
 			return fmt.Errorf("variable validation failed: value for variable '%s' is required", varName)
 		}
 
-		if trimmedValue != "" {
+		if trimmedValue != "null" {
 			if len(rule.AllowedValue) > 0 {
 				if !slices.Contains(rule.AllowedValue, value) {
 					if rule.Sensitive {
